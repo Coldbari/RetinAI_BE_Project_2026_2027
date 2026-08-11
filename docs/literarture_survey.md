@@ -148,6 +148,38 @@ collapsed under external validation.
 
 ---
 
+## 10. Ordinal regression and adversarial debiasing (the staging work)
+
+**CORN — rank-consistent ordinal regression (Shi, Cao & Raschka, 2023)** reformulates a K-class
+ordinal problem as K−1 conditional binary tasks, guaranteeing rank consistency in a way a flat
+softmax cannot.
+
+**What we took from it.** ICROP stages are ordered — Stage 1 → 2 → 3 → 4/5 is a progression, and
+confusing Stage 1 with Stage 4/5 is a far worse error than confusing Stage 1 with Stage 2. A flat
+6-way softmax treats all confusions as equally wrong. Swapping to a CORN head (plus a separate
+AP-ROP branch, since AP-ROP is not a point on that ladder but an aggressive form that co-occurs
+with stages) raised fold-0 macro-F1 from 0.520 to **0.554**.
+
+**DANN — domain-adversarial training (Ganin et al., JMLR 2016)** attaches a domain classifier
+through a gradient-reversal layer, so the encoder is pushed to produce features from which the
+domain cannot be predicted.
+
+**What we took from it — and where we had to qualify it.** Site is **99.7% decodable** from the
+staging corpus, so an adversary is clearly warranted. But the literature almost always evaluates
+the adversary with a probe trained over *all* classes, and that is not a sound instrument when
+disease prevalence varies by site: the probe can score well by reading disease, not provenance.
+
+Running both probes gives different answers. The naive probe falls 0.859 → 0.820 and reads as
+success; the **disease-controlled** probe (normal-class images only, so disease is held constant)
+does not move at all, 0.882 → 0.885. The adversary removed the *disease–site correlation*, not
+*site appearance*.
+
+This is the methodological point the paper draft is built around: **a naive site probe
+systematically overstates adversarial debiasing**, and reporting one without the other makes a
+domain-adaptation result look stronger than it is.
+
+---
+
 ## Where this survey left the design
 
 1. Screen on **referable disease**, not fine-grained grading, because that is the clinical decision.

@@ -177,7 +177,98 @@ unrouted.
 
 ---
 
-## 8. Android client — `android/`
+## 8. ROP 6-class ICROP staging (in progress)
+
+The deployed ROP model is binary. The staging work extends it to the six ICROP classes —
+Normal, Stage 1, Stage 2, Stage 3, Stage 4/5, AP-ROP.
+
+### Corpus and splits
+
+`scripts/build_rop_staging_manifest.py` consolidates four sources; `scripts/make_staging_folds.py`
+builds patient-grouped 5-fold splits. One site (`multiview`) is held out entirely and divided into
+a **dev** set that may be scored freely and a **locked** set that is scored once, at the end.
+
+| | Images | Infants |
+|---|---|---|
+| Train pool | 3,112 | 1,528 |
+| Held-out site — dev | 663 | 116 |
+| Held-out site — locked | 661 | 116 |
+
+Per-class training counts: Normal 1,109 · Stage 1 515 · Stage 2 696 · Stage 3 535 ·
+**Stage 4/5 89** · AP-ROP 168. Imbalance ratio 12.46.
+
+`scripts/anonymise_ostrava_tree.py` de-identifies the Ostrava source before anything reads it.
+One patient-grouping bug was found and fixed there: IDs 40 and 41 were the same infant, which
+would have split one baby across folds.
+
+### The five-gate shortcut audit — `scripts/rop_shortcut_audit.py`
+
+No staging number is trusted until all five gates run. This exists because of the device confound
+found earlier in the binary ROP work — the lesson was that the audit has to come *before* the
+result, not after it.
+
+| Gate | Asks | Result |
+|---|---|---|
+| **G1** patient leakage | Is any infant in two folds? | Pass — 0 |
+| **G2** duplicate leakage | Any exact or near-duplicate images across folds? | Pass — 0 exact MD5, 0 near-dupes, closest pHash distance 15 |
+| **G3** site decodability | Can a model tell which site an image came from? | **Balanced accuracy 0.9973** vs 0.3333 chance. Stage 4/5 comes from a single source |
+| **G4** metadata-only baseline | What score is achievable with **no pixels decoded**? | **0.187 macro-F1** — the bar every image model must clear |
+| **G5** disease-controlled site probe | Does training *add* site information to the embedding? | Trained 0.882 vs untrained 0.894 on normal-only images — pass |
+
+G4 is the gate that makes the rest meaningful. A 6-class macro-F1 of 0.50 sounds mediocre in
+isolation; against a metadata-only bar of 0.19 it is evidence the network is reading retinas.
+
+G5 reads the **normal-only** probe deliberately. Running the probe over all classes lets
+site-varying disease prevalence inflate the score, so it would measure prevalence rather than
+appearance.
+
+### The benchmark — `kaggle_kernels/rop_staging_benchmark.py`
+
+Five backbones spanning 4.0M–27.8M parameters and three families (CNN, ViT, hybrid):
+EfficientNet-B0, EfficientNetV2-S, ConvNeXt-T (in12k), DeiT3-S, CAFormer-S18.
+
+`models/comparison/make_table.py` **refuses to state a ranking the numbers do not support**. On
+one fold and one seed the spread is 0.028 macro-F1, so the reported conclusion is "no model is
+separable from another", not "EfficientNetV2-S wins". Full 5-fold CV is running.
+
+### The structured head — `configs/rop_staging_structured.yaml`
+
+Three changes to the flat 6-way softmax, each motivated by something clinical:
+
+1. **Ordinal CORN head** — ROP stages are ordered. A flat softmax treats Stage 1 and Stage 4/5 as
+   equally distant from Stage 2, discarding the ordering.
+2. **Separate AP-ROP branch** — AP-ROP is not a point on the stage ladder; it is an aggressive
+   posterior form that co-occurs with stages. Forcing it into the same ordinal axis is wrong.
+3. **Site adversary (DANN)** — a gradient-reversal branch predicting the source site, to
+   discourage the encoder from representing provenance.
+
+Result on fold 0: macro-F1 **0.554** (vs 0.520 flat), accuracy 0.684, QWK 0.632, AUC 0.868.
+
+### Two findings worth carrying out of this project
+
+**The label unit, not the model.** AP-ROP scored recall 0.311 per image. The cause is annotation
+granularity: AP-ROP is labelled per examination *session*, and a session has a median of 18 frames
+of which roughly 47% score below the model's 10th percentile — those frames do not show the
+pathology, but they carry the session's label. Scored at the session level, recall is **0.905**
+(19 of 21) with a **0.000** false-positive rate on normals and precision 0.980.
+`scripts/rop_session_level_analysis.py` does this.
+
+**Naive probes overstate adversarial debiasing.** `results/rop/dann_probe_ablation.json`:
+
+| Model | Naive probe | Disease-controlled probe |
+|---|---|---|
+| Untrained | 0.890 | 0.894 |
+| Flat, no DANN | 0.859 | 0.882 |
+| Structured + DANN (w_site 0.5) | 0.820 | 0.885 |
+
+The naive probe drops 0.039 and looks like success. The disease-controlled probe does not move.
+DANN removed the disease–site *correlation*, not site *appearance*. An ablation at w_site = 2.0
+is running to see whether a stronger adversary moves the controlled probe, and what it costs the
+clinical metrics.
+
+---
+
+## 9. Android client — `android/`
 
 Kotlin, Jetpack Compose, Material 3.
 
@@ -194,7 +285,7 @@ Kotlin, Jetpack Compose, Material 3.
 
 ---
 
-## 9. Deployment
+## 10. Deployment
 
 `retinal-ai/` is a HuggingFace Space (Docker SDK): `python:3.11-slim`, CPU-only torch 2.1.0,
 OpenCV system libs, non-root uid 1000, port 7860. Weights ship via Git LFS.
@@ -205,7 +296,7 @@ system runs where a clinic can actually afford to run it. The cost is latency: t
 
 ---
 
-## 10. Testing
+## 11. Testing
 
 - Unit tests over the gate, presentation rules, DTO parsing, URL and upload rules.
 - Instrumented Android tests against captured fixtures.
