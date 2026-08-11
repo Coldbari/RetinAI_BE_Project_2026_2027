@@ -103,8 +103,8 @@ How each of these fed into the design is written up in
      Shortcuts Over Signal," Nature Machine Intelligence, vol. 3, pp. 610-619, 2021.
 ```
 
-Reference [15] is the one this project leans on hardest. It is the reason every headline number
-here is reported twice — pooled, and controlled for the confound — rather than once.
+Reference [15] is the one we leaned on hardest. It is the reason every headline number
+here is reported twice: once pooled, and once controlled for the confound.
 
 ## Ordinal regression and domain-adversarial training (ROP staging)
 
@@ -118,13 +118,14 @@ here is reported twice — pooled, and controlled for the confound — rather th
      Research, vol. 17, no. 59, pp. 1-35, 2016.
 ```
 
-Reference [18] is the CORN head used for ICROP staging. ROP stages are ordered; a flat softmax
-treats Stage 1 and Stage 4/5 as equally distant from Stage 2, discarding that structure.
+Reference [18] is the CORN head we use for ICROP staging. ROP stages are ordered, and a flat
+softmax treats Stage 1 and Stage 4/5 as equally distant from Stage 2, which throws that
+structure away.
 
-Reference [19] is the gradient-reversal site adversary. Our own ablation qualifies it: measured
-with a naive site probe the adversary appears to work (0.859 → 0.820), but a
-**disease-controlled** probe does not move (0.882 → 0.885). It removed the disease–site
-correlation, not site appearance.
+Reference [19] is the gradient-reversal site adversary. Our own ablation qualifies it. Measured
+with a naive site probe the adversary looks like it works, going from 0.859 to 0.820, but a
+disease-controlled probe does not move at all, 0.882 to 0.885. It removed the disease-site
+correlation rather than site appearance.
 
 ---
 
@@ -134,24 +135,24 @@ correlation, not site appearance.
 |---|---|---|---|
 | EyePACS | DR | ~35,126 | Training (pooled) |
 | APTOS 2019 | DR | ~3,662 | Training (pooled) |
-| Messidor-2 | DR | 1,744 | **External validation**, no retraining |
-| IDRiD | DR | — | **External validation** + resolution sensitivity |
+| Messidor-2 | DR | 1,744 | External validation, no retraining |
+| IDRiD | DR | n/a | External validation plus resolution sensitivity |
 | SMDG-19 | Glaucoma | ~12,449 | Training (multi-source aggregation) |
 | G1020 | Glaucoma | 1,020 | Zero-shot failure case, then pooled into training |
-| REFUGE1 / ORIGA | Glaucoma | 800 / 650 | **Withheld-source zero-shot** — 0.936 and 0.735 |
-| Infant retinal database | ROP (binary) | 6,004 (188 patients) | Training + held-out test, split **by patient** |
+| REFUGE1 / ORIGA | Glaucoma | 800 / 650 | Withheld-source zero-shot, 0.936 and 0.735 |
+| Infant retinal database | ROP (binary) | 6,004 (188 patients) | Training and held-out test, split by patient |
 | ROP staging corpus (4 sources) | ROP (6-class ICROP) | 3,112 (1,528 infants) | Training pool; one site held out as dev + locked |
 
-**No external ROP dataset exists publicly** for the binary task, which is why binary ROP has no
+No external ROP dataset exists publicly for the binary task, which is why binary ROP has no
 external validation row. The staging corpus partially addresses this by consolidating four
-sources and holding one out entirely — but that held-out site is where the 99.7% site
-decodability was measured, so it is a generalisation test *and* a confound, not a clean external
-set.
+sources and holding one out entirely. But that held-out site is where the 99.7% site
+decodability was measured, so it is a generalisation test and a confound at the same time,
+rather than a clean external set.
 
 ---
 
 ## A note on citation discipline
 
-Where a number in this repository comes from a paper, it is cited. Where it comes from our own
-measurement, it is traceable to a file in the development repository's `results/` directory.
+Where a number in this repository comes from a paper, we cite it. Where it comes from our own
+measurement, it traces back to a file in the development repository's `results/` directory.
 Nothing in the README is quoted from memory or estimated.
