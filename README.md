@@ -409,7 +409,7 @@ evaluation.
 | System architecture | [images/system_architecture.png](images/system_architecture.png) | Training and serving data flow |
 | Flowchart | [images/flowchart.png](images/flowchart.png) | Gate, route, preprocess, infer, explain, report |
 | Model evidence figures | [images/](images/) | 12 figures covering every headline claim |
-| Project video | [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 4 min 35 s presentation walkthrough |
+| Project video | [Google Drive](https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link) · [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 4 min 35 s presentation walkthrough. Drive access is restricted to the project group and evaluators |
 | Software design | [software/software.md](software/software.md) | Module-by-module implementation notes |
 | Literature survey | [docs/literarture_survey.md](docs/literarture_survey.md) | Reviewed work and how it shaped our design |
 | Reference papers | [reference/paper.md](reference/paper.md) | IEEE-format reference list |
@@ -826,17 +826,21 @@ every series is direct-labelled as well.
 
 ### Project video
 
-A 4 min 35 s presentation walkthrough. Three ways to get at it:
+A 4 min 35 s presentation walkthrough.
+
+**Project Demo Video:**
+https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link
+
+Access to the Drive copy is limited to the project group and the evaluation panel, so it asks you
+to sign in with an authorised account. That is intended, not a broken link.
+
+Copies also live in this repository, both of which download rather than stream, because GitHub
+serves video files as attachments:
 
 | Where | Link | Notes |
 |---|---|---|
-| Google Drive | [Watch in browser](https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link) | 1080p60, plays without downloading anything |
 | In this repository | [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 720p, 5.8 MB, kept small so the repository stays light |
 | Release asset | [1080p60 download](https://github.com/Coldbari/RetinAI_BE_Project_2026_2027/releases/download/project-video/RetinAI-project-video-1080p.mp4) | The original, 36 MB |
-
-Drive is the one to use if you just want to watch it. GitHub serves video files as downloads
-rather than streaming them, so the two GitHub links will save the file to your machine instead of
-opening a player.
 
 A presentation walkthrough covering what ROP is and how it is classified, why screening is hard,
 our preprocessing pipeline, how the project evolved to the current 6-class dataset, the
