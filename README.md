@@ -826,15 +826,17 @@ every series is direct-labelled as well.
 
 ### Project video
 
-**Watch here:** [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) (4 min 35 s,
-720p, 5.8 MB). Click through and GitHub plays it in the browser, no download needed.
+A 4 min 35 s presentation walkthrough. Three ways to get at it:
 
-**Full quality (1080p60):**
-[Google Drive copy](https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link)
+| Where | Link | Notes |
+|---|---|---|
+| Google Drive | [Watch in browser](https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link) | 1080p60, plays without downloading anything |
+| In this repository | [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 720p, 5.8 MB, kept small so the repository stays light |
+| Release asset | [1080p60 download](https://github.com/Coldbari/RetinAI_BE_Project_2026_2027/releases/download/project-video/RetinAI-project-video-1080p.mp4) | The original, 36 MB |
 
-We keep the 720p copy in the repository because GitHub will not preview a file as large as the
-original, which leaves a download link where a play button should be. The slides stay perfectly
-legible at 720p since they are mostly flat colour and text.
+Drive is the one to use if you just want to watch it. GitHub serves video files as downloads
+rather than streaming them, so the two GitHub links will save the file to your machine instead of
+opening a player.
 
 A presentation walkthrough covering what ROP is and how it is classified, why screening is hard,
 our preprocessing pipeline, how the project evolved to the current 6-class dataset, the
