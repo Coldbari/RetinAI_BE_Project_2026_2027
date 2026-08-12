@@ -67,16 +67,16 @@ server.
 
 | Sr. No. | Name of Student | Roll No. | Branch | Email ID | GitHub ID |
 |---|---|---|---|---|---|
-| 1 | Rutuja Bait |  | Automation and Robotics | 2023.rutuja.bait@ves.ac.in  | `TO FILL` |
-| 2 | Pravar Rangnekar | 25 | Automation and Robotics | 2023.pravar.rangnekar@ves.ac.in | `TO FILL` |
-| 3 | Yash Shengale | `TO FILL` | Automation and Robotics | 2023.yash.shengale@ves.ac.in | `TO FILL` |
+| 1 | Rutuja Bait | 36  | Automation and Robotics | 2023.rutuja.bait@ves.ac.in  | rutujabait |
+| 2 | Pravar Rangnekar | 25 | Automation and Robotics | 2023.pravar.rangnekar@ves.ac.in | PravarRangnekar |
+| 3 | Yash Shengale | 63 | Automation and Robotics | 2023.yash.shengale@ves.ac.in | yashshengale |
 | 4 | Praharsh Nagpure | 16 | Automation and Robotics | 2023.praharsh.nagpure@ves.ac.in | Coldbari |
 
 ---
 
 ## Guide Details
 
-**Project Guide:** Rutuja Bait
+**Project Guide:** Mrs. Amudha Kumar
 **Department:** Automation and Robotics
 **Institute:** Vivekanand Education Society's Institute of Technology (VESIT), Mumbai
 
@@ -409,6 +409,7 @@ evaluation.
 | System architecture | [images/system_architecture.png](images/system_architecture.png) | Training and serving data flow |
 | Flowchart | [images/flowchart.png](images/flowchart.png) | Gate, route, preprocess, infer, explain, report |
 | Model evidence figures | [images/](images/) | 12 figures covering every headline claim |
+| Project video | [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 4 min 35 s presentation walkthrough |
 | Software design | [software/software.md](software/software.md) | Module-by-module implementation notes |
 | Literature survey | [docs/literarture_survey.md](docs/literarture_survey.md) | Reviewed work and how it shaped our design |
 | Reference papers | [reference/paper.md](reference/paper.md) | IEEE-format reference list |
@@ -823,8 +824,30 @@ The figures use a colourblind-validated palette (DR blue `#3987e5`, ROP orange `
 Glaucoma aqua `#199e70`, with worst adjacent CVD ΔE 9.4). Colour is never the only cue, since
 every series is direct-labelled as well.
 
+### Project video
+
+**Watch here:** [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) (4 min 35 s,
+720p, 5.8 MB). Click through and GitHub plays it in the browser, no download needed.
+
+**Full quality (1080p60):**
+[Google Drive copy](https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link)
+
+We keep the 720p copy in the repository because GitHub will not preview a file as large as the
+original, which leaves a download link where a play button should be. The slides stay perfectly
+legible at 720p since they are mostly flat colour and text.
+
+A presentation walkthrough covering what ROP is and how it is classified, why screening is hard,
+our preprocessing pipeline, how the project evolved to the current 6-class dataset, the
+EfficientNetV2-S results, and where the work goes next.
+
+One thing to note when watching it alongside this README. The results slide in the video reports
+the **flat** EfficientNetV2-S model, where AP-ROP recall is 0.183 on fold 0. The README headlines
+the later **structured** head (ordinal CORN, AP-ROP branch, site adversary), where the same
+metric is 0.311 per image and 0.905 per session. Both are correct, they are just different models
+at different points in the work. The cross-site macro-F1 of 0.6407 in the video is the same
+number as the 0.641 in the benchmark table here.
+
 **Live demo:** https://champ610-retinal-ai.hf.space
-**Demo video:** `TO FILL: record a walkthrough and paste the Drive link`
 
 ---
 
