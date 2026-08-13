@@ -131,15 +131,20 @@ audit found the ROP model firing on 59 of 59 adult eyes, which is impossible sin
 disease of prematurity. Every number in this report is stated with the conditions it was
 measured under.
 
-Work in progress extends ROP from a binary flag to 6-class ICROP staging over a corpus of 3,112
-images from 1,528 infants. A five-gate shortcut audit runs before we trust any staging number,
-and a clinically-structured head (ordinal CORN, a dedicated AP-ROP branch and a site adversary)
-reaches macro-F1 0.554 against a 0.187 metadata-only baseline. Two results from that work seem
-useful beyond this project. AP-ROP recall goes from 0.311 per image to 0.905 per examination
-session once it is scored at the unit its label actually describes. And a domain-adversarial
-branch that looks like it removes site information under a naive probe leaves a
-disease-controlled probe unmoved, which suggests the usual way of claiming adversarial
-debiasing overstates it.
+The current phase extends ROP from a binary flag to 6-class ICROP staging over a corpus of
+6,700 images from 1,528 infants across three hospitals, with a fourth hospital held out
+entirely. A five-gate shortcut audit runs before we trust any staging number. Full 5-fold
+cross-validation is now complete, and it corrected us: the clinically-structured head (ordinal
+CORN, a dedicated AP-ROP branch, a site adversary) that looked clearly better on one fold turns
+out to be statistically equivalent to a plain softmax across all five (macro-F1 0.692 ± 0.086
+against 0.683 ± 0.118). We had built a story on that one fold and the cross-validation took it
+away, which is precisely what cross-validation is for. What survived is worth more. AP-ROP
+recall goes from 0.35 per image to 0.84 per examination session once it is scored at the unit
+its label actually describes. A seven-arm ablation shows the ordinal head is load-bearing, the
+class-balancing sampler silently destroys it, and the domain-adversarial branch that looks like
+it removes site information under a naive probe leaves a disease-controlled probe unmoved at
+every adversary strength we tried. The paper we are drafting rests on those measurement
+findings, not on an architecture win.
 
 ---
 
@@ -177,14 +182,23 @@ debiasing overstates it.
   fairness. For staging we also run a five-gate shortcut audit (leakage, duplicates, site
   decodability, metadata-only baseline, disease-controlled site probe) before trusting any
   number.
-- ROP 6-class ICROP staging over a 3,112-image corpus from 1,528 infants, with a held-out site,
-  an ordinal CORN head, an AP-ROP branch and a domain-adversarial site branch.
+- ROP 6-class ICROP staging over a 6,700-image corpus from 1,528 infants (three hospitals),
+  with a fourth hospital held out, an ordinal CORN head, an AP-ROP branch, a domain-adversarial
+  site branch, and a component-by-component ablation of all three.
 - Explainability with Grad-CAM, calibration with temperature scaling, and statistical intervals
   using bootstrap (cluster-bootstrap where the data is patient-grouped).
 - A gradability gate for non-retinal or ungradable input, and a patient-context router that
   suppresses clinically impossible findings.
 - A Flask web application and an Android client, both producing PDF reports.
 - Docker deployment to HuggingFace Spaces.
+
+### Scope change (August 2026)
+
+Glaucoma has been parked as exploratory and is no longer active work. The source-confound audit
+already reported below was the warning sign, and a later finding (the G1020 collection appears
+twice in the pooled corpus under different mounts, which contaminates any pooled glaucoma AUC)
+settled it. The numbers stay in this README as measured history with their caveats. Active work
+is DR and ROP, with ROP staging the current focus.
 
 ### Out of scope
 
@@ -374,9 +388,9 @@ than leaving it blank, since the template asks for it.
 | Week 5–7 (06–26 Jul) | Presentation preparation, deck rebuild, dataset survey | Completed |
 | Week 8 (27 Jul) | Safety, honesty and statistics overhaul, device-confound audit | Completed |
 | Week 9 (03 Aug) | Android client, confound audits T12–T17, evidence figures | Completed |
-| Week 10 (10 Aug) | ROP 6-class ICROP staging: corpus, shortcut audit, five-backbone benchmark, structured head | Completed |
-| Week 11 (17 Aug) | Full 5-fold CV, adversary-strength ablation (w_site 2.0), significance tests (McNemar / DeLong) | In progress |
-| Week 12 | Calibration wired into serving, paper drafting and submission | Pending |
+| Week 10 (10 Aug) | ROP 6-class ICROP staging: corpus, shortcut audit, five-backbone benchmark, structured head, full 5-fold CV (flat and structured), seven-arm ablation, bootstrap CIs and calibration | Completed |
+| Week 11 (17 Aug) | Seed repeats (1337, 2024) for flat and structured, session-level scoring of every arm | Planned |
+| Week 12 | ISBI paper draft, locked test set opened once, calibration wired into serving | Planned |
 
 ---
 
@@ -391,10 +405,10 @@ got done that week.
 | Week 2 | 15–21 Jun 2026 | Literature survey. Dataset acquisition (EyePACS, APTOS, SMDG-19, G1020). Kaggle environment setup | Rebuild as dedicated per-disease models | Baseline plateaued at ROP 73.3% accuracy and DR macro-F1 0.497 | 0 |
 | Week 3 | 22–28 Jun 2026 | Config-driven Kaggle-first training framework. Evaluation, validation and reporting layers. Five-architecture ROP sweep, ResNet50 best at AUC 0.964. Multi-disease web app. Mixup regulariser | External validation, glaucoma multi-source | Kaggle P100 `sm_60` unsupported by the default torch build. 384px ran out of memory on a T4. A local `kaggle/` folder shadowed the PyPI package | 10 |
 | Week 4 | 29 Jun–05 Jul 2026 | Referable-DR screening eval. Multi-source glaucoma config. Full Model Card and Methodology page. Dashboard and UX overhaul. Deck rebuilt for the three-model system | Presentation, then a rigor pass | Glaucoma trained on SMDG only collapsed to AUC 0.589 zero-shot on G1020, a genuine domain shift | 7 |
-| Week 5–7 | 06–26 Jul 2026 | Presentation preparation and delivery. Dataset survey for a second ROP source | Full honesty and statistics overhaul | No repository activity. `TO FILL: reason (exams / presentation period)` | 0 |
+| Week 5–7 | 06–26 Jul 2026 | Presentation preparation and delivery. Dataset survey for a second ROP source | Full honesty and statistics overhaul | No repository activity during this stretch — it was taken up by the mid-project presentation and the university exam period | 0 |
 | Week 8 | 27 Jul–02 Aug 2026 | Safety, honesty and statistics overhaul. T9 device-confound audit, which confirmed a real confound. Cluster-bootstrap intervals. DR and glaucoma serving calibration. Gradability gate false-rejection measured on adults. Glaucoma source audit. Started the Android client | Finish the Android client and the confound audits | ROP's 0.927 turned out to be partly device recognition. We also found and closed a PHI egress risk | 21 |
 | Week 9 | 03–09 Aug 2026 | Android client finished (CameraX capture, on-device quality gate, result and report screens, PDF export, instrumented tests). T12 glaucoma zero-shot range. T13 DR on IDRiD plus resolution sensitivity. T16 cross-disease routing. T17 confusion matrices and clinic PPV. 12 evidence figures. PHI incident remediated. ROP staging corpus consolidated from four sources | ROP 6-class ICROP staging, five-backbone benchmark | Six infant patient photographs were being served publicly. Removed and swept. Also found the ROP model fires on 59 of 59 adult eyes | 43 |
-| Week 10 | 10–16 Aug 2026 | ROP 6-class ICROP staging. Corpus consolidated from four sources (3,112 images, 1,528 infants, 6 classes). Patient-grouped 5-fold splits with a held-out site. Five-gate shortcut audit passed. Five-backbone benchmark run. Clinically-structured head (ordinal CORN, AP-ROP branch, site adversary) reached macro-F1 0.554 against 0.520 flat. Session-level AP-ROP analysis. DANN probe ablation | Full 5-fold CV, stronger-adversary ablation, significance tests | Site is 99.7% decodable from the images, and Stage 4/5 comes from a single source. AP-ROP image-level recall of 0.31 looked like model failure until we checked the label unit. It is annotated per session, not per frame | 11 |
+| Week 10 | 10–16 Aug 2026 | ROP 6-class ICROP staging, corpus to conclusions. Corpus consolidated from four sources (6,700 CV images from 1,528 infants, plus 1,324 held-out). Patient-grouped 5-fold splits with a held-out hospital. Five-gate shortcut audit passed. Five-backbone benchmark. Clinically-structured head built and cross-validated against flat softmax — the two are equivalent (macro-F1 0.692 ± 0.086 vs 0.683 ± 0.118), which withdrew our earlier fold-0 claim that the structured head wins. Seven-arm ablation isolating the ordinal head, the AP-ROP branch, the sampler and the adversary. Session-level AP-ROP scoring pooled over all folds (0.84 recall against 0.35 image-level). Patient-clustered bootstrap CIs and calibration (ECE) | Seed repeats 1337 and 2024, session-level scoring of every ablation arm, start the ISBI draft | The fold-0 result we had built the architecture story on did not survive 5-fold CV — fold 0 concentrates the session-labelled AP-ROP infants, and all five backbones had "failed" on the same broken evaluation unit rather than on the disease. The corrected claim is measurement, not architecture | 24 |
 
 The full commit history, code and results live in our development repository. This log book
 mirrors the milestones. Please ask if direct access to the development history is needed for
@@ -409,7 +423,7 @@ evaluation.
 | System architecture | [images/system_architecture.png](images/system_architecture.png) | Training and serving data flow |
 | Flowchart | [images/flowchart.png](images/flowchart.png) | Gate, route, preprocess, infer, explain, report |
 | Model evidence figures | [images/](images/) | 12 figures covering every headline claim |
-| Project video | [Google Drive](https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link) · [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 4 min 35 s presentation walkthrough. Drive access is restricted to the project group and evaluators |
+| Project video | [YouTube — RetinAI project walkthrough](https://youtu.be/fQpp9Fr1Up4) | 4 min 35 s presentation walkthrough, streams directly, no sign-in needed |
 | Software design | [software/software.md](software/software.md) | Module-by-module implementation notes |
 | Literature survey | [docs/literarture_survey.md](docs/literarture_survey.md) | Reviewed work and how it shaped our design |
 | Reference papers | [reference/paper.md](reference/paper.md) | IEEE-format reference list |
@@ -669,16 +683,25 @@ the actual finding here.
 
 ---
 
-### ROP 6-class ICROP staging (provisional)
+### ROP 6-class ICROP staging
 
 Our deployed ROP model is binary. Moving to real clinical grading means predicting the six ICROP
-classes: Normal, Stage 1, Stage 2, Stage 3, Stage 4/5 and AP-ROP. The corpus for that is now
-built and the first benchmark has run.
+classes: Normal, Stage 1, Stage 2, Stage 3, Stage 4/5 and AP-ROP. This phase is now through full
+5-fold cross-validation and a component ablation, and its most important results are corrections
+we had to make to our own earlier claims.
 
-**Corpus.** Four sources consolidated into 3,112 training images from 1,528 infants, split
-patient-grouped into 5 folds. One site (`multiview`) is held out entirely and further divided
-into a dev set (663 images, 116 infants) and a locked set (661 images, 116 infants) which we have
-not looked at. Class imbalance ratio is 12.46, and Stage 4/5 has only 89 training images.
+**Corpus.** Three hospitals consolidated into a cross-validation pool of 6,700 images from 1,528
+infants: Ostrava 4,285 images / 148 infants, ROP-VL 1,675 / 983, Shenzhen 740 / 397. A fourth
+hospital (`multiview`, 1,324 images, 232 infants) is held out entirely and further divided into
+a dev set (663 images) and a locked set (661 images) which we have still not looked at. Class
+distribution across the pool: Normal 3,837 (57.3%), Stage 1 577, Stage 2 959, Stage 3 620,
+Stage 4/5 just 89 (1.3%), AP-ROP 618. Note the inversion in the source table: Ostrava
+contributes 64% of the images from 10% of the infants (about 29 frames per infant), which is why
+every statistic below is patient-grouped or patient-clustered. Per-fold training uses a
+frame-capped subset (at most 20 per infant, 2 for normals, about 2,470 images) so heavily-imaged
+infants cannot dominate the loss; validation stays uncapped.
+
+![Structured staging network](images/rop_staging/architecture.png)
 
 ![Five-backbone staging benchmark](images/rop_staging/00_comparison_macro_f1.png)
 
@@ -691,57 +714,108 @@ not looked at. Class imbalance ratio is 12.46, and Stage 4/5 has only 89 trainin
 | EfficientNet-B0 | 4.0M | 0.492 | 0.536 |
 | *metadata-only baseline* | n/a | *0.187* | n/a |
 
-This table does not support a ranking, and we are not claiming one. The spread across all five
-architectures is 0.028 macro-F1, across a 7x parameter range and three model families (CNN, ViT,
-hybrid). That is smaller than any spread estimate we can get from one fold and one seed. What the
-table does show is that every model clears the 0.187 metadata-only bar by a wide margin, so the
-networks are decoding pixels rather than picking up on filename or image-dimension artefacts.
-Full 5-fold cross-validation is running now.
+This table does not support a ranking and we are not claiming one: the spread across five
+architectures spanning a 7x parameter range and three model families is 0.028 macro-F1. What it
+does show is that every model clears the 0.187 metadata-only bar by a wide margin, so the
+networks are decoding pixels rather than filename or image-dimension artefacts.
 
-**A structured head beats a flat classifier.** We replaced the flat 6-way softmax with an ordinal
-CORN head, since ROP stages are ordered and treating them as unordered categories throws that
-away. We also added a separate AP-ROP branch and a site adversary. Fold-0 macro-F1 went from
-0.520 to 0.554, with QWK 0.632 and AUC 0.868.
+#### The 5-fold verdict: structured and flat are equivalent, and our fold-0 story was wrong
+
+We replaced the flat 6-way softmax with a clinically-structured head: an ordinal CORN branch
+(ROP stages are ordered, and a flat softmax throws that away), a separate AP-ROP branch (ICROP-3
+defines AP-ROP as an aggressive form, not a stage, so it should not compete with the stages for
+probability mass), and a domain-adversarial site branch. On fold 0 this looked like a clear win,
+and we said so in an earlier version of this README. Full 5-fold cross-validation corrected us:
+
+| Metric (5-fold CV, same backbone, same folds) | Flat softmax | Structured head |
+|---|---|---|
+| macro-F1 | 0.683 ± 0.118 | 0.692 ± 0.086 |
+| QWK | 0.836 | 0.826 |
+| AP-ROP F1 | 0.733 | 0.725 |
+| Stage 2 recall | 0.570 | 0.632 (higher on every fold) |
+| Held-out-hospital QWK | 0.930 | 0.946 |
+
+The per-fold differences are mixed-sign, so these two models are equivalent on headline metrics.
+The dramatic fold-0 "softmax failure on AP-ROP" that motivated part of the design turned out to
+be a property of fold 0 itself: its validation split concentrates the most heavily-imaged
+session-labelled AP-ROP infants, and every backbone "failed" identically because all of them
+were being scored against the same broken evaluation unit. The flat model reaches AP-ROP recall
+0.83 to 0.97 on folds 1 through 4. We have withdrawn the architecture-superiority claim. What
+the structured head still buys at zero performance cost: outputs that match the ICROP taxonomy
+(an independent AP-ROP probability plus a stage distribution), consistently better Stage 2
+recall, and slightly better transfer to the held-out hospital.
+
+Patient-clustered bootstrap over the pooled CV predictions (2,000 replicates, resampling
+infants, not images): macro-F1 0.652 [0.574, 0.762], QWK 0.761 [0.627, 0.912], and AP-ROP
+image-level recall 0.345 with a 95% interval of [0.25, 0.84] — an interval so wide it is telling
+us the image-level metric is dominated by a handful of heavily-imaged infants, which is the
+label-unit finding restated as statistics. Calibration: pooled ECE 0.107, but fold 0 alone is
+0.196 against 0.06 to 0.09 for every other fold, a third independent signature that fold 0's
+labels, not its images, are the problem.
+
+#### A seven-arm ablation: what each component actually contributes
+
+All arms on fold 0, same backbone, seed and schedule, last-epoch checkpoints. Single-fold
+numbers carry no error bars, so we only read the large gaps.
+
+| Arm | macro-F1 | QWK | AP-ROP recall |
+|---|---|---|---|
+| Flat softmax, weighted sampler | 0.515 | 0.603 | 0.191 |
+| Flat softmax, natural sampling | 0.563 | 0.580 | 0.237 |
+| Structured, full | 0.553 | 0.569 | 0.212 |
+| Structured, adversary off (w=0) | 0.546 | 0.648 | 0.265 |
+| Structured, AP-ROP branch removed | 0.549 | 0.575 | 0.195 |
+| Structured, ordinal head removed | 0.479 | 0.394 | 0.181 |
+| Structured, with weighted sampler | 0.403 | 0.129 | 0.141 |
+
+Four readings. First, the class-balancing sampler silently destroys the ordinal head (QWK 0.129):
+CORN's conditional thresholds calibrate to the prevalence they are trained on, and a sampler
+that feeds it a rebalanced world miscalibrates every high-rank threshold. Flat softmax tolerates
+the same sampler fine, so this incompatibility is invisible unless you test for it. Second,
+removing the ordinal head hurts most (QWK 0.394, with visible training instability). Third, the
+AP-ROP branch does not buy image-level argmax recall on this fold — every arm hits the same
+ceiling of 0.14 to 0.26, because the ceiling is the label unit, not the head. Fourth, the
+adversary does not help: turning it off entirely gives the best fold-0 QWK of the structured
+arms and ties on the held-out hospital (0.942 vs 0.946).
 
 #### The label unit, not the model
 
-AP-ROP recall came out at 0.311 per image, which reads like a failing detector. It is not.
-AP-ROP is annotated per examination session rather than per frame. A session has a median of 18
-frames, and roughly 47% of them sit below the 10th percentile of the model's score because those
-frames do not show the pathology at all. Scoring per image punishes the model for frames whose
-label was never really about them.
+AP-ROP is annotated per examination session, not per frame. A session has a median of about 18
+frames, and roughly 47% of the frames in confirmed AP-ROP sessions score below the model's 10th
+percentile because those particular frames do not show the pathology. Scoring per image punishes
+the model for frames whose label was never about them. Pooled over all five folds and scored at
+the unit the label actually describes:
 
-Evaluated at the unit the label actually describes:
-
-| Evaluation unit | Recall | 95% CI | n |
+| Evaluation unit | Recall | 95% CI | Normal-case false positives |
 |---|---|---|---|
-| Per image | 0.311 | [0.270, 0.355] | 476 |
-| Per session | 0.905 (19/21) | [0.696, 0.988] | 21 |
-| Per patient | 0.833 | [0.359, 0.996] | 6 |
+| Per image | 0.345 | [0.25, 0.84] (patient bootstrap) | — |
+| Per session (max over frames) | 0.840 (100/119) | [0.76, 0.90] | 0.25% |
 
-The false-positive rate on normal cases is 0.000 at both image and session level, and AP-ROP
-precision is 0.980. So the image-level number was a ceiling set by annotation granularity rather
-than a model deficiency. We would not have caught it without checking what the label unit was.
+The same model, the same predictions — the only thing that changed is the evaluation unit. This
+also fully explains the fold-0 plateau that fooled us, and it generalises: any group publishing
+image-level metrics against session-level labels is understating detection.
 
 #### Adversarial debiasing is weaker than a naive probe suggests
 
 Site is 99.7% decodable from these images against a chance level of 33.3%, so we added a
-domain-adversarial (DANN) branch to suppress it. Whether it worked depends entirely on how you
-probe for it:
+domain-adversarial (DANN) branch to suppress it. Whether it "worked" depends entirely on how you
+probe for it, and we now have the full dose-response:
 
-| Model | Naive site probe | Disease-controlled probe |
-|---|---|---|
-| Untrained | 0.890 | 0.894 |
-| Flat, no DANN | 0.859 | 0.882 |
-| Structured + DANN (w_site 0.5) | 0.820 | 0.885 |
+| Model | Naive site probe | Disease-controlled probe | Clinical cost |
+|---|---|---|---|
+| Untrained backbone | 0.890 | 0.894 | — |
+| Flat, no DANN | 0.859 | 0.882 | — |
+| Structured, w_site 0 | — | 0.885 (unchanged) | none; best fold-0 QWK |
+| Structured, w_site 0.5 | 0.820 | 0.885 | none measurable |
+| Structured, w_site 2.0 | 0.868 | 0.921 | AP-ROP recall falls to 0.168, QWK to 0.525 |
 
-The naive probe makes it look like the adversary removed site information, dropping from 0.859 to
-0.820. The disease-controlled probe, which runs on normal-class images only so that disease is
-held constant and site-varying prevalence cannot flatter the score, says otherwise: 0.882 to
-0.885, essentially unchanged. What DANN actually removed was the disease-site correlation, not
-site appearance. The naive probe overstates the debiasing, and the controlled probe is the
-honest instrument. We have a stronger-adversary arm running at w_site 2.0 to see whether more
-pressure moves the controlled probe, and what it costs on the clinical metrics.
+The naive probe makes the w_site 0.5 adversary look like it removed site information (0.859 to
+0.820). The disease-controlled probe — run on normal-class images only, so disease is held
+constant and site-varying prevalence cannot flatter the score — says it removed nothing, at any
+strength. Pushing harder (w_site 2.0) is actively harmful and still does not move the controlled
+probe in the right direction. What DANN removed was the disease-site correlation, not site
+appearance. The naive probe overstates adversarial debiasing, and most published DANN results in
+medical imaging rest on exactly the naive probe.
 
 ### Test log
 
@@ -769,13 +843,17 @@ pressure moves the controlled probe, and what it costs on the clinical metrics.
 | 20 | Staging gate G3, is the source site decodable from the images? | Site should not be trivially readable | Balanced accuracy 0.9973 against chance 0.3333. Site is almost perfectly decodable, and Stage 4/5 comes from a single source | Stated, motivated the site adversary |
 | 21 | Staging gate G4, metadata-only baseline with no pixels decoded | Image models must exceed it | Bar is 0.187 macro-F1. Every backbone scored 0.492 to 0.520, clearing it by about 2.6x | Pass |
 | 22 | Staging gate G5, disease-controlled site probe | Trained model should not encode more site than an untrained one | Trained 0.882 against untrained 0.894 on normal-only images, so training added no site information | Pass |
-| 23 | AP-ROP evaluated at the unit its label describes | Image-level recall should reflect detection ability | Image 0.311 → session 0.905 (19/21) → patient 0.833, with 0.000 false positives on normals. The ceiling was annotation granularity, not the model | Pass, re-scoped metric |
-| 24 | Does the DANN adversary actually remove site information? | Controlled probe should fall | FAIL. The naive probe fell from 0.859 to 0.820 but the disease-controlled probe did not move, 0.882 to 0.885. DANN removed the disease-site correlation, not site appearance | Fail, stronger-adversary arm running |
+| 23 | AP-ROP evaluated at the unit its label describes | Image-level recall should reflect detection ability | Pooled over all 5 folds: image 0.345 → session 0.840 (100/119, CI 0.76–0.90) at 0.25% normal-session false positives. The ceiling was annotation granularity, not the model | Pass, re-scoped metric |
+| 24 | Does the DANN adversary actually remove site information? | Controlled probe should fall | FAIL at every strength. w_site 0 / 0.5 / 2.0 leave the disease-controlled probe at 0.885 / 0.885 / 0.921, and w_site 2.0 destroys AP-ROP recall (0.168) and QWK (0.525). DANN removed the disease-site correlation, not site appearance | Fail, adversary demoted to reported-negative |
+| 25 | Does the structured head beat flat softmax? Full 5-fold CV, both models, same folds | The fold-0 gap should replicate | It did not. Flat 0.683 ± 0.118 vs structured 0.692 ± 0.086 macro-F1, per-fold differences mixed-sign. Fold 0's "softmax failure" was the session-label unit, not the architecture. Superiority claim withdrawn | Fail, claim corrected |
+| 26 | Can the ordinal (CORN) head train under a class-balancing sampler? | Sampler should help the rare classes | FAIL. QWK collapses to 0.129 with stage 4/5 precision 0.043. CORN calibrates to training prevalence; the sampler feeds it a false one. Flat softmax tolerates the same sampler | Fail, natural sampling adopted |
+| 27 | Seven-arm component ablation on fold 0 | Each design component should earn its place | Ordinal head is load-bearing (QWK 0.394 without it); branch buys taxonomy fidelity, not fold-0 recall; adversary contributes nothing (w=0 ties or wins). Every arm hits the same AP-ROP image-level ceiling — the label unit | Pass, measured |
 
-Seven of these failed. We are listing them rather than deleting them, because each one changed
-the system. Test 6 forced a device-stratified re-split, test 8 gave us the routing layer, test 18
-gave us a PHI egress guard, and test 24 stopped us making a debiasing claim that the naive probe
-would have supported.
+Nine of these failed. We are listing them rather than deleting them, because each one changed
+the system. Test 6 forced a device-stratified re-split, test 8 gave us the routing layer, test
+18 gave us a PHI egress guard, test 24 stopped us making a debiasing claim that the naive probe
+would have supported, and test 25 withdrew an architecture claim we had already written up. The
+failed tests are where this project actually learned something.
 
 ---
 
@@ -800,17 +878,18 @@ Nothing here is hand-drawn.
 | 11 | [Safety before/after](images/11_safety_before_after.png) | What the gate and routing removed |
 | 12 | [ROP subgroups](images/12_rop_subgroups.png) | Can fairness be demonstrated? No, and why that is the finding |
 
-### ROP staging figures (provisional)
+### ROP staging figures
 
 | File | The question it answers |
 |---|---|
+| [Structured network diagram](images/rop_staging/architecture.png) | The three-branch head, with the measured result that justifies each branch written under it |
 | [Five-backbone comparison](images/rop_staging/00_comparison_macro_f1.png) | Do any of the five architectures separate from each other? No, 0.028 spread. But all clear the 0.187 metadata bar |
 | [Per-class recall](images/rop_staging/00_comparison_per_class_recall.png) | Which ICROP classes are actually learnable from this corpus |
-| [EfficientNetV2-S per class](images/rop_staging/effnetv2s_per_class.png) | Precision and recall per ICROP class for the best fold-0 backbone |
+| [EfficientNetV2-S per class](images/rop_staging/effnetv2s_per_class.png) | Precision and recall per ICROP class, fold 0 |
 | [EfficientNetV2-S training curves](images/rop_staging/effnetv2s_training_curves.png) | Loss and validation macro-F1 per epoch |
 
-These four are provisional: one fold, one seed, no spread estimate. We include them because the
-shape of the result is already useful, not because the ranking is settled.
+The fold-0 figures are stamped provisional in-image because single-fold numbers carry no spread
+estimate; the 5-fold CV and ablation tables above are the settled versions.
 
 Figure 02 is the one worth starting with. It carries the result that most changes how the system
 should be described, which is that sensitivity and specificity survive a change of population but
@@ -826,32 +905,19 @@ every series is direct-labelled as well.
 
 ### Project video
 
-A 4 min 35 s presentation walkthrough.
+**Project Demo Video (YouTube):** https://youtu.be/fQpp9Fr1Up4
 
-**Project Demo Video:**
-https://drive.google.com/file/d/1Of2shJy_7bIDML14teMDCdsqnZqQYiSa/view?usp=share_link
+A 4 min 35 s presentation walkthrough covering what ROP is and how it is classified, why
+screening is hard, our preprocessing pipeline, how the project evolved to the current 6-class
+dataset, the EfficientNetV2-S results, and where the work goes next.
 
-Access to the Drive copy is limited to the project group and the evaluation panel, so it asks you
-to sign in with an authorised account. That is intended, not a broken link.
-
-Copies also live in this repository, both of which download rather than stream, because GitHub
-serves video files as attachments:
-
-| Where | Link | Notes |
-|---|---|---|
-| In this repository | [demo/RetinAI-project-video.mp4](demo/RetinAI-project-video.mp4) | 720p, 5.8 MB, kept small so the repository stays light |
-| Release asset | [1080p60 download](https://github.com/Coldbari/RetinAI_BE_Project_2026_2027/releases/download/project-video/RetinAI-project-video-1080p.mp4) | The original, 36 MB |
-
-A presentation walkthrough covering what ROP is and how it is classified, why screening is hard,
-our preprocessing pipeline, how the project evolved to the current 6-class dataset, the
-EfficientNetV2-S results, and where the work goes next.
-
-One thing to note when watching it alongside this README. The results slide in the video reports
-the **flat** EfficientNetV2-S model, where AP-ROP recall is 0.183 on fold 0. The README headlines
-the later **structured** head (ordinal CORN, AP-ROP branch, site adversary), where the same
-metric is 0.311 per image and 0.905 per session. Both are correct, they are just different models
-at different points in the work. The cross-site macro-F1 of 0.6407 in the video is the same
-number as the 0.641 in the benchmark table here.
+One thing to note when watching it alongside this README. The video was recorded partway through
+the staging work, so its results slide reports the fold-0 numbers we had at the time (flat
+EfficientNetV2-S, AP-ROP recall 0.183, cross-site macro-F1 0.6407 — the same number as the 0.641
+in the benchmark table here). The full 5-fold cross-validation, the equivalence verdict and the
+seven-arm ablation in this README all came after the recording, and where the two disagree, the
+README is the current version. We would rather leave the video honest to its date than re-record
+it every time a result moves.
 
 **Live demo:** https://champ610-retinal-ai.hf.space
 
@@ -919,15 +985,21 @@ number as the 0.641 in the benchmark table here.
 10. **Fairness is not demonstrated.** The metadata available cannot support a subgroup fairness
     claim for ROP. Saying so is more honest than producing a breakdown we cannot back up.
 11. **Binary ROP loses clinical detail, and staging is not deployed.** The deployed model does not
-    stage zone, stage or plus disease the way ICROP grading needs. Our 6-class staging model
-    reaches macro-F1 0.554 on fold 0, but it is provisional: one fold, one seed, a 0.028 spread
-    across five architectures that supports no ranking, and a locked test set we have
-    deliberately not looked at. It is not in the product.
-12. **The staging corpus has a severe site confound.** Site is 99.7% decodable from the images and
-    Stage 4/5 comes from a single source, so any staging number is tangled up with provenance
-    until the adversary works. Right now the disease-controlled probe says it does not.
-13. **Stage 4/5 rests on 89 training images.** Its reported F1 of 0.48 carries correspondingly wide
-    uncertainty, and 19 validation images cannot support a claim.
+    stage zone, stage or plus disease the way ICROP grading needs. The 6-class staging models
+    reach macro-F1 0.68 to 0.69 under 5-fold CV, but this is one seed (repeats at two more seeds
+    are the next run), and the locked test set has deliberately not been opened. Staging is not
+    in the product.
+12. **The staging corpus has a severe site confound, and our adversary does not fix it.** Site is
+    99.7% decodable from the images and Stage 4/5 comes from a single source. The DANN branch
+    does not remove site appearance at any strength we tried — we report that as a negative
+    result rather than pretending otherwise. What protects the numbers is the design instead:
+    patient-grouped folds, a held-out hospital, and the metadata-only baseline every model must
+    clear.
+13. **Stage 4/5 rests on 89 training images** and only 4 in the locked set, so it stays flagged
+    "not externally validated" no matter what the CV says. The staging labels themselves are
+    also machine-translated diagnosis codes for one source (session-level, as the AP-ROP
+    analysis showed) — recruiting a paediatric ophthalmologist to re-adjudicate about 300 labels
+    is the main open dependency for publication, and we are working on it.
 14. **Grad-CAM is coarse and not causal.** It shows where the last conv layer activated, not
     clinical reasoning. It can look completely plausible while the model leans on a spurious cue.
 15. **No uncertainty or abstention inside the models.** The gate rejects non-retinal input, but a
@@ -944,14 +1016,15 @@ number as the 0.641 in the benchmark table here.
 1. **Run the significance tests.** McNemar and DeLong are implemented but not yet reported for our
    final architecture choices, so the ResNet50-for-ROP recommendation currently rests on point
    metrics alone.
-2. **Finish the ICROP staging evaluation.** The corpus, the five-backbone benchmark and the
-   structured head are done. What remains is full 5-fold cross-validation to turn a 0.028 spread
-   into something defensible, the stronger-adversary arm at w_site 2.0, and a single scoring of
-   the locked test set.
-3. **Make the site adversary actually work.** The disease-controlled probe says the current one
-   removes the disease-site correlation but not site appearance. Until that probe moves, no
-   staging number is separable from provenance.
-4. **Evaluate every ROP metric at the session level.** AP-ROP recall went from 0.311 to 0.905 just
+2. **Finish the ICROP staging evaluation.** The 5-fold CV, the adversary dose-response and the
+   seven-arm ablation are done. What remains is the seed repeats (1337 and 2024, flat and
+   structured), session-level scoring of every ablation arm, and then a single scoring of the
+   locked test set with everything frozen.
+3. **Get the labels re-adjudicated.** The session-level AP-ROP finding says a meaningful fraction
+   of frame labels do not describe their frames. A paediatric ophthalmologist re-reading about
+   300 images would turn that from an inference into a measurement, and is the main dependency
+   for the paper.
+4. **Evaluate every ROP metric at the session level.** AP-ROP recall went from 0.345 to 0.840 just
    by scoring at the unit the label describes. The binary ROP operating point is still reported
    per image and per infant, and it should be re-derived per session too.
 5. **A genuinely held-out glaucoma source.** Validate zero-shot on a collection never seen in
@@ -977,25 +1050,32 @@ number as the 0.641 in the benchmark table here.
 
 | Item | Details |
 |---|---|
-| Paper Title | *Confound-Controlled Evaluation of Multi-Disease Retinal Screening: Device, Source and Prevalence Effects* (working title) |
-| Conference / Journal Name | `TO FILL` |
-| Paper Status | Drafting |
-| Submission Date | `TO FILL` |
-| Paper Link | `TO FILL` |
+| Paper Title | *What the Label Unit Hides: An Audited Multi-Hospital Benchmark for ICROP Retinopathy of Prematurity Staging* (working title) |
+| Conference / Journal Name | IEEE ISBI 2027 (target; fallbacks MIDL 2027, MELBA / TVST) |
+| Paper Status | Drafting — all core experiments complete, seed repeats and locked-test scoring remain |
+| Submission Date | ISBI deadline 26 October 2026 (planned) |
+| Paper Link | `TO FILL — after submission` |
 
-The contribution we are writing up is the audit methodology rather than the classifier. Three
+The paper is ROP-focused. The contribution is the measurement methodology, not the classifier —
+the 5-fold CV says our structured head and a plain softmax are equivalent, and we say so. Four
 results carry it:
 
-1. **Confound-controlled reporting.** The device and source stratification protocol, and the
-   argument that a pooled AUC quoted without its confounds is not a usable screening number.
-2. **The label unit determines the ceiling.** AP-ROP recall of 0.311 per image and 0.905 per
-   examination session come from the same model on the same data. The only difference is scoring
-   at the unit the annotation actually describes. Image-level metrics on session-level labels
-   systematically understate detection.
-3. **Naive site probes overstate adversarial debiasing.** A DANN branch that looks like it removes
-   site information under the standard all-class probe leaves a disease-controlled probe unmoved.
-   The controlled probe is the honest instrument, and reporting only the naive one makes a
-   domain-adaptation result look stronger than it is.
+1. **The label unit determines the ceiling.** AP-ROP recall of 0.345 per image and 0.840 per
+   examination session come from the same predictions. The only difference is scoring at the
+   unit the annotation actually describes. Image-level metrics on session-level labels
+   systematically understate detection, and the patient-bootstrap interval of [0.25, 0.84] on
+   the image-level number shows it is not even a stable quantity.
+2. **Naive site probes overstate adversarial debiasing.** A DANN branch that looks like it
+   removes site information under the standard all-class probe leaves a disease-controlled probe
+   unmoved at every adversary strength, and the strong setting damages the clinical metrics. The
+   controlled probe is the honest instrument.
+3. **One fold misleads.** The fold-0 "structural softmax failure" replicated across five
+   backbones and still turned out to be an artefact of which infants that fold's validation
+   split contained. Multi-fold, patient-grouped evaluation is not optional on data like this.
+4. **A taxonomy-faithful head costs nothing.** Equivalent headline metrics, consistently better
+   Stage 2 recall, better held-out-hospital transfer, and outputs a clinician can read as ICROP
+   intends (an independent AP-ROP probability alongside a stage distribution) — with a
+   component ablation showing what each branch contributes.
 
 Figures and tables are collected in our development repository under `thesis_assets/` and
 `graphs/rop_staging/`.
