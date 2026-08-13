@@ -1,0 +1,109 @@
+{
+  "min_positive_units": 3,
+  "n_boot": 2000,
+  "strata": {
+    "sex": {
+      "F": {
+        "images": 306,
+        "units": 12,
+        "positive_units": 1,
+        "negative_units": 11,
+        "prevalence": 0.22549019607843138,
+        "auc": null,
+        "ci": null,
+        "note": "UNMEASURABLE \u2014 1 positive / 11 negative infants; a bootstrap cannot vary a side with <3 clusters"
+      },
+      "M": {
+        "images": 635,
+        "units": 15,
+        "positive_units": 8,
+        "negative_units": 8,
+        "prevalence": 0.5889763779527559,
+        "auc": 0.8954658143299117,
+        "ci": [
+          0.7049261403859093,
+          0.9700144813596118
+        ],
+        "degenerate_draws": 0
+      }
+    },
+    "gestational age": {
+      "GA < 28 wk (extremely preterm)": {
+        "images": 266,
+        "units": 5,
+        "positive_units": 2,
+        "negative_units": 3,
+        "prevalence": 0.7969924812030075,
+        "auc": null,
+        "ci": null,
+        "note": "UNMEASURABLE \u2014 2 positive / 3 negative infants; a bootstrap cannot vary a side with <3 clusters"
+      },
+      "GA >= 28 wk": {
+        "images": 675,
+        "units": 22,
+        "positive_units": 7,
+        "negative_units": 16,
+        "prevalence": 0.3422222222222222,
+        "auc": 0.8393978393978394,
+        "ci": [
+          0.6205319860961763,
+          0.9599968009527383
+        ],
+        "degenerate_draws": 0
+      }
+    },
+    "birth weight": {
+      "BW < 1000 g (ELBW)": {
+        "images": 266,
+        "units": 5,
+        "positive_units": 2,
+        "negative_units": 3,
+        "prevalence": 0.7969924812030075,
+        "auc": null,
+        "ci": null,
+        "note": "UNMEASURABLE \u2014 2 positive / 3 negative infants; a bootstrap cannot vary a side with <3 clusters"
+      },
+      "BW >= 1000 g": {
+        "images": 675,
+        "units": 22,
+        "positive_units": 7,
+        "negative_units": 16,
+        "prevalence": 0.3422222222222222,
+        "auc": 0.8393978393978394,
+        "ci": [
+          0.6193277838742651,
+          0.9613524263557244
+        ],
+        "degenerate_draws": 1
+      }
+    },
+    "postnatal age at capture": {
+      "PA < 40 d": {
+        "images": 541,
+        "units": 20,
+        "positive_units": 4,
+        "negative_units": 16,
+        "prevalence": 0.32532347504621073,
+        "auc": 0.8894458281444584,
+        "ci": [
+          0.6265185296131461,
+          0.9702453828743697
+        ],
+        "degenerate_draws": 21
+      },
+      "PA >= 40 d": {
+        "images": 400,
+        "units": 17,
+        "positive_units": 8,
+        "negative_units": 10,
+        "prevalence": 0.6675,
+        "auc": 0.8447523302638619,
+        "ci": [
+          0.6136432785276793,
+          0.9713506600699373
+        ],
+        "degenerate_draws": 0
+      }
+    }
+  }
+}

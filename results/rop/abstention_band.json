@@ -1,0 +1,25 @@
+{
+  "disease": "rop",
+  "enabled": true,
+  "half_width": 0.02,
+  "lo": 0.1733,
+  "hi": 0.2133,
+  "abstain_frac": 0.06820682068206821,
+  "acc_inside": 0.5645161290322581,
+  "acc_outside": 0.730814639905549,
+  "gain": 0.011342692710829438,
+  "threshold": 0.1933,
+  "split": "val",
+  "n": 909,
+  "all_candidates": [
+    {
+      "half_width": 0.02,
+      "lo": 0.1733,
+      "hi": 0.2133,
+      "abstain_frac": 0.06820682068206821,
+      "acc_inside": 0.5645161290322581,
+      "acc_outside": 0.730814639905549,
+      "gain": 0.011342692710829438
+    }
+  ]
+}

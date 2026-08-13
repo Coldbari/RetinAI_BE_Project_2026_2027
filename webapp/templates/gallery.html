@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Explainability{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>Explainability gallery</h1>
+  <p>Grad-CAM heatmaps show <i>where</i> each model looks. Warm regions drove the
+     prediction — a clinician can verify the model attends to plausible pathology.</p>
+</section>
+
+{% if not examples %}
+<div class="panel"><p class="muted">No gallery examples available yet. Add sample images under
+  <code>webapp/static/gallery/&lt;disease&gt;/</code> (a few are bundled for ROP once trained).</p></div>
+{% endif %}
+
+{% for disease, items in examples.items() %}
+<h2 class="section-title">{{ disease }}</h2>
+<div class="gallery-grid">
+  {% for it in items %}
+  <figure class="gcard">
+    <div class="gpair">
+      <img src="data:image/jpeg;base64,{{ it.thumb }}" alt="original">
+      {% if it.heatmap %}<img src="data:image/png;base64,{{ it.heatmap }}" alt="grad-cam">{% endif %}
+    </div>
+    <figcaption>
+      <b>{{ it.prediction }}</b> <span class="muted">{{ it.score }}%</span>
+      {% if it.risk %}<span class="risk r-{{ it.risk|lower }}">{{ it.risk }}</span>{% endif %}
+    </figcaption>
+  </figure>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

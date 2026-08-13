@@ -1,0 +1,18 @@
+{
+  "calibrated_on": "infant TRAIN split only (dataset_split/train), n=400, seed=42",
+  "held_out": [
+    "infant test split",
+    "HRF (all three cohorts)",
+    "EyePACS/APTOS (see task G8)"
+  ],
+  "thresholds": {
+    "min_redness": 1.029,
+    "min_saturation": 34.0,
+    "min_red_hue_frac": 0.34,
+    "require_rgb_order": false,
+    "min_blur_var": 5.0,
+    "min_luminance": 18.0,
+    "max_luminance": 235.0,
+    "min_fov_ratio": 0.05
+  }
+}

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+# Model weights are fetched by scripts/get_weights.py, never committed (too large for git)
+results/**/weights.pth
+results/reports/

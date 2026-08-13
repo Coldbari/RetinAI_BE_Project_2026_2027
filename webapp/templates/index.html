@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="hero">
+  <span class="hero-kicker flip-line">Retinal screening assistant · decision-support prototype</span>
+
+  <h1 class="hero-title flip-text-wrapper" aria-label="AI-Assisted ROP Screening">
+    {%- set title = "AI-Assisted ROP Screening" -%}
+    {%- set total = title|length -%}
+    {%- set dur = 2.2 -%}
+    {%- set ns = namespace(i=0) -%}
+    {%- for word in title.split(" ") -%}
+      <span class="word">
+        {%- for ch in word -%}<span class="flip-char" data-char="{{ ch }}" style="--flip-delay:{{ '%.3f'|format(sin(ns.i / total * pi / 2) * dur * 0.25) }}s">{{ ch }}</span>{%- set ns.i = ns.i + 1 -%}{%- endfor -%}
+      </span>
+      {%- if not loop.last -%}<span class="whitespace" aria-hidden="true">&nbsp;</span>{%- set ns.i = ns.i + 1 -%}{%- endif -%}
+    {%- endfor -%}
+  </h1>
+
+  <p class="hero-sub flip-line">
+    Upload one neonatal fundus photograph and a dedicated deep-learning model screens it for
+    <b>Retinopathy of Prematurity</b> — returning an explainable Grad-CAM heatmap, a graded
+    risk level, an automated clinical report, and a 6-class ICROP staging research preview.
+  </p>
+
+  <a class="cta flip-line" href="{{ url_for('screen') }}">Start a screening →</a>
+</section>
+
+<h2 class="section-title">Models</h2>
+<div class="model-grid">
+  {% for m in summary %}
+  <div class="model-card {{ 'live' if m.loaded else 'pending' }}">
+    <div class="model-head">
+      <h3>{{ m.disease }}</h3>
+      <span class="badge {{ 'on' if m.loaded else 'off' }}">{{ 'live' if m.loaded else 'training' }}</span>
+    </div>
+    <p class="muted">{{ m.arch }} · {{ m.classes|length }}-class</p>
+    {% if m.metrics and m.metrics.auc %}
+    <div class="metrics">
+      <div><span>{{ '%.1f'|format(m.metrics.accuracy*100) }}%</span><label>Accuracy</label></div>
+      <div><span>{{ '%.3f'|format(m.metrics.auc) }}</span><label>AUC</label></div>
+      <div><span>{{ '%.1f'|format(m.metrics.macro_f1*100) }}%</span><label>Macro F1</label></div>
+    </div>
+    {# A number without the conditions it was measured under is not a result. #}
+    {% if m.caveat %}<p class="card-caveat">⚠ {{ m.caveat }}</p>{% endif %}
+    <p class="card-meta">
+      Runs for: <b>{{ m.contexts|reject('equalto','demo')|join(', ') or 'demo only' }}</b>
+      {% if m.calibration %}
+        · Confidence:
+        {% if m.calibration.status == 'calibrated' %}
+          <span class="pill ok">calibrated</span>
+        {% elif m.calibration.status == 'verified-uncalibrated' %}
+          <span class="pill ok">measured, well calibrated (ECE {{ '%.3f'|format(m.calibration.ece) }})</span>
+        {% elif m.calibration.status == 'measured-miscalibrated' %}
+          <span class="pill bad">miscalibrated (ECE {{ '%.3f'|format(m.calibration.ece) }}) — read as a score, not a probability</span>
+        {% else %}
+          <span class="pill warn">unverified</span>
+        {% endif %}
+      {% endif %}
+    </p>
+    {% else %}
+    <p class="muted small">Metrics appear once the model is trained.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="section-title">How it works</h2>
+
+<!-- ───────── CINEMATIC PIPELINE — one fundus image flows through 4 stations ───────── -->
+<div class="pipeline" id="pipeline" data-phase="0" aria-label="Animated screening pipeline">
+
+  <!-- the specimen: a single fundus image that transforms as it travels the pipeline -->
+  <div class="pl-stage">
+    <div class="pl-frame">
+      <img class="pl-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Retinopathy_of_Prematurity_Zones.jpg/960px-Retinopathy_of_Prematurity_Zones.jpg"
+           alt="A fundus photograph being processed through the screening pipeline" loading="lazy">
+
+      <!-- p1 · acquisition scan-line -->
+      <span class="pl-scan" aria-hidden="true"></span>
+      <!-- p2 · circle-crop vignette + CLAHE tile grid -->
+      <span class="pl-crop" aria-hidden="true"></span>
+      <span class="pl-grid" aria-hidden="true"></span>
+      <!-- p3 · model scan-beam (ROP amber) -->
+      <span class="pl-beams" aria-hidden="true">
+        <i style="--c:var(--amber)"></i>
+      </span>
+      <!-- p4 · Grad-CAM heat bloom over the optic disc & vessels -->
+      <span class="pl-heat" aria-hidden="true"></span>
+      <!-- corner reticle / HUD -->
+      <span class="pl-hud" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    </div>
+
+    <!-- p4 · graded-risk chips + report fly in (illustrative output) -->
+    <div class="pl-badges" aria-hidden="true">
+      <span class="pl-badge" style="--c:var(--amber)">ROP · Low</span>
+      <span class="pl-badge pl-badge--pdf">PDF report</span>
+    </div>
+
+    <p class="pl-caption" id="plCaption">Watch one fundus image flow from capture to report.</p>
+  </div>
+
+  <!-- the rail: vertical progress line + 4 annotated stations -->
+  <ol class="pl-rail">
+    <span class="pl-track" aria-hidden="true"><span class="pl-fill"></span><span class="pl-pulse"></span></span>
+
+    <li class="pl-node" data-go="1">
+      <span class="pl-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9a2 2 0 0 1 2-2h2l1.5-2h7L17 7h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.2"/>
+        </svg>
+      </span>
+      <div class="pl-meta"><span class="pl-num">01</span><b>Capture</b><small>Upload or capture a fundus photograph.</small></div>
+    </li>
+
+    <li class="pl-node" data-go="2">
+      <span class="pl-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 3v13a2 2 0 0 0 2 2h13"/><path d="M3 6h13a2 2 0 0 1 2 2v13"/>
+        </svg>
+      </span>
+      <div class="pl-meta"><span class="pl-num">02</span><b>Preprocess</b><small>Circle-crop to the retina, then CLAHE contrast.</small></div>
+    </li>
+
+    <li class="pl-node" data-go="3">
+      <span class="pl-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="8" y="8" width="8" height="8" rx="1.5"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/>
+        </svg>
+      </span>
+      <div class="pl-meta"><span class="pl-num">03</span><b>Inference</b><small>ROP screening + staging preview · test-time augmentation.</small></div>
+    </li>
+
+    <li class="pl-node" data-go="4">
+      <span class="pl-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 2h8l4 4v16H6Z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>
+        </svg>
+      </span>
+      <div class="pl-meta"><span class="pl-num">04</span><b>Report</b><small>Grad-CAM heatmap · graded risk · PDF report.</small></div>
+    </li>
+  </ol>
+
+  <button class="pl-replay" id="plReplay" type="button" aria-label="Pause or replay the animation">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+  </button>
+</div>
+
+<!-- ───────────────────────── JOURNEY FLIP-BOOK ───────────────────────── -->
+<h2 class="section-title">The Journey</h2>
+<p class="muted small" style="margin:-6px 0 16px">From five ideas to one working prototype — the three weeks behind this project, told as a book.</p>
+<div class="ibook-stage" id="journeyBook">
+  <div class="ibook">
+    <!-- Front cover -->
+    <div class="ibook-cover">
+      <div class="ibook-face ibook-cover-front"
+           style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Retinopathy_of_Prematurity_Zones.jpg/960px-Retinopathy_of_Prematurity_Zones.jpg')">
+        <div class="ibook-cover-meta">
+          <span class="ibook-cover-kicker">A Final-Year Story</span>
+          <h3>The Journey</h3>
+          <span>From Five Ideas to One Retina AI</span>
+        </div>
+      </div>
+      <div class="ibook-face ibook-cover-back">
+        <span class="ibook-ip-kicker">Final-Year Project</span>
+        <h2>The Journey</h2>
+        <div class="rule"></div>
+        <p>From five ideas to one Retina&nbsp;AI</p>
+        <div class="ibook-ideas" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span class="on"></span>
+        </div>
+        <p class="ibook-ip-foot">Idea №5 — the one that made it</p>
+      </div>
+    </div>
+
+    <!-- Pages -->
+    <div class="ibook-pages">
+
+      <!-- Leaf 1 · P1 text (The Fifth Idea) | P2 visual (a single fundus) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">1</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">The Fifth Idea</h3>
+            <p class="lead">Final year. We walked in with five project ideas — and four of them quietly fell away.</p>
+            <p>The fifth was the one that stuck: teach a machine to read the retina.</p>
+            <p>The panel said yes. Three long weeks later, we can finally say it — <em>we made it.</em></p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back ibook-face--fig">
+          <div class="ibook-folio ibook-folio--l">2</div>
+          <figure class="ibook-figure">
+            <div class="ibook-photo" style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Retinopathy_of_Prematurity_Zones.jpg/960px-Retinopathy_of_Prematurity_Zones.jpg')"></div>
+            <figcaption class="ibook-cap">A single fundus photograph — our entire input. Everything the models know, they read from one image like this.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- Leaf 2 · P3 text (Why the Eye) | P4 visual (three diseases) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">3</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">Why the Eye</h3>
+            <p>The retina is the one place in the body where you can watch blood vessels and nerves directly — no scalpel, just light.</p>
+            <p>Hidden in one fundus photo are the early warnings of diseases that steal sight in silence. But reading them takes a specialist, and specialists are rare where screening is needed most.</p>
+            <p>So we asked a stubborn question: could a single photo be screened for several diseases at once?</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">4</div>
+          <div class="ibook-content">
+            <h4 class="ibook-vtitle">Three thieves of sight</h4>
+            <div class="ibook-cards">
+              <div class="ibook-dcard" style="--c:var(--amber)">
+                <b>Retinopathy of Prematurity</b>
+                <span>Threatens babies born too soon</span>
+                <em>Binary · ROP / No ROP</em>
+              </div>
+              <div class="ibook-dcard" style="--c:var(--accent)">
+                <b>Diabetic Retinopathy</b>
+                <span>The toll diabetes takes on the eye</span>
+                <em>5 grades · referable ≥ 2</em>
+              </div>
+              <div class="ibook-dcard" style="--c:var(--accent2)">
+                <b>Glaucoma</b>
+                <span>The silent one — unnoticed until late</span>
+                <em>Binary · Glaucoma / Not</em>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaf 3 · P5 text (Three Thieves) | P6 visual (dataset bars) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">5</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">Three Thieves of Sight</h3>
+            <p>We chose three diseases that quietly take vision.</p>
+            <p><b>Retinopathy of Prematurity</b>, which threatens babies born too soon. <b>Diabetic Retinopathy</b>, the toll diabetes exacts on the eye. And <b>Glaucoma</b> — the silent one, unnoticed until sight is already gone.</p>
+            <p>Three very different patients, one shared goal: catch it early.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">6</div>
+          <div class="ibook-content">
+            <h4 class="ibook-vtitle">What we learned from</h4>
+            <div class="ibook-bars">
+              <div class="ibook-bar"><label>Diabetic Retinopathy<small>EyePACS + APTOS</small></label><span class="track"><i style="width:100%;--c:var(--accent)"></i></span><b>≈ 38,788</b></div>
+              <div class="ibook-bar"><label>Glaucoma<small>SMDG-19 + G1020</small></label><span class="track"><i style="width:34%;--c:var(--accent2)"></i></span><b>≈ 13,336</b></div>
+              <div class="ibook-bar"><label>ROP<small>our own Kaggle set</small></label><span class="track"><i style="width:13%;--c:var(--amber)"></i></span><b>5,004</b></div>
+            </div>
+            <p class="ibook-note">≈ 57,000 retinal photographs in all. The ROP set we built and published ourselves — 188 babies.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaf 4 · P7 text (Hunt for Data) | P8 visual (before/after) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">7</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">The Hunt for Data</h3>
+            <p>A model is only as good as what it learns from — so first we went hunting for eyes.</p>
+            <p>For diabetic retinopathy we pooled <b>EyePACS</b> and <b>APTOS</b>: nearly 39,000 graded photos. For glaucoma, <b>SMDG-19</b> and <b>G1020</b> — about 13,000 more.</p>
+            <p>ROP had no clean public set. So we built our own: <b>5,004 infant retinas from 188 babies</b>, published on Kaggle ourselves.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">8</div>
+          <div class="ibook-content">
+            <h4 class="ibook-vtitle">One shared pipeline</h4>
+            <div class="ibook-ba">
+              <figure>
+                <div class="ibook-photo ibook-photo--sm" style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Retinopathy_of_Prematurity_Zones.jpg/960px-Retinopathy_of_Prematurity_Zones.jpg')"></div>
+                <figcaption>Raw capture</figcaption>
+              </figure>
+              <span class="ibook-ba-arrow">→</span>
+              <figure>
+                <div class="ibook-photo ibook-photo--sm ibook-photo--clahe" style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Retinopathy_of_Prematurity_Zones.jpg/960px-Retinopathy_of_Prematurity_Zones.jpg')"></div>
+                <figcaption>Crop + CLAHE</figcaption>
+              </figure>
+            </div>
+            <p class="ibook-note">Every image cropped tight to the retina, then contrast-balanced — so the model sees the eye, not the camera.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaf 5 · P9 text (Cleaning & Fair) | P10 visual (sweep) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">9</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">Cleaning, and Playing Fair</h3>
+            <p>Raw fundus photos are messy — black borders, uneven light, every camera different. So every image took the same path: cropped tight to the retina, then evened out with CLAHE.</p>
+            <p>And we refused to cheat. For the babies we split <em>by child</em>, so no infant's eyes appeared in both training and testing.</p>
+            <p>A model that has already seen the answer isn't learning — it's memorising.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">10</div>
+          <div class="ibook-content">
+            <h4 class="ibook-vtitle">We raced five architectures</h4>
+            <div class="ibook-sweep">
+              <div class="ibook-srow"><label>ResNet-50</label><span class="track"><i style="width:96%;--c:var(--accent2)"></i></span><b>AUC 0.96</b></div>
+              <div class="ibook-srow muted"><label>EfficientNetV2-S</label><span class="track"><i style="width:88%"></i></span></div>
+              <div class="ibook-srow muted"><label>DenseNet-121</label><span class="track"><i style="width:84%"></i></span></div>
+              <div class="ibook-srow muted"><label>MobileNetV3-L</label><span class="track"><i style="width:80%"></i></span></div>
+              <div class="ibook-srow muted"><label>EfficientNet-B0</label><span class="track"><i style="width:78%"></i></span></div>
+            </div>
+            <p class="ibook-note">ResNet-50 won the short sweep. At full training the gap nearly
+               vanished (0.927 vs 0.920) and a significance test said the difference could be
+               chance — so we kept it, but stopped claiming it was the better architecture.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaf 6 · P11 text (Building the Brains) | P12 visual (compute receipt) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">11</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">Building the Brains</h3>
+            <p>We didn't guess at the models. For ROP we raced five architectures head-to-head; ResNet-50 won, so ResNet-50 it was. Diabetic retinopathy and glaucoma run on <b>EfficientNetV2-S</b>.</p>
+            <p>Each one studies a <b>384-pixel</b> image five times over — flipped and rotated, then averaged — so one odd angle never decides a diagnosis.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">12</div>
+          <div class="ibook-content">
+            <h4 class="ibook-vtitle">Trained on borrowed machines</h4>
+            <ul class="ibook-receipt">
+              <li><span>GPUs we owned</span><b>0</b></li>
+              <li><span>Where it ran</span><b>Kaggle P100 · T4</b></li>
+              <li><span>Session limit</span><b>12 hours</b></li>
+              <li><span>Safety net</span><b>checkpoint / epoch</b></li>
+              <li><span>The fix</span><b>torch 2.5.1 + cu121</b></li>
+            </ul>
+            <p class="ibook-note">DR ≈ 4 h · ROP ≈ 1.5 h · Glaucoma ≈ 2 h.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaf 7 · P13 text (Borrowed Machines) | P14 visual (domain shift) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">13</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">Trained on Borrowed Machines</h3>
+            <p>We trained all of this without owning a single GPU. Everything ran on Kaggle's free P100s and T4s — sessions that died after twelve hours, so we saved progress every epoch and resumed the next day.</p>
+            <p>One week vanished into a single cryptic CUDA error, until we pinned the exact PyTorch version. After that the runs settled: about four hours for DR, ninety minutes for ROP, two for glaucoma.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">14</div>
+          <div class="ibook-content">
+            <h4 class="ibook-vtitle">The near-failure</h4>
+            <div class="ibook-shift">
+              <div class="ibook-scol"><span class="track tall"><i style="height:97%;--c:var(--accent2)"></i></span><b>0.97</b><label>Home data</label></div>
+              <div class="ibook-scol"><span class="track tall"><i style="height:59%;--c:var(--red)"></i></span><b>0.59</b><label>Unseen hospital</label></div>
+              <div class="ibook-scol"><span class="track tall"><i style="height:86%;--c:var(--accent2)"></i></span><b>0.86</b><label>After the fix</label></div>
+            </div>
+            <p class="ibook-note">Glaucoma AUC. The crash was real domain shift; multi-source
+               retraining brought it back to 0.86. But that hospital's data is now <em>inside</em>
+               our training set — so it has stopped being a test.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaf 8 · P15 text (Near-Failure) | P16 visual (Grad-CAM) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">15</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">The Near-Failure</h3>
+            <p>Our favourite lesson came from almost failing.</p>
+            <p>The glaucoma model scored a brilliant <b>0.97</b> at home — then we showed it a hospital it had never seen, and it crumbled to <b>0.59</b>.</p>
+            <p>That gap is the real world. We didn't bury it; we folded the new source into training and watched it climb back to <b>0.96</b>. That's when a model becomes trustworthy.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back ibook-face--fig">
+          <div class="ibook-folio ibook-folio--l">16</div>
+          <figure class="ibook-figure">
+            <div class="ibook-photo ibook-photo--cam" style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Retinopathy_of_Prematurity_Zones.jpg/960px-Retinopathy_of_Prematurity_Zones.jpg')">
+              <span class="ibook-cam-bloom" aria-hidden="true"></span>
+              <span class="ibook-cam-hud" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            </div>
+            <figcaption class="ibook-cap">Grad-CAM — every answer comes with a heatmap of exactly where the model looked.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- Leaf 9 · P17 text (What It Does Today) | P18 visual (closing) -->
+      <div class="ibook-page">
+        <div class="ibook-face ibook-page-front">
+          <div class="ibook-folio ibook-folio--r">17</div>
+          <div class="ibook-content">
+            <h3 class="ibook-ptitle">What It Does Today</h3>
+            <p>Today the product is focused: ROP only. Upload one neonatal fundus photo and it answers in seconds — a heatmap of where it looked, a graded risk, a one-click PDF report, and a 6-class ICROP staging research preview.</p>
+            <div class="ibook-chips">
+              <span style="--c:var(--amber)">ROP screening</span>
+              <span style="--c:var(--amber)">ICROP staging · preview</span>
+            </div>
+            <p>The DR and glaucoma models we built along the way were retired from the product — our own audits found their headline numbers confounded, and this demo only exposes what we currently stand behind. It is not a doctor, and we never pretend it is.</p>
+          </div>
+        </div>
+        <div class="ibook-face ibook-page-back">
+          <div class="ibook-folio ibook-folio--l">18</div>
+          <div class="ibook-content ibook-content--close">
+            <div class="ibook-quote">
+              <p>“From five ideas to one working prototype — in three weeks, on borrowed GPUs, with a dataset we built ourselves.”</p>
+            </div>
+            <div class="ibook-roadahead">
+              <span class="ibook-vtitle">The road ahead</span>
+              <p>External validation · the clinic · real patients.</p>
+            </div>
+            <p class="ibook-disclaimer">A decision-support prototype — not a diagnostic device. Every finding belongs to a qualified clinician.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back cover (static) -->
+      <div class="ibook-backcover">
+        <p>The End</p>
+        <button class="ibook-again" type="button">↻ Read Again</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="ibook-close" type="button" aria-label="Close book">×</button>
+  <span class="ibook-hint">Click to Open</span>
+</div>
+
+{# Disabled: "Built by" team / contributors section. Uncomment to restore. #}
+{#
+<h2 class="section-title">Built by</h2>
+<p class="muted small" style="margin:-6px 0 16px">The four-person team behind this project and what each contributed.</p>
+<div class="team-grid">
+  {% for p in team %}
+  <figure class="team-card reveal" style="--d:{{ loop.index0 * 0.08 }}s">
+    <div class="avatar-ring"><img src="{{ p.photo }}" alt="{{ p.name }}" loading="lazy"></div>
+    <h4>{{ p.name }}</h4>
+    <span class="role">{{ p.role }}</span>
+    <figcaption>{{ p.contribution }}</figcaption>
+  </figure>
+  {% endfor %}
+</div>
+#}
+
+{# Disabled: "What people say" testimonial carousel. Uncomment to restore
+   (its script tag at the bottom of this file is commented out too). #}
+{#
+<h2 class="section-title">What people say</h2>
+<div class="tcard" id="tcard">
+  <div class="tstack" id="tstack">
+    {% for t in testimonials %}
+    <div class="tslide" data-i="{{ loop.index0 }}">
+      <img src="{{ t.image }}" alt="{{ t.name }}" draggable="false" loading="lazy">
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="tbody">
+    <div class="tcount"><span id="tcur">1</span> / {{ testimonials|length }}</div>
+    <div class="ttext" id="ttext"
+         data-quotes='{{ testimonials | map(attribute="quote") | list | tojson }}'
+         data-names='{{ testimonials | map(attribute="name") | list | tojson }}'
+         data-roles='{{ testimonials | map(attribute="role") | list | tojson }}'
+         data-avatars='{{ testimonials | map(attribute="photo") | list | tojson }}'>
+      <p class="tquote" id="tquote"></p>
+      <div class="tauthor"><img id="tavatar" alt=""><div><b id="tname"></b><span id="trole"></span></div></div>
+    </div>
+    <div class="tnav">
+      <button id="tprev" aria-label="Previous testimonial">‹</button>
+      <button id="tnext" aria-label="Next testimonial">›</button>
+    </div>
+  </div>
+</div>
+#}
+{% endblock %}
+{% block scripts %}
+{# disabled with the testimonials carousel above #}
+{# <script src="{{ url_for('static', filename='js/testimonials.js') }}"></script> #}
+<script src="{{ url_for('static', filename='js/journey.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pipeline.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,28 @@
+# Which model serves which disease, and WHICH PATIENT it is allowed to see.
+#
+# This deployment is ROP-ONLY. The earlier DR and Glaucoma models were removed from the
+# product: glaucoma because a source-confound audit (and later a double-mounted collection)
+# made its pooled AUC undefendable, DR because the project's active work is ROP and a demo
+# should only expose what its authors currently stand behind.
+#
+# `weights`   : the .pth pulled from the Kaggle run (via git LFS). Missing weights -> the
+#               disease shows "model not loaded" so the app still boots.
+# `applies_to`: the patient contexts this model was TRAINED for. A model is never run on a
+#               context outside this list.
+#
+# WHY ROUTING EXISTS: without it, every model ran on every upload. Measured consequence —
+# the ROP model (trained only on preterm infants) flagged 41/45 adult eyes as ROP-positive.
+# The context declaration is mandatory and the operator makes it, never the image.
+models:
+  - disease: ROP
+    config: configs/rop.yaml
+    weights: results/rop/weights.pth
+    applies_to: [infant]
+
+contexts:
+  infant:
+    label: Preterm infant (NICU screening)
+    hint: >-
+      ROP screening for premature infants. This deployment screens for ROP only; it has no
+      adult models, so adult fundus photographs have nothing valid to run against.
+    runs: [ROP]

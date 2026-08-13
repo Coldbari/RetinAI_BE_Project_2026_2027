@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}About · Model Card & Methodology{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>Model Card &amp; Methodology</h1>
+  <p>A transparent record of the data, training and validation behind this ROP screening
+     assistant — a clinical <b>decision-support prototype</b> that assists, and does not
+     replace, ophthalmologists. This deployment screens for one disease:
+     <b>Retinopathy of Prematurity</b>.</p>
+</section>
+
+<!-- ───────────────────────── OVERVIEW ───────────────────────── -->
+<div class="about-grid">
+  <div class="panel">
+    <h3>What the system does</h3>
+    <ul>
+      <li>Screens a <b>neonatal fundus photograph</b> for ROP (No ROP / ROP) at a
+          sensitivity-first operating point.</li>
+      <li>Returns a prediction, a <b>model score</b> (calibration measured: ECE 0.041 through
+          the served 5-view TTA path), risk level and recommendation.</li>
+      <li>Shows a <b>Grad-CAM</b> heatmap (where the model looked) and generates a
+          downloadable <b>PDF report</b>.</li>
+      <li>Includes a <b>6-class ICROP staging research preview</b> (Normal, Stage 1, 2, 3,
+          Stage 4/5, AP-ROP) — clearly labelled, not a clinical output.</li>
+      <li>A gradability gate rejects non-retinal input, and patient context is mandatory:
+          this app has no adult models, and it says so instead of guessing.</li>
+    </ul>
+  </div>
+  <div class="panel warn">
+    <h3>Important limitations</h3>
+    <ul>
+      <li>Research prototype — <b>not</b> a regulated diagnostic device; no prospective
+          clinical validation.</li>
+      <li>The binary model's pooled AUC of 0.927 is partly camera recognition: with capture
+          device held constant it is <b>0.881</b>, and every ROP-positive test image came
+          from one camera. The device-controlled figure is the honest one.</li>
+      <li>Per-infant specificity at the deployed threshold is <b>0.000</b> — no healthy
+          infant in the test cohort was fully cleared. This is a triage filter, not a
+          rule-out test.</li>
+      <li>The staging preview is a research model: cross-validated but single-seed, its
+          locked external test has deliberately not been opened, and Stage 4/5 rests on 89
+          training images. Do not read its output as a clinical grade.</li>
+      <li>Earlier versions of this app also screened DR and glaucoma. Both were retired
+          from the product — glaucoma after our own source-confound audit made its pooled
+          number undefendable, DR because it is not the current focus. We only expose what
+          we currently stand behind.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ───────────────────────── MODELS ───────────────────────── -->
+<h2 class="section-title">The two models served</h2>
+<div class="panel">
+  <table class="perf">
+    <tr><th></th><th>ROP screening (product)</th><th>ICROP staging (research preview)</th></tr>
+    <tr><td>Task</td><td>Binary: No ROP / ROP</td><td>6-class: Normal · Stage 1 · Stage 2 · Stage 3 · Stage 4/5 · AP-ROP</td></tr>
+    <tr><td>Architecture</td><td>ResNet50 (won a five-architecture sweep)</td><td>EfficientNetV2-S with a structured head: ordinal CORN stages + a separate AP-ROP branch</td></tr>
+    <tr><td>Training data</td><td>ROP database, patient-level split</td><td>6,700 images / 1,528 infants across three hospitals; patient-grouped 5-fold CV; a fourth hospital held out and its locked half never opened</td></tr>
+    <tr><td>Headline</td><td>AUC 0.927 pooled · <b>0.881 device-controlled</b> · sensitivity 0.990 at the served threshold</td><td>macro-F1 0.692 ± 0.086 (5-fold CV) · QWK 0.826 · statistically equivalent to a flat softmax, chosen for its taxonomy-faithful outputs</td></tr>
+    <tr><td>Operating point</td><td>threshold 0.1933, chosen on validation for sensitivity ≥ 0.99</td><td>AP-ROP threshold 0.5, fixed a priori; stage = ordinal rank</td></tr>
+    <tr><td>Calibration</td><td>ECE 0.041 through the served TTA path (no temperature applied — measured, already well calibrated)</td><td>pooled ECE 0.107; not calibrated for clinical use</td></tr>
+  </table>
+  <p class="muted small">The staging model's evaluation produced two findings we consider more
+     useful than the model itself: AP-ROP labels are per-examination-session, so image-level
+     recall (0.345) understates true detection (0.840 per session, CI 0.76–0.90, at 0.25%
+     false alarms on normal sessions); and the domain-adversarial site branch that looks like
+     it removes hospital information under a naive probe leaves a disease-controlled probe
+     unmoved at every strength we tried. Both are written up in the project repository.</p>
+</div>
+
+<!-- ───────────────────────── PIPELINE ───────────────────────── -->
+<h2 class="section-title">Preprocessing &amp; serving — identical to training</h2>
+<div class="panel">
+  <ul>
+    <li><b>Circle-crop</b> to the retinal field of view, then <b>CLAHE</b> contrast
+        equalisation on the LAB luminance channel.</li>
+    <li><b>5-view test-time augmentation</b> (original, flips, ±10°), averaged — the
+        calibration and threshold above are measured through this exact path.</li>
+    <li>The <b>same preprocessing module</b> runs in training and serving, so what was
+        measured is what is deployed.</li>
+    <li><b>Gradability gate</b>: redness, saturation, blur, luminance and field-of-view
+        checks calibrated on training data only; false-rejection measured at 1.7% on 4,000
+        held-out adult fundus images.</li>
+    <li>Uploads below ~1500&nbsp;px get a <b>resolution warning</b>: preprocessing applies a
+        fixed-radius filter before resizing, and a measured experiment showed downscaled
+        input costs real sensitivity.</li>
+  </ul>
+</div>
+
+<!-- ───────────────────────── TEAM ───────────────────────── -->
+<h2 class="section-title">Who built this</h2>
+<div class="panel">
+  <p>Rutuja Bait · Pravar Rangnekar · Yash Shengale ·
+     Praharsh Nagpure — BE Capstone Project 2026–27, Automation &amp; Robotics, Vivekanand
+     Education Society's Institute of Technology (VESIT), Mumbai. Guide: Mrs. Amudha Kumar.</p>
+  <p class="muted small">Project log book:
+     <a href="https://github.com/Coldbari/RetinAI_BE_Project_2026_2027">github.com/Coldbari/RetinAI_BE_Project_2026_2027</a>
+     · Project video: <a href="https://youtu.be/fQpp9Fr1Up4">youtu.be/fQpp9Fr1Up4</a></p>
+</div>
+
+<div class="panel warn">
+  <p><b>Not a medical device.</b> No regulatory clearance, no clinical trial, no prospective
+     validation. Every number above is retrospective, measured on curated datasets under the
+     stated conditions. A qualified clinician confirms every finding.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Diseases{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>The three diseases we screen</h1>
+  <p>What each condition is, what causes it, who it affects, and the genetics behind it.
+     <b>Hover the highlighted terms</b> to preview a real fundus image.</p>
+</section>
+
+{% for d in diseases %}
+<article class="disease" style="--c:{{ d.accent }}">
+  <header class="disease-head">
+    <span class="disease-abbr">{{ d.abbr }}</span>
+    <h2><span class="cc" data-cc-img="{{ d.image }}" data-cc-desc="{{ d.hover }}">{{ d.name }}</span></h2>
+    <p class="disease-tag">{{ d.tagline }}</p>
+    <span class="cc cc-chip" data-cc-img="{{ d.image }}" data-cc-desc="{{ d.hover }}">🔍 Hover to see a real fundus →</span>
+  </header>
+
+  <div class="disease-grid">
+    <div class="dsec"><h4>What it is</h4><p>{{ d.what }}</p></div>
+    <div class="dsec"><h4>What causes it</h4>
+      <ul>{% for c in d.causes %}<li>{{ c }}</li>{% endfor %}</ul>
+    </div>
+    <div class="dsec"><h4>Who it affects · age group</h4><p>{{ d.age }}</p></div>
+    <div class="dsec"><h4>Genetic / hereditary link</h4><p>{{ d.genetics }}</p></div>
+    <div class="dsec"><h4>Signs, stages &amp; symptoms</h4><p>{{ d.signs }}</p></div>
+    <div class="dsec accent"><h4>What our model detects</h4><p>{{ d.detect }}</p></div>
+  </div>
+</article>
+{% endfor %}
+
+<p class="muted small" style="text-align:center;margin-top:26px">
+  Educational summary only — not medical advice. Disease images courtesy of Wikimedia Commons.
+</p>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/cursorcard.js') }}"></script>{% endblock %}

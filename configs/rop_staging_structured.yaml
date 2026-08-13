@@ -1,0 +1,58 @@
+# ROP staging — clinically-structured head (ordinal CORN + AP-ROP branch + site adversary).
+#
+# Same data contract, folds, and preprocessing as configs/rop_staging.yaml — the flat
+# 6-way benchmark is the BASELINE this model is compared against, so everything upstream
+# of the head must be identical. Trained by train_structured.py (not train.py: the
+# multi-task losses, ordinal masking and DANN ramp do not fit build_loss's contract).
+#
+# Every key here is read explicitly by train_structured.py. Do not add keys the code does
+# not consult — that mistake produced silent no-ops twice in this project already.
+disease: rop_staging_structured
+seed: 42
+
+data:
+  num_classes: 6
+  class_names: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5", "AP-ROP"]
+  manifest: results/prepared/rop_staging/fold_0.csv
+  presplit: true
+
+preprocess:
+  image_size: 384
+  circle_crop: true
+  letterbox: true
+  ben_graham: false
+  clahe: true
+
+model:
+  arch: effnetv2s          # cross-site leader in the five-backbone benchmark
+  pretrained: true
+  dropout: 0.3
+
+train:
+  epochs: 20               # measured: ~3.5 min/epoch on Kaggle; matches the benchmark runs
+  batch_size: 16
+  lr: 0.0003
+  weight_decay: 0.05
+  label_smoothing: 0.0     # CORN's conditional BCE targets are not smoothable per-class
+  amp: true
+  num_workers: 4
+  site_randomization: true
+  weighted_sampler: true   # same 6-class balanced sampling as the baseline
+
+  # AP-ROP branch. pos_weight sqrt-damped: raw inverse frequency (~16x on fold 0) would
+  # buy recall by destroying precision; sqrt (~4x) nudges the operating point without
+  # letting 142 images dominate the branch. "auto_sqrt" computes it from the train split.
+  arop_pos_weight: auto_sqrt
+  arop_threshold: 0.5      # fixed a priori — tuning it on val would be selection
+
+  # Loss mix: total = stage + w_arop * arop + lambda(t) * site, lambda ramped 0 -> w_site
+  # by the DANN schedule so the site head learns to READ site before the backbone is asked
+  # to erase it.
+  w_arop: 1.0
+  w_site: 0.5
+
+eval:
+  early_stopping: false    # same rule as the benchmark: keep the LAST epoch, report it
+  primary_metric: macro_f1
+  qwk_classes: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5"]
+  unvalidated_classes: ["Stage 4/5", "AP-ROP"]

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>Recent screenings</h1>
+  <p>Session history (in-memory). Persistent patient records + longitudinal comparison
+     are documented future work — see <a href="{{ url_for('about') }}">About</a>.</p>
+</section>
+
+{% if not history %}
+<div class="panel"><p class="muted">No screenings yet. Run one from the
+  <a href="{{ url_for('screen') }}">Screen</a> page.</p></div>
+{% else %}
+<div class="hist-list">
+  {% for h in history %}
+  <div class="hist-row" data-id="{{ h.id }}">
+    <img src="data:image/jpeg;base64,{{ h.thumb }}" class="hist-thumb">
+    <div class="hist-body">
+      <div class="hist-top">
+        <span class="muted">{{ h.time }}</span>
+        {% if h.flagged %}<span class="risk r-high">{{ h.flagged }} flagged</span>
+        {% else %}<span class="risk r-low">clear</span>{% endif %}
+      </div>
+      <div class="hist-findings">
+        {% for f in h.findings %}
+        <span class="chip2">{{ f.disease }}: <b>{{ f.prediction }}</b> ({{ f.score }}%)</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="hist-actions">
+      <button class="hbtn view" data-id="{{ h.id }}" title="View details">👁 View</button>
+      <button class="hbtn dl"   data-id="{{ h.id }}" title="Download PDF report">⬇ Report</button>
+      <button class="hbtn del"  data-id="{{ h.id }}" title="Delete from history">🗑 Delete</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- View-details modal -->
+<div id="hist-modal" class="hist-modal" hidden>
+  <div class="hist-modal-card">
+    <button class="hist-modal-x" type="button" aria-label="Close">✕</button>
+    <h3 id="hm-time">Screening</h3>
+    <img id="hm-img" alt="Screening fundus image">
+    <div id="hm-findings"></div>
+    <div class="hist-modal-actions">
+      <button id="hm-dl" class="primary" type="button">⬇ Download report</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/history.js') }}"></script>{% endblock %}

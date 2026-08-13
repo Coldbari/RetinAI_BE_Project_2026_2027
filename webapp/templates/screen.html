@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Screen{% endblock %}
+{% block content %}
+<div class="screen-stage">
+  <header class="screen-hero reveal" style="--d:0s">
+    <span class="eyebrow">AI ROP SCREENING</span>
+    <h1>Screen a neonatal fundus image</h1>
+    <p>One photograph of a preterm infant's retina, screened for
+       <b>Retinopathy of Prematurity</b> — with a Grad-CAM heatmap, a downloadable report,
+       and a 6-class ICROP staging research preview.</p>
+    <div class="chips">
+      <span class="chip-dot rop">ROP screening</span>
+      <span class="chip-dot rop">ICROP staging · research preview</span>
+    </div>
+  </header>
+
+  <section class="panel screen-card reveal" style="--d:.12s">
+    <h2><span class="step-num">1</span> Patient context <span class="req">required</span></h2>
+    <p class="ctx-why">Each model is only valid for the population it was trained on. This
+       choice decides which models run — it is not a filter on the results.</p>
+    <div id="ctxgroup" class="ctx-group"></div>
+
+    <h2><span class="step-num">2</span> Patient details <span class="opt">optional</span></h2>
+    <div class="form-grid">
+      <input id="name" placeholder="Name">
+      <input id="pid" placeholder="Patient ID">
+      <input id="age" type="number" placeholder="Age">
+      <select id="gender"><option value="">Gender</option><option>F</option><option>M</option><option>Other</option></select>
+    </div>
+
+    <h2><span class="step-num">3</span> Fundus image</h2>
+    <div id="drop" class="drop">
+      <input id="file" type="file" accept="image/*" hidden>
+      <div id="dropmsg">
+        <span class="big">↓</span>
+        <p><b>Drag &amp; drop</b> a fundus photo<br>or <button id="browse" type="button">browse files</button></p>
+        <span class="hint">JPG / PNG · a clear, centred retinal image works best</span>
+      </div>
+      <img id="preview" hidden>
+    </div>
+    <button id="analyze" class="btn-pop" disabled><span>Analyze image</span></button>
+  </section>
+
+  <section class="panel results-panel reveal" id="results" hidden>
+    <h2><span class="step-num">4</span> Results</h2>
+    <p id="qualitybanner" class="quality-banner" hidden></p>
+    <p id="ctxbanner" class="ctx-banner" hidden></p>
+    <div class="result-layout">
+      <div id="cards"></div>
+      <div id="viz" hidden>
+        <div class="tabs" id="viztabs"></div>
+        <img id="origimg" class="viz-img">
+        <img id="heatimg" class="viz-img" hidden>
+        <p id="heatcap" class="legend"></p>
+        <div class="legendbar"><span>low</span><i></i><span>high influence</span></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="download" class="primary">⬇ Download PDF report</button>
+      <button id="again" class="ghost">Analyze another</button>
+    </div>
+  </section>
+</div>
+
+<!-- full-screen black loading page shown while /predict runs (min 5s) -->
+<div id="loader-overlay" role="status" aria-label="Loading">
+  <div class="ktl">
+    <div class="ktl-inner">
+      <!-- the dot orbits around the word; the ı stretches and the L bounces -->
+      <span class="ktl-dot" aria-hidden="true"></span>
+      <p class="ktl-word" aria-hidden="true">
+        <span class="ktl-l">L</span><span>o</span><span>a</span><span>d</span><span class="ktl-i">ı</span><span>n</span><span>g</span>
+      </p>
+    </div>
+  </div>
+  <p class="ktl-sub">Analysing the fundus image — running the models for this patient context…</p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/main.js') }}"></script>{% endblock %}

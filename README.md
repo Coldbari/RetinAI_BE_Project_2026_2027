@@ -10,10 +10,13 @@
 [![Android](https://img.shields.io/badge/Android-Jetpack_Compose-3DDC84?style=flat&logo=android)](https://developer.android.com/jetpack/compose)
 [![HF Space](https://img.shields.io/badge/Deployed-HuggingFace_Spaces-FFD21E?style=flat&logo=huggingface)](https://champ610-retinal-ai.hf.space)
 
-RetinAI takes one colour fundus (retina) photograph and screens it for three diseases at once:
-Diabetic Retinopathy (DR), Retinopathy of Prematurity (ROP) and Glaucoma. Each disease has its
-own model with its own tuned operating point. Every result comes back with a Grad-CAM heatmap, a
-graded risk level and a downloadable PDF report.
+RetinAI screens a colour fundus (retina) photograph for Retinopathy of Prematurity (ROP). The
+deployed product is deliberately ROP-only: it serves the binary screening model at a
+sensitivity-first operating point plus a 6-class ICROP staging research preview, and every
+result comes back with a Grad-CAM heatmap, a graded risk level and a downloadable PDF report.
+The DR and glaucoma models we built earlier in the project were retired from the product after
+our own audits (their measured history stays in this README), and this repository also
+contains the full runnable web application — see [How to Run](#how-to-run-the-project).
 
 **This is not a medical device.** It is a research and education prototype built for a
 final-year capstone project. It has no regulatory clearance and was never prospectively
@@ -554,56 +557,56 @@ uid 1000, port 7860, weights through Git LFS.
 
 ## Code Structure
 
+What this repository contains — the log book plus the runnable ROP application:
+
 ```text
-RetinAI/
+RetinAI_BE_Project_2026_2027/
 │
-├── README.md
-├── train.py · prepare_data.py · evaluate.py · benchmark.py · predict.py   ← entry points
-├── requirements.txt · Dockerfile
-│
-├── configs/                    ← one YAML per experiment
-│   ├── dr.yaml · rop.yaml · glaucoma.yaml · glaucoma_multisource.yaml
-│   ├── sweep.yaml · sweep_rop.yaml · rop_staging.yaml
-│   ├── ablation_dr.yaml
-│   └── external_dr_messidor.yaml · external_glaucoma_refuge.yaml
-│
-├── models/                     ← the training framework
-│   ├── common/                 ← config, datasets, data_prep, preprocessing,
-│   │                             architectures, losses, metrics, train_utils,
-│   │                             experiment_logger, data_quality
-│   ├── evaluation/             ← calibration, statistical_tests, error_analysis
-│   ├── validation/             ← external_validation
-│   ├── comparison/             ← make_table (architecture sweeps)
-│   └── experiments/            ← ablation_study
-│
-├── kaggle_kernels/             ← GPU training kernels + the workflow docs
-├── data_prep/                  ← patient-level splitting
-├── dataset_split/              ← the ROP train/val/test split by patient
-│
-├── results/                    ← weights.pth + metrics.json + audits, per disease
-│   ├── dr/ · rop/ · glaucoma/
-│   ├── rop_device_audit.md · gate_calibration.md · dr_intervals.md · sweep_rop.md
-│   └── cross_disease_matrix.json · confusion_tables.json
-│
-├── graphs/                     ← evidence figures, generated from results/
-├── scripts/                    ← make_graphs.py, generate_thesis_assets.py, audits
-├── reports/                    ← ReportLab clinical-PDF generator
+├── README.md                   ← this log book
+├── requirements.txt
 │
 ├── webapp/                     ← the Flask application (the product)
-├── retinal-ai/                 ← deployment mirror → HuggingFace Space (Docker)
-├── android/                    ← Jetpack Compose Android client
-├── tests/                      ← unit and integration tests
+│   ├── app.py                  ← entry point: python webapp/app.py
+│   ├── inference.py            ← model registry, TTA, Grad-CAM, staging preview
+│   ├── registry.yaml           ← which model serves which patient context (ROP/infant only)
+│   ├── templates/ · static/    ← the UI
 │
-├── docs/                       ← PROJECT_OVERVIEW · RESULTS · LIMITATIONS ·
-│                                 CHALLENGES · DATASETS · ROADMAP
-├── thesis_assets/              ← collected figures and tables for the paper
-├── unified_model/              ← LEGACY: the earlier single multi-task model
-└── legacy/                     ← quarantined first-generation scripts
+├── models/                     ← the shared framework the app imports
+│   └── common/                 ← config, preprocessing (identical to training),
+│                                 architectures, structured staging head, gradability gate
+│
+├── configs/                    ← rop.yaml (screening) · rop_staging_structured.yaml (preview)
+├── reports/                    ← ReportLab clinical-PDF generator
+├── scripts/get_weights.py      ← one-time checkpoint download (~180 MB)
+│
+├── results/                    ← recorded metrics, calibration, operating points
+│   ├── rop/                    ← binary model: metrics, calibration, device-audit CIs
+│   │                             (+ weights.pth after step 3)
+│   ├── rop_staging/            ← staging preview: provenance (+ weights.pth after step 3)
+│   └── gate_thresholds.json    ← the gradability gate's calibrated bounds
+│
+├── images/                     ← the evidence figures cited throughout this README
+├── docs/ · reference/          ← literature survey, software notes, IEEE references
+├── hardware/                   ← honest "not applicable" (software-only project)
+└── demo/                       ← pointer to the project video on YouTube
 ```
+
+The full development history — training kernels, the five-gate shortcut audit, the 5-fold CV
+and ablation scripts, tests, and every experiment's saved config — lives in our development
+repository, which this log book mirrors at milestone level. Ask if evaluation needs direct
+access.
 
 ---
 
 ## How to Run the Project
+
+This repository contains the complete, runnable **ROP screening web application** — the same
+code that powers the live deployment. Cloning it and following the four steps below gives you
+a working local copy. (Training code, experiment history and audit scripts live in our
+development repository; this log book carries the product.)
+
+The quickest option needs no installation at all — the live deployment:
+**https://champ610-retinal-ai.hf.space** (free tier, CPU-only, a few seconds per image).
 
 ### Step 1: Clone the Repository
 
@@ -619,51 +622,41 @@ python -m venv .venv && source .venv/bin/activate      # Python 3.11+
 pip install -r requirements.txt
 ```
 
-### Step 3: Run
+(On Windows: `.venv\Scripts\activate`.)
 
-Web application, which is the actual product:
+### Step 3: Fetch the Model Weights
+
+The two trained checkpoints are too large for GitHub, so they are downloaded once from our
+deployed HuggingFace Space (~180 MB total):
+
+```bash
+python scripts/get_weights.py
+```
+
+This places `results/rop/weights.pth` (binary screening, ResNet50) and
+`results/rop_staging/weights.pth` (ICROP staging research preview, EfficientNetV2-S). The app
+boots without them, but every result then says "model not loaded".
+
+### Step 4: Run the Web App
+
+From the repository root:
 
 ```bash
 python webapp/app.py            # → http://127.0.0.1:5002
 ```
 
-If a disease's `results/<disease>/weights.pth` is missing, that model just reports as unavailable
-and the other two still screen.
+Open the address, choose the patient context (this deployment screens preterm infants only —
+that is deliberate; the app has no adult models and says so rather than guessing), and upload
+a neonatal fundus photograph. You get back:
 
-Train a model. Training is Kaggle-first, so nothing trains on a laptop:
+- the **ROP screening result** (No ROP / ROP) with a risk level and recommendation,
+- a **Grad-CAM heatmap** of where the model looked,
+- a **6-class ICROP staging research preview** (clearly labelled — not a clinical grade),
+- and a downloadable one-page **PDF report**.
 
-```bash
-python train.py --config configs/rop.yaml
-python train.py --config configs/dr.yaml --set train.epochs=2 model.arch=efficientnet_b0
-```
-
-Evaluate a checkpoint:
-
-```bash
-python evaluate.py --config configs/rop.yaml --weights results/rop/weights.pth
-```
-
-Regenerate every evidence figure from the recorded results:
-
-```bash
-python scripts/make_graphs.py
-```
-
-Android client:
-
-```bash
-cd android && ./gradlew assembleDebug
-# install the APK, then set the server URL in Settings
-```
-
-### Step 4: Observe the Output
-
-Upload a fundus photograph and give the patient's age band. For each admissible disease you get
-back a grade, a calibrated confidence, a risk level, a clinical recommendation and a Grad-CAM
-heatmap, plus a downloadable one-page PDF report. Non-retinal images get rejected by the gate
-with a stated reason instead of being scored.
-
-You can also just use the live deployment: https://champ610-retinal-ai.hf.space
+Non-retinal images are rejected by the gradability gate with a stated reason instead of being
+scored, and uploads below ~1500 px get a resolution warning explaining why a downscaled copy
+is processed differently from what the model was trained on.
 
 ---
 

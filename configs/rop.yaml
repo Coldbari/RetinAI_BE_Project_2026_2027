@@ -1,0 +1,74 @@
+# Retinopathy of Prematurity — binary (No ROP / ROP Detected)
+# Reuses the existing patient-level split under dataset_split/ (no leakage).
+disease: rop
+seed: 42
+
+data:
+  num_classes: 2
+  class_names: ["No ROP", "ROP Detected"]
+  manifest: results/prepared/rop/manifest.csv
+  sources:
+    - name: rop
+      type: imagefolder_split   # train/val/test already split by patient ID
+      train_dir: dataset_split/train
+      val_dir: dataset_split/val
+      test_dir: dataset_split/test
+      # ImageFolder maps class dirs alphabetically: DG0 -> 0 (No ROP), DG1 -> 1 (ROP)
+
+preprocess:
+  image_size: 384
+  circle_crop: true
+  ben_graham: false         # ROP signal is vascular/peripheral; keep native color
+  clahe: true
+
+model:
+  arch: resnet50
+  pretrained: true
+  head: classification
+  dropout: 0.3
+
+train:
+  batch_size: 16
+  grad_accum: 2
+  epochs: 30
+  lr: 2.0e-4
+  weight_decay: 1.0e-4
+  label_smoothing: 0.05
+  grad_clip: 1.0
+  patience: 8
+  num_workers: 4
+  amp: true
+  loss: focal               # focal helps the harder ROP-positive class
+  focal_gamma: 2.0
+  class_balanced: true
+  weighted_sampler: true
+  scheduler: onecycle
+  # Stronger augmentation (perspective/blur/erasing) is enabled for ROP in
+  # preprocessing via train.strong_aug.
+  strong_aug: true
+
+tta:
+  enabled: true
+
+eval:
+  primary_metric: recall
+  target_sensitivity: 0.90  # pick the operating threshold from the val ROC at >=0.90 sens
+  # THRESHOLD PROVENANCE (scripts/rederive_rop_threshold.py — tasks S5 + U4)
+  #
+  # The previous value 0.371 was the threshold that hits sens>=0.90 on the TEST split
+  # itself. It was selected on test, so its apparent "sens 0.90 / spec 0.83" was not an
+  # unbiased estimate of anything — you cannot quote performance for a threshold you read
+  # off the same data.
+  #
+  # 0.1933 is derived on the CLEAN val split (19 cross-split duplicate images removed)
+  # and scored through the real 5-view TTA serving path. Applied to test EXACTLY ONCE:
+  #     sensitivity 0.990  95% CI [0.981, 0.996]
+  #     specificity 0.398  95% CI [0.361, 0.436]
+  # (the old 0.371 would have given sens 0.916 / spec 0.791 on test — but that pair is
+  #  unusable as an estimate, being test-derived.)
+  #
+  # Specificity of 0.40 is genuinely poor: ~60% of healthy infants get flagged. That is
+  # the honest cost of an unbiased operating point on this dataset, and it is a DATA
+  # problem (29 test infants, 7 positive, one camera carrying every positive — see
+  # results/rop_device_audit.json), not something to fix by tuning on test again.
+  screen_threshold: 0.1933

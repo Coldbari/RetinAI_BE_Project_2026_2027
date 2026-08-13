@@ -1,0 +1,24 @@
+{
+  "disease": "rop",
+  "method": "temperature on log(TTA-averaged probs)",
+  "apply": false,
+  "decision_reason": "NOT applied: ECE change -0.3% (0.0555 -> 0.0557) is not material. 5-view TTA averaging already acts as an ensemble and calibrates this model; applying T=1.079 would shift the probability scale and invalidate the tuned operating threshold for no measurable gain",
+  "temperature": 1.0793076753616333,
+  "n": 909,
+  "n_classes": 2,
+  "split": "val",
+  "removed_duplicates": 19,
+  "uncalibrated": {
+    "ece": 0.055509561883865556,
+    "mce": 0.10439867758360066,
+    "brier": 0.3366060651550883
+  },
+  "calibrated": {
+    "ece": 0.055663326201454116,
+    "mce": 0.0852528421842747,
+    "brier": 0.3359313453871702
+  },
+  "argmax_changed": 0,
+  "threshold_changed": 6,
+  "note": "Fitted against predict_with_tta output (5-view probability average). NOT interchangeable with results/<disease>/calibration/ which was fitted on single-view logits."
+}
