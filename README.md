@@ -8,7 +8,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.5-EE4C2C?style=flat&logo=pytorch)](https://pytorch.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0-black?style=flat&logo=flask)](https://flask.palletsprojects.com/)
 [![Android](https://img.shields.io/badge/Android-Jetpack_Compose-3DDC84?style=flat&logo=android)](https://developer.android.com/jetpack/compose)
-[![HF Space](https://img.shields.io/badge/Deployed-HuggingFace_Spaces-FFD21E?style=flat&logo=huggingface)](https://champ610-retinal-ai.hf.space)
+[![Weights](https://img.shields.io/badge/Weights-HuggingFace-FFD21E?style=flat&logo=huggingface)](https://huggingface.co/Champ610/retinai-rop-weights)
 
 RetinAI screens a colour fundus (retina) photograph for Retinopathy of Prematurity (ROP). The
 deployed product is deliberately ROP-only: it serves the binary screening model at a
@@ -23,9 +23,7 @@ final-year capstone project. It has no regulatory clearance and was never prospe
 validated, so it must not be used for real diagnosis. A qualified clinician confirms every
 finding.
 
-**Live deployment:** https://champ610-retinal-ai.hf.space
-Free tier, CPU only, so expect a few seconds per image. The Android client talks to this same
-server.
+**Live demo:** temporarily offline — we deleted our HuggingFace Space on 14 Aug 2026 to fully purge patient images that survived in its git history (see the test log), and HuggingFace's current free tier no longer allows recreating Docker Spaces. The application runs locally in four commands ([How to Run](#how-to-run-the-project)); trained weights are hosted at https://huggingface.co/Champ610/retinai-rop-weights. Deleting a public deployment was the right trade against patient privacy, and we would make it again.
 
 ---
 
@@ -605,8 +603,7 @@ code that powers the live deployment. Cloning it and following the four steps be
 a working local copy. (Training code, experiment history and audit scripts live in our
 development repository; this log book carries the product.)
 
-The quickest option needs no installation at all — the live deployment:
-**https://champ610-retinal-ai.hf.space** (free tier, CPU-only, a few seconds per image).
+The live demo is temporarily offline (see the note at the top — deleted to purge patient images from its git history; HuggingFace's free tier no longer recreates Docker Spaces). The four steps below give you the identical application locally.
 
 ### Step 1: Clone the Repository
 
@@ -854,7 +851,8 @@ medical imaging rest on exactly the naive probe.
 | 15 | Subgroup fairness audit for ROP | Report subgroup gaps | Not assessable. The metadata we have cannot support a fairness claim, and that is the finding | Stated |
 | 16 | End-to-end manual test set | Correct end-to-end behaviour | 93 labelled images, 84% overall correct | Pass |
 | 17 | Train/serve preprocessing skew for DR | No skew | Investigated and disproven. The skew we suspected was not real | Pass |
-| 18 | PHI exposure sweep of the repository | No patient data served | FAIL. Six infant patient photographs were being served publicly. Removed, history swept, egress guard added | Fail, remediated |
+| 18 | PHI exposure sweep of the repository | No patient data served | FAIL. Six infant patient photographs were being served publicly. Removed from the working tree and an egress guard added — but a 14 Aug 2026 audit proved the remediation incomplete: the images remained downloadable from the deployment's git history, four more were tracked in the dev repo, and 67 clinical-record filenames (sex, gestational age, birth weight) sat inside two committed result files | Fail, remediated in full on 14 Aug 2026 |
+| 18b | Re-audit of test 18's own remediation | The first remediation should hold | FAIL — deleting a file does not delete its git history. Full fix: the public Space was deleted outright (its URL with it), weights moved to a clean model repo, patient images untracked everywhere, identifiers de-identified by script, and two new guards added that scan file contents and image bytes, not just paths. Lesson recorded: verify remediations, never trust a commit message that says "removed" | Fail, closed |
 | 19 | Staging gates G1 and G2, patient and duplicate leakage across folds | No infant or near-duplicate image in two folds | 0 shared patients. 0 exact-MD5 matches, 0 near-duplicates, closest pHash distance 15 | Pass |
 | 20 | Staging gate G3, is the source site decodable from the images? | Site should not be trivially readable | Balanced accuracy 0.9973 against chance 0.3333. Site is almost perfectly decodable, and Stage 4/5 comes from a single source | Stated, motivated the site adversary |
 | 21 | Staging gate G4, metadata-only baseline with no pixels decoded | Image models must exceed it | Bar is 0.187 macro-F1. Every backbone scored 0.492 to 0.520, clearing it by about 2.6x | Pass |
@@ -935,7 +933,7 @@ seven-arm ablation in this README all came after the recording, and where the tw
 README is the current version. We would rather leave the video honest to its date than re-record
 it every time a result moves.
 
-**Live demo:** https://champ610-retinal-ai.hf.space
+**Live demo:** offline as of 14 Aug 2026 (privacy-first deletion; see above). Run locally via How to Run.
 
 ---
 
