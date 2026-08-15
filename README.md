@@ -23,7 +23,7 @@ final-year capstone project. It has no regulatory clearance and was never prospe
 validated, so it must not be used for real diagnosis. A qualified clinician confirms every
 finding.
 
-**Live demo:** temporarily offline — we deleted our HuggingFace Space on 14 Aug 2026 to fully purge patient images that survived in its git history (see the test log), and HuggingFace's current free tier no longer allows recreating Docker Spaces. The application runs locally in four commands ([How to Run](#how-to-run-the-project)); trained weights are hosted at https://huggingface.co/Champ610/retinai-rop-weights. Deleting a public deployment was the right trade against patient privacy, and we would make it again.
+**Project page:** https://huggingface.co/spaces/Champ610/retinal-ai — results, links and local-run instructions. The *interactive* demo now runs locally instead: we deleted the hosted app on 14 Aug 2026 to fully purge patient images that survived in its git history (see the test log), and HuggingFace's current free tier no longer allows recreating Docker Spaces, so the same Space URL now serves a static project page. The application runs locally in four commands ([How to Run](#how-to-run-the-project)); trained weights are hosted at https://huggingface.co/Champ610/retinai-rop-weights. Deleting a public deployment was the right trade against patient privacy, and we would make it again.
 
 ---
 
@@ -603,7 +603,7 @@ code that powers the live deployment. Cloning it and following the four steps be
 a working local copy. (Training code, experiment history and audit scripts live in our
 development repository; this log book carries the product.)
 
-The live demo is temporarily offline (see the note at the top — deleted to purge patient images from its git history; HuggingFace's free tier no longer recreates Docker Spaces). The four steps below give you the identical application locally.
+The hosted demo was retired on 14 Aug 2026 (see the note at the top — deleted to purge patient images from its git history; the Space now serves a [static project page](https://huggingface.co/spaces/Champ610/retinal-ai) instead). The four steps below give you the identical application locally.
 
 ### Step 1: Clone the Repository
 
@@ -933,7 +933,7 @@ seven-arm ablation in this README all came after the recording, and where the tw
 README is the current version. We would rather leave the video honest to its date than re-record
 it every time a result moves.
 
-**Live demo:** offline as of 14 Aug 2026 (privacy-first deletion; see above). Run locally via How to Run.
+**Live demo:** offline as of 14 Aug 2026 (privacy-first deletion; see above). The Space URL now serves a static [project page](https://huggingface.co/spaces/Champ610/retinal-ai); run the app locally via How to Run.
 
 ---
 
