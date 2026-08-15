@@ -773,20 +773,43 @@ arms and ties on the held-out hospital (0.942 vs 0.946).
 
 #### The label unit, not the model
 
-AP-ROP is annotated per examination session, not per frame. A session has a median of about 18
-frames, and roughly 47% of the frames in confirmed AP-ROP sessions score below the model's 10th
-percentile because those particular frames do not show the pathology. Scoring per image punishes
-the model for frames whose label was never about them. Pooled over all five folds and scored at
-the unit the label actually describes:
+AP-ROP is annotated per examination session, not per frame. Roughly 47% of the frames in
+confirmed AP-ROP sessions score below the model's 10th percentile, because those particular
+frames do not show the pathology. Scoring per image therefore punishes the model for frames
+whose label was never about them. Pooled over all five folds:
 
 | Evaluation unit | Recall | 95% CI | Normal-case false positives |
 |---|---|---|---|
 | Per image | 0.345 | [0.25, 0.84] (patient bootstrap) | — |
-| Per session (max over frames) | 0.840 (100/119) | [0.76, 0.90] | 0.25% |
+| Per unit, equal weight, **no** aggregation | 0.693 | — | — |
+| Per session (max over frames) | 0.840 (100/119) | [0.76, 0.90] | 0.25%* |
 
-The same model, the same predictions — the only thing that changed is the evaluation unit. This
-also fully explains the fold-0 plateau that fooled us, and it generalises: any group publishing
-image-level metrics against session-level labels is understating detection.
+**We audited this result on 14 Aug 2026 and it is weaker than our earlier write-up claimed.
+Reporting the correction rather than the headline:**
+
+- The corpus's AP-ROP images are **76% one infant** (470 of 618, imaged across 16 sessions).
+  The other 103 AP-ROP infants come from ROP-VL with 1–2 frames each, where "max over a
+  session's frames" does nothing at all. So 103 of the 119 "sessions" are single-patient
+  units, not sessions.
+- Because of that, the jump from 0.345 to 0.840 is **mostly a change in how patients are
+  weighted, not a change of evaluation unit**: equal-weighting the units with no aggregation
+  already reaches 0.693, and aggregation adds only the remaining 0.147.
+- Where aggregation genuinely acts — the Ostrava data, the only source with real session
+  structure — image-level recall 0.204 becomes session-level 0.875 across 16 sessions. That
+  is the clean demonstration, and it rests on **one infant**: a case study, not a benchmark.
+- The model is not blind to AP-ROP per frame either: **image-level ROC-AUC is 0.917**. The
+  0.345 is an artifact of the fixed 0.5 threshold on a population dominated by one infant's
+  unrepresentative frames.
+
+The defensible conclusion is narrower than "image-level metrics understate detection", and
+it is still worth stating: **image-level recall at a fixed threshold is not a stable quantity
+on session-labelled data** — its patient-clustered interval spans [0.25, 0.84], and its value
+is set by corpus composition as much as by detection ability. Anyone comparing architectures
+on such a metric is partly comparing corpus composition.
+
+*The false-alarm denominator needs pinning: 0.25% counts Ostrava-keyed normal sessions only;
+counting all normal units it is 1.16%. Both are honest, they are different denominators, and
+the paper will state one.
 
 #### Adversarial debiasing is weaker than a naive probe suggests
 
@@ -1053,15 +1076,19 @@ The paper is ROP-focused. The contribution is the measurement methodology, not t
 the 5-fold CV says our structured head and a plain softmax are equivalent, and we say so. Four
 results carry it:
 
-1. **The label unit determines the ceiling.** AP-ROP recall of 0.345 per image and 0.840 per
-   examination session come from the same predictions. The only difference is scoring at the
-   unit the annotation actually describes. Image-level metrics on session-level labels
-   systematically understate detection, and the patient-bootstrap interval of [0.25, 0.84] on
-   the image-level number shows it is not even a stable quantity.
+1. **Image-level recall on session-labelled data is not a stable quantity.** AP-ROP recall of
+   0.345 per image and 0.840 per examination session come from the same predictions, but the
+   audit above shows most of that gap is patient re-weighting rather than frame aggregation,
+   and the aggregation effect proper rests on a single well-imaged infant. What survives, and
+   is enough: the image-level number's patient-bootstrap interval spans [0.25, 0.84], its value
+   is set by corpus composition, and image-level ROC-AUC of 0.917 shows the frames were never
+   the problem. Architecture comparisons built on such a metric are partly comparing corpora.
 2. **Naive site probes overstate adversarial debiasing.** A DANN branch that looks like it
    removes site information under the standard all-class probe leaves a disease-controlled probe
-   unmoved at every adversary strength, and the strong setting damages the clinical metrics. The
-   controlled probe is the honest instrument.
+   unmoved, and the strong setting damages the clinical metrics. The controlled probe is the
+   honest instrument. (One point of the dose–response — the same head with the adversary fully
+   off — was carried over rather than measured in our first write-up; it is being measured now,
+   and the claim will be stated at whatever strength that measurement supports.)
 3. **One fold misleads.** The fold-0 "structural softmax failure" replicated across five
    backbones and still turned out to be an artefact of which infants that fold's validation
    split contained. Multi-fold, patient-grouped evaluation is not optional on data like this.
