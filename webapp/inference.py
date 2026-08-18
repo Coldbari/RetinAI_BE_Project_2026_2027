@@ -387,6 +387,64 @@ class StagingPreview:
         }
 
 
+class EmbeddingGate:
+    """Third gradability layer: kNN distance to real fundus in IMAGENET feature space.
+
+    The two heuristic layers (colour, structure) each fell to a real-world image class in
+    field testing - a furniture photo, then a night-time interior. This layer asks the
+    only robust question: does the upload even sit near the fundus distribution? Generic
+    ImageNet features are used deliberately - the fine-tuned screening/staging backbones
+    were measured to COLLAPSE scene information (a warm room lands nearer to fundus in
+    their space than some real retinas), while ImageNet features still know what rooms,
+    lamps and furniture look like. Built by scripts/build_embedding_gate.py; fails OPEN
+    if the artifact or torchvision weights are unavailable (the heuristics still stand).
+    """
+
+    def __init__(self, device, tfm):
+        self.available = False
+        art = Path("results/rop/gate_embedding.npz")
+        if not art.exists():
+            print("[webapp] embedding gate: artifact missing - layer disabled")
+            return
+        try:
+            import torchvision
+            z = np.load(art, allow_pickle=True)
+            self.bank = z["bank"].astype(np.float32)
+            self.k = int(z["k"])
+            self.threshold = float(z["threshold"])
+            net = torchvision.models.resnet50(weights="IMAGENET1K_V2")
+            net.fc = torch.nn.Identity()
+            self.net = net.to(device).eval()
+            self.device, self.tfm = device, tfm
+            self.available = True
+            print(f"[webapp] embedding gate loaded (bank {self.bank.shape[0]}, "
+                  f"threshold {self.threshold:.3f})")
+        except Exception as e:                                    # noqa: BLE001
+            print(f"[webapp] embedding gate unavailable ({e}) - layer disabled")
+
+    def distance(self, image):
+        x = self.tfm(image.convert("RGB")).unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            z = self.net(x).flatten(1).float().cpu().numpy()[0]
+        z /= np.linalg.norm(z) + 1e-9
+        sims = self.bank @ z
+        return float(1.0 - np.sort(sims)[-self.k])
+
+    def check(self, image):
+        """None if the image resembles retinal imagery; else a rejection dict."""
+        if not self.available:
+            return None
+        d = self.distance(image)
+        if d <= self.threshold:
+            return None
+        return {"verdict": "not_fundus",
+                "reason": "This image does not resemble retinal imagery (feature-space "
+                          "check: its content is unlike any fundus photograph the gate "
+                          "was calibrated on).",
+                "metrics": {"embedding_distance": round(d, 4),
+                            "threshold": round(self.threshold, 4)}}
+
+
 class RegistryConfigError(RuntimeError):
     """Raised at boot when the routing table is missing or inconsistent.
 
@@ -407,6 +465,8 @@ class Registry:
             self.models.append(dm)
         self.contexts = self._validate_contexts(spec, registry_path)
         self.staging = StagingPreview(self.device)
+        rop = next((m for m in self.models if m.disease == "ROP"), self.models[0])
+        self.embedding_gate = EmbeddingGate(self.device, rop.base_tfm)
         loaded = [m.disease for m in self.models if m.loaded]
         print(f"[webapp] device {self.device} | loaded: {loaded or 'none yet'} "
               f"| contexts: {', '.join(sorted(self.contexts))}")
@@ -468,6 +528,13 @@ class Registry:
         # fundus photograph. Before this existed, all three models returned a positive
         # finding on 100% of non-retinal input, including this project's own charts.
         quality = gradability(image)
+        if quality["gradable"]:
+            # heuristic layers passed - the learned layer gets the final word
+            emb = self.embedding_gate.check(image)
+            if emb is not None:
+                quality = {"gradable": False, "verdict": emb["verdict"],
+                           "reason": emb["reason"],
+                           "metrics": {**quality["metrics"], **emb["metrics"]}}
         if not quality["gradable"]:
             return {
                 "context": context,

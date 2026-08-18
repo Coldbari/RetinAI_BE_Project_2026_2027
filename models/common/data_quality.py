@@ -85,6 +85,11 @@ GATE_DEFAULTS = {
     # Fraction of pixels with a near-zero Laplacian. Graphics have big exactly-flat areas
     # (charts p50 = 0.84); photographs never do (fundus max = 0.39 across all cohorts).
     "max_flat_frac": 0.6,
+    # The bright field must be ONE disk-like component. Fundus: fill p1 >= 0.83, exactly
+    # one significant component. Night interiors (the second field bypass): fill <= 0.71,
+    # >= 3 components.
+    "min_disk_fill": 0.72,
+    "max_bright_components": 2,
     # mean(R)/mean(B) over the field of view. Retinal tissue is red-dominant - but pale
     # premature retina under some cameras dips below 1.0 (ROP-VL/Shenzhen p1 = 0.81), so
     # this bound must stay permissive; the corner check carries the structural burden.
@@ -146,7 +151,7 @@ def gradability_metrics(image, work_size=512):
     if mask.sum() < 64:                  # essentially an empty / black frame
         return {"fov_ratio": fov_ratio, "redness": 0.0, "rgb_ordered": False,
                 "saturation": 0.0, "red_hue_frac": 0.0, "corner_lum": float(gray.mean()),
-                "flat_frac": 1.0,
+                "flat_frac": 1.0, "disk_fill": 0.0, "n_bright_components": 0,
                 "blur_var": 0.0, "luminance": float(gray.mean()), "empty": True}
 
     px = rgb[mask].astype(np.float32)
@@ -184,6 +189,27 @@ def gradability_metrics(image, work_size=512):
         lap_abs = np.abs(gx) + np.abs(gy)
     flat_frac = float((lap_abs < 0.5).mean())
 
+    # The retinal field is ONE bright DISK. Measured across all four cohorts: the largest
+    # bright connected component fills >= 0.83 of its enclosing circle and is the only
+    # significant component (p99 = 1). A night-time photograph also has dark corners, but
+    # its light is scattered lamps and lit patches: >= 3 components, disk-fill <= 0.71.
+    # (This closed the second field bypass: a temple-interior photo with dark corners.)
+    disk_fill, n_bright = 0.0, 0
+    if _HAS_CV2:
+        bright = (gray > 20).astype(np.uint8)
+        n, lab, stats, _ = cv2.connectedComponentsWithStats(bright, 8)
+        if n > 1:
+            areas = stats[1:, 4]
+            n_bright = int((areas > 0.01 * gray.size).sum())
+            comp = (lab == 1 + areas.argmax()).astype(np.uint8)
+            cnts, _ = cv2.findContours(comp, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if cnts:
+                c = max(cnts, key=cv2.contourArea)
+                (_, _), rad = cv2.minEnclosingCircle(c)
+                disk_fill = float(cv2.contourArea(c) / (np.pi * rad * rad + 1e-6))
+    else:   # no-cv2 fallback: treat as one component, neutral fill
+        disk_fill, n_bright = 1.0, 1
+
     return {
         "fov_ratio": fov_ratio,
         "redness": float(r / max(b, 1.0)),
@@ -192,6 +218,8 @@ def gradability_metrics(image, work_size=512):
         "red_hue_frac": red_hue_frac,
         "corner_lum": corner_lum,
         "flat_frac": flat_frac,
+        "disk_fill": disk_fill,
+        "n_bright_components": n_bright,
         "blur_var": blur,
         "luminance": float(gray[mask].mean()),
         "empty": False,
@@ -216,6 +244,17 @@ def gradability(image, thresholds=None):
         return {"gradable": False, "verdict": "not_fundus", "metrics": m,
                 "reason": "This looks like a chart, screenshot or rendered graphic, "
                           "not a photograph."}
+
+    # Structural signal: the retinal field is a single bright disk. Scattered light
+    # sources (a night-time photograph) or a non-circular bright region are not a retina,
+    # however warm their colours and dark their corners.
+    if (m["n_bright_components"] > t.get("max_bright_components", 2)
+            or (m["n_bright_components"] >= 1
+                and m["disk_fill"] < t.get("min_disk_fill", 0.72))):
+        return {"gradable": False, "verdict": "not_fundus", "metrics": m,
+                "reason": "This does not look like a fundus photograph — the retinal "
+                          "field is a single bright circular disk, and this image's "
+                          "bright regions do not form one."}
 
     # Structural signal: no circular aperture -> not a fundus photograph, whatever the hue.
     if m["corner_lum"] > t.get("max_corner_lum", 40.0):

@@ -8,6 +8,8 @@
   "thresholds": {
     "max_corner_lum": 40.0,
     "max_flat_frac": 0.6,
+    "min_disk_fill": 0.72,
+    "max_bright_components": 2,
     "min_redness": 0.75,
     "min_saturation": 20.0,
     "min_red_hue_frac": 0.0,
