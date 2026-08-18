@@ -77,12 +77,25 @@ def _blur_score(path) -> float:
 #   * achromatic frames            -> hue is undefined and reads as red, caught by saturation
 # An image is rejected if ANY signal says non-retinal.
 GATE_DEFAULTS = {
-    # mean(R)/mean(B) over the field of view. Retinal tissue is red-dominant.
-    "min_redness": 1.03,
-    # mean HSV saturation. Kills greyscale, white and chart-like input.
-    "min_saturation": 34.0,
-    # fraction of FOV pixels whose hue is red/orange. Kills random noise, whose hue is flat.
-    "min_red_hue_frac": 0.34,
+    # Mean luminance of the four 12% corner patches. The circular fundus aperture leaves
+    # corners near-black in every cohort (p99 <= 19.8); real-world photographs fill them
+    # (measured warm indoor scenes: >130). PRIMARY non-fundus check as of 2026-08-19 -
+    # found by a user handing the app a photo of furniture and getting "ROP Detected 91.5%".
+    "max_corner_lum": 40.0,
+    # Fraction of pixels with a near-zero Laplacian. Graphics have big exactly-flat areas
+    # (charts p50 = 0.84); photographs never do (fundus max = 0.39 across all cohorts).
+    "max_flat_frac": 0.6,
+    # mean(R)/mean(B) over the field of view. Retinal tissue is red-dominant - but pale
+    # premature retina under some cameras dips below 1.0 (ROP-VL/Shenzhen p1 = 0.81), so
+    # this bound must stay permissive; the corner check carries the structural burden.
+    "min_redness": 0.75,
+    # mean HSV saturation. Kills greyscale, white and chart-like input (charts measure ~11;
+    # the palest real cohort's p1 is 25).
+    "min_saturation": 20.0,
+    # fraction of FOV pixels whose hue is red/orange. DISABLED (0.0): calibrated on Ostrava
+    # it sat at 0.34, silently rejecting real Shenzhen/Multi-View fundus whose p1 is
+    # 0.03-0.09. Kept as a metric for reporting only.
+    "min_red_hue_frac": 0.0,
     # R > G > B ordering. Held on only 95% of infant training images, so OFF by default —
     # requiring it would falsely reject 1 in 20 real patients.
     "require_rgb_order": False,
@@ -132,7 +145,8 @@ def gradability_metrics(image, work_size=512):
     fov_ratio = float(mask.mean())
     if mask.sum() < 64:                  # essentially an empty / black frame
         return {"fov_ratio": fov_ratio, "redness": 0.0, "rgb_ordered": False,
-                "saturation": 0.0, "red_hue_frac": 0.0,
+                "saturation": 0.0, "red_hue_frac": 0.0, "corner_lum": float(gray.mean()),
+                "flat_frac": 1.0,
                 "blur_var": 0.0, "luminance": float(gray.mean()), "empty": True}
 
     px = rgb[mask].astype(np.float32)
@@ -149,12 +163,35 @@ def gradability_metrics(image, work_size=512):
         saturation = float((255.0 * (mx - mn) / np.maximum(mx, 1.0)).mean())
         red_hue_frac = float((px[:, 0] == mx).mean())
 
+    # Fundus photography exposes the retina through a circular aperture: whatever the
+    # camera or cohort, the frame CORNERS are near-black (measured p99 across Ostrava /
+    # ROP-VL / Shenzhen / Multi-View: 0.4-19.8). A real-world photograph fills its corners.
+    # This is the structural check the colour heuristics cannot provide - a warm-lit indoor
+    # scene passes every colour test (measured: a furniture photo scored redness 1.2-1.4,
+    # saturation >40, red_hue >0.7) but its corners average >130.
+    ch, cw = max(1, int(gray.shape[0] * 0.12)), max(1, int(gray.shape[1] * 0.12))
+    corner_lum = float(np.mean([gray[:ch, :cw].mean(), gray[:ch, -cw:].mean(),
+                                gray[-ch:, :cw].mean(), gray[-ch:, -cw:].mean()]))
+
+    # Graphics (charts, screenshots, renders) contain large PERFECTLY flat regions;
+    # a photograph of anything - retina included - never does, because sensor noise and
+    # texture keep the Laplacian nonzero almost everywhere. Measured: fundus flat_frac
+    # max 0.39 across all four cohorts, charts p50 0.84.
+    if _HAS_CV2:
+        lap_abs = np.abs(cv2.Laplacian(gray.astype(np.float64), cv2.CV_64F))
+    else:
+        gy, gx = np.gradient(gray.astype(np.float64))
+        lap_abs = np.abs(gx) + np.abs(gy)
+    flat_frac = float((lap_abs < 0.5).mean())
+
     return {
         "fov_ratio": fov_ratio,
         "redness": float(r / max(b, 1.0)),
         "rgb_ordered": bool(r > g > b),
         "saturation": saturation,
         "red_hue_frac": red_hue_frac,
+        "corner_lum": corner_lum,
+        "flat_frac": flat_frac,
         "blur_var": blur,
         "luminance": float(gray[mask].mean()),
         "empty": False,
@@ -173,6 +210,19 @@ def gradability(image, thresholds=None):
     if m["empty"] or m["fov_ratio"] < t["min_fov_ratio"]:
         return {"gradable": False, "verdict": "not_fundus", "metrics": m,
                 "reason": "No retinal field of view detected — the frame is almost entirely dark."}
+
+    # Graphics signal: large perfectly-flat regions -> a chart or screenshot, not a photo.
+    if m["flat_frac"] > t.get("max_flat_frac", 0.6):
+        return {"gradable": False, "verdict": "not_fundus", "metrics": m,
+                "reason": "This looks like a chart, screenshot or rendered graphic, "
+                          "not a photograph."}
+
+    # Structural signal: no circular aperture -> not a fundus photograph, whatever the hue.
+    if m["corner_lum"] > t.get("max_corner_lum", 40.0):
+        return {"gradable": False, "verdict": "not_fundus", "metrics": m,
+                "reason": "This does not look like a fundus photograph — retinal images "
+                          "are captured through a circular aperture, leaving the frame "
+                          "corners black; this image fills its corners."}
 
     # Colour signals — reject if ANY says non-retinal (they catch different failures).
     if (m["redness"] < t["min_redness"]
@@ -251,8 +301,14 @@ def run_dqa(manifest, output_pdf="thesis_assets/dataset_report.pdf",
 
     if cleaned_manifest:
         Path(cleaned_manifest).parent.mkdir(parents=True, exist_ok=True)
-        cleaned[["image_path", "label", "split"]].to_csv(cleaned_manifest, index=False)
-        print(f"[dqa] cleaned manifest -> {cleaned_manifest} ({len(cleaned)} rows)")
+        # Carry every column the input manifest had. A fixed list here silently DROPPED the
+        # patient-group key, so a cleaned manifest could no longer be checked for sibling
+        # leakage — the split would look fine because the evidence had been thrown away.
+        keep = [c for c in ("image_path", "label", "split", "source", "group")
+                if c in cleaned.columns]
+        cleaned[keep].to_csv(cleaned_manifest, index=False)
+        print(f"[dqa] cleaned manifest -> {cleaned_manifest} ({len(cleaned)} rows, "
+              f"columns: {', '.join(keep)})")
 
     print(f"[dqa] total={total} corrupted={corrupted} invalid_labels={invalid_labels} "
           f"blurry~{blurry}/{len(sample_idx)} duplicates~{duplicates}")
