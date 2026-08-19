@@ -5,15 +5,17 @@
 **RetinAI: Explainable Multi-Disease Retinal Screening from a Single Fundus Photograph**
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat&logo=python)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.5-EE4C2C?style=flat&logo=pytorch)](https://pytorch.org/)
-[![Flask](https://img.shields.io/badge/Flask-3.0-black?style=flat&logo=flask)](https://flask.palletsprojects.com/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-%E2%89%A52.1-EE4C2C?style=flat&logo=pytorch)](https://pytorch.org/)
+[![Flask](https://img.shields.io/badge/Flask-%E2%89%A53.0-black?style=flat&logo=flask)](https://flask.palletsprojects.com/)
 [![Android](https://img.shields.io/badge/Android-Jetpack_Compose-3DDC84?style=flat&logo=android)](https://developer.android.com/jetpack/compose)
 [![Weights](https://img.shields.io/badge/Weights-HuggingFace-FFD21E?style=flat&logo=huggingface)](https://huggingface.co/Champ610/retinai-rop-weights)
 
 RetinAI screens a colour fundus (retina) photograph for Retinopathy of Prematurity (ROP). The
-deployed product is deliberately ROP-only: it serves the binary screening model at a
-sensitivity-first operating point plus a 6-class ICROP staging research preview, and every
-result comes back with a Grad-CAM heatmap, a graded risk level and a downloadable PDF report.
+deployed product is deliberately ROP-only. One model — EfficientNetV2-S with a clinically
+structured head — produces both the binary screening verdict, at a sensitivity-first operating
+point vetted at two hospitals, and a 6-class ICROP staging research preview. Every result comes
+back with a Grad-CAM heatmap taken from that same model, a graded risk level and a downloadable
+PDF report.
 The DR and glaucoma models we built earlier in the project were retired from the product after
 our own audits (their measured history stays in this README), and this repository also
 contains the full runnable web application — see [How to Run](#how-to-run-the-project).
@@ -23,7 +25,7 @@ final-year capstone project. It has no regulatory clearance and was never prospe
 validated, so it must not be used for real diagnosis. A qualified clinician confirms every
 finding.
 
-**Project page:** https://huggingface.co/spaces/Champ610/retinal-ai — results, links and local-run instructions. The *interactive* demo now runs locally instead: we deleted the hosted app on 14 Aug 2026 to fully purge patient images that survived in its git history (see the test log), and HuggingFace's current free tier no longer allows recreating Docker Spaces, so the same Space URL now serves a static project page. The application runs locally in four commands ([How to Run](#how-to-run-the-project)); trained weights are hosted at https://huggingface.co/Champ610/retinai-rop-weights. Deleting a public deployment was the right trade against patient privacy, and we would make it again.
+**Project page:** https://huggingface.co/spaces/Champ610/retinal-ai — results, links and local-run instructions. The *interactive* demo now runs locally instead: we deleted the hosted app on 14 Aug 2026 to fully purge patient images that survived in its git history (see the test log), and HuggingFace's current free tier no longer allows recreating Docker Spaces, so the same Space URL now serves a static project page. The application runs locally in four steps ([How to Run](#how-to-run-the-project)); trained weights are hosted in the model repository at https://huggingface.co/Champ610/retinai-rop-weights. Deleting a public deployment was the right trade against patient privacy, and we would make it again.
 
 ---
 
@@ -396,8 +398,8 @@ than leaving it blank, since the template asks for it.
 | Week 8 (27 Jul) | Safety, honesty and statistics overhaul, device-confound audit | Completed |
 | Week 9 (03 Aug) | Android client, confound audits T12–T17, evidence figures | Completed |
 | Week 10 (10 Aug) | ROP 6-class ICROP staging: corpus, shortcut audit, five-backbone benchmark, structured head, full 5-fold CV (flat and structured), seven-arm ablation, bootstrap CIs and calibration | Completed |
-| Week 11 (17 Aug) | Seed repeats (1337, 2024) for flat and structured, session-level scoring of every arm | Planned |
-| Week 12 | ISBI paper draft, locked test set opened once, calibration wired into serving | Planned |
+| Week 11 (17 Aug) | Seed repeats and session-level scoring of every arm; claim-by-claim verification; matched head×seed 2×2; **locked test set pre-registered and opened once (18 Aug)**; gradability gate rebuilt twice; **binary screening re-based off the ResNet50 after an external audit** | Completed |
+| Week 12 (24 Aug) | ISBI draft compressed into the 4-page LaTeX template; pediatric-ophthalmologist co-author contacted for label adjudication | Planned |
 
 ---
 
@@ -545,10 +547,17 @@ train split only. The test split, the HRF cohorts and EyePACS/APTOS were all hel
 false-rejection rates we report are measurements rather than fits. The patient-context router
 suppresses clinically impossible findings.
 
-**Serving.** `webapp/inference.py` holds a `Registry` that loads all three models from
+**Serving.** `webapp/inference.py` holds a `Registry` that loads the models declared in
 `registry.yaml`. It degrades gracefully, so a missing checkpoint just marks that disease
 unavailable while the rest keep working. Grad-CAM is generic across backbones through forward and
-backward hooks.
+backward hooks, and is always taken from the model that produced the verdict.
+
+> **Deployment scope, as shipped.** `registry.yaml` in this repository declares **ROP only**.
+> Glaucoma was withdrawn from scope after a source-confound audit, and DR is parked rather than
+> deleted — its training code, configs and results are all still here and reproducible, but the
+> running app screens one disease. Passages below that describe "three models" describe the
+> multi-disease phase of the project, which is part of its history and its measurements, not the
+> current deployment.
 
 **Android client.** Kotlin and Jetpack Compose with Material 3. CameraX capture with focus, torch
 and an alignment overlay. An advisory on-device quality meter calibrated at a fixed scale.
@@ -632,15 +641,18 @@ pip install -r requirements.txt
 ### Step 3: Fetch the Model Weights
 
 The two trained checkpoints are too large for GitHub, so they are downloaded once from our
-deployed HuggingFace Space (~180 MB total):
+HuggingFace **model repository** ([`Champ610/retinai-rop-weights`](https://huggingface.co/Champ610/retinai-rop-weights),
+~180 MB total):
 
 ```bash
 python scripts/get_weights.py
 ```
 
-This places `results/rop/weights.pth` (binary screening, ResNet50) and
-`results/rop_staging/weights.pth` (ICROP staging research preview, EfficientNetV2-S). The app
-boots without them, but every result then says "model not loaded".
+This places `results/rop_staging/weights.pth` — the **product model** (EfficientNetV2-S with
+the structured head), which produces both the binary screening verdict and the ICROP stage — and
+`results/rop/weights.pth`, the ResNet50 that used to make the screening decision and was retired
+from it on 19 Aug 2026 (kept as the routing anchor and as a fallback). The app boots without
+them, but every result then says "model not loaded".
 
 ### Step 4: Run the Web App
 
@@ -692,7 +704,9 @@ we had to make to our own earlier claims.
 **Corpus.** Three hospitals consolidated into a cross-validation pool of 6,700 images from 1,528
 infants: Ostrava 4,285 images / 148 infants, ROP-VL 1,675 / 983, Shenzhen 740 / 397. A fourth
 hospital (`multiview`, 1,324 images, 232 infants) is held out entirely and further divided into
-a dev set (663 images) and a locked set (661 images) which we have still not looked at. Class
+a dev set (663 images) and a locked set (661 images, 116 infants). The locked set was opened
+exactly once, on 18 Aug 2026, under a protocol committed to the repository before any locked
+inference existed. Class
 distribution across the pool: Normal 3,837 (57.3%), Stage 1 577, Stage 2 959, Stage 3 620,
 Stage 4/5 just 89 (1.3%), AP-ROP 618. Note the inversion in the source table: Ostrava
 contributes 64% of the images from 10% of the infants (about 29 frames per infant), which is why
@@ -853,7 +867,7 @@ medical imaging rest on exactly the naive probe.
 | 8 | Cross-disease admissibility, every image through every model | Models abstain outside their world | FAIL. The ROP model flagged 59 of 59 adult eyes, and ROP cannot occur in an adult | Fail, routing added |
 | 9 | Gradability gate false-rejection on adult fundus images | FRR < 5% | 1.7% on 4,000 EyePACS images (61 not-fundus, 8 poor-exposure) | Pass |
 | 10 | Gradability gate rejects synthetic non-retinal input | All rejected | 6/6 probes rejected (noise, grey, black, white, two dashboard screenshots) | Pass |
-| 11 | ROP operating point selected on val, measured once on test | Sensitivity ≥ 0.90 | threshold 0.1933 gives sens 0.990 / spec 0.398 on the TTA path we actually serve | Pass |
+| 11 | ROP operating point selected on val, measured once on test | Sensitivity ≥ 0.90 | threshold 0.1933 gives sens 0.990 / spec 0.398 on the TTA path we served at the time. Superseded by test 28: the threshold met this bar at its own hospital and collapsed at another | Passed here, failed test 28 |
 | 12 | ROP per-infant specificity at the deployed threshold | Some healthy infants cleared | 0.000. None of 22 healthy infants were cleared. It is a triage filter, not a rule-out test | Stated |
 | 13 | Positive predictive value at realistic clinic prevalence | Useful PPV | ROP is about 13% in a real NICU. Sensitivity and specificity survive a change of population, PPV does not | Stated |
 | 14 | Probability calibration with temperature scaling | Lower ECE | DR referable 0.141 → 0.111 (T 0.70), DR 5-class 0.181 → 0.133, ROP 0.059 → 0.041 | Pass |
@@ -871,6 +885,9 @@ medical imaging rest on exactly the naive probe.
 | 25 | Does the structured head beat flat softmax? Full 5-fold CV, both models, same folds | The fold-0 gap should replicate | It did not. Flat 0.683 ± 0.118 vs structured 0.692 ± 0.086 macro-F1, per-fold differences mixed-sign. Fold 0's "softmax failure" was the session-label unit, not the architecture. Superiority claim withdrawn | Fail, claim corrected |
 | 26 | Can the ordinal (CORN) head train under a class-balancing sampler? | Sampler should help the rare classes | FAIL. QWK collapses to 0.129 with stage 4/5 precision 0.043. CORN calibrates to training prevalence; the sampler feeds it a false one. Flat softmax tolerates the same sampler | Fail, natural sampling adopted |
 | 27 | Seven-arm component ablation on fold 0 | Each design component should earn its place | Ordinal head is load-bearing (QWK 0.394 without it); branch buys taxonomy fidelity, not fold-0 recall; adversary contributes nothing (w=0 ties or wins). Every arm hits the same AP-ROP image-level ceiling — the label unit | Pass, measured |
+| 28 | Does the served screening threshold transfer to a hospital it never trained on? | Specificity should survive a change of site | **FAIL, total.** Over 663 images from the held-out hospital the 0.1933 threshold flagged **663 of 663**, all 150 healthy eyes included — specificity 0.000, because the lowest score anywhere on that site (0.2788) sits above the cut-off. External AUC 0.691 against 0.927 claimed internally. Found by uploading a healthy retina to our own app and disbelieving the answer | Fail, screening re-based |
+| 29 | Re-base screening onto the structured model's P(any ROP) | Better external discrimination, and a threshold vetted at both sites | External AUC 0.821 vs 0.691. Threshold 0.0155 by a rule fixed in advance — the largest cut-off holding sens ≥ 0.90 at **both** sites. Internal spec 0.398 → 0.781, external 0.000 → 0.387, healthy eyes cleared externally 0/150 → 58/150. Selection used the external DEV half, so those numbers are in-sample and optimistic; the locked half stays closed | Pass, with caveat |
+| 30 | Grad-CAM attention confined to the retina | Saliency should fall on tissue, not on the frame | FAIL initially: one of twelve test images put 24% of its attention on the black surround with the global peak outside the eye. Overlay was also drawn on the raw upload while the map lives on the preprocessed grid. Now masked to a fitted aperture, drawn on the frame the model saw, and the off-retina fraction is published beside every heatmap rather than cropped away | Fail, fixed and instrumented |
 
 Nine of these failed. We are listing them rather than deleting them, because each one changed
 the system. Test 6 forced a device-stratified re-split, test 8 gave us the routing layer, test
@@ -1007,11 +1024,13 @@ it every time a result moves.
    referable DR.
 10. **Fairness is not demonstrated.** The metadata available cannot support a subgroup fairness
     claim for ROP. Saying so is more honest than producing a breakdown we cannot back up.
-11. **Binary ROP loses clinical detail, and staging is not deployed.** The deployed model does not
-    stage zone, stage or plus disease the way ICROP grading needs. The 6-class staging models
-    reach macro-F1 0.68 to 0.69 under 5-fold CV, but this is one seed (repeats at two more seeds
-    are the next run), and the locked test set has deliberately not been opened. Staging is not
-    in the product.
+11. **Staging is a research output, and image-level staging is weak.** The product does not grade
+    zone or plus disease the way full ICROP assessment needs. The 6-class models reach macro-F1
+    0.68 to 0.69 under 5-fold CV, replicated at a second seed. On the locked held-out hospital
+    (opened once, 18 Aug 2026) the honest split is stark: **eye-level QWK 0.80**, but
+    **image-level QWK only 0.52** — a single photograph shows one part of a retina, and 17.8% of
+    eyes with stage 1–3 disease are called normal at eye level. Staging is shown in the product
+    as a clearly-labelled research preview, not as a clinical grade.
 12. **The staging corpus has a severe site confound, and our adversary does not fix it.** Site is
     99.7% decodable from the images and Stage 4/5 comes from a single source. The DANN branch
     does not remove site appearance at any strength we tried — we report that as a negative
@@ -1036,13 +1055,13 @@ it every time a result moves.
 
 ## Future Scope
 
-1. **Run the significance tests.** McNemar and DeLong are implemented but not yet reported for our
-   final architecture choices, so the ResNet50-for-ROP recommendation currently rests on point
-   metrics alone.
-2. **Finish the ICROP staging evaluation.** The 5-fold CV, the adversary dose-response and the
-   seven-arm ablation are done. What remains is the seed repeats (1337 and 2024, flat and
-   structured), session-level scoring of every ablation arm, and then a single scoring of the
-   locked test set with everything frozen.
+1. **Confirm the re-based screening threshold at a third site.** The 0.0155 cut-off was selected
+   using the held-out hospital's dev half, so the external numbers reported for it are in-sample
+   for that choice and optimistic. The locked half has been spent. A clean confirmation needs a
+   hospital neither half has seen.
+2. **The ICROP staging evaluation is complete.** 5-fold CV, the adversary dose-response, the
+   seven-arm ablation, seed repeats and session-level scoring are all done, and the locked test
+   was scored once with everything frozen. What remains is writing it up, not measuring it.
 3. **Get the labels re-adjudicated.** The session-level AP-ROP finding says a meaningful fraction
    of frame labels do not describe their frames. A paediatric ophthalmologist re-reading about
    300 images would turn that from an inference into a measurement, and is the main dependency
