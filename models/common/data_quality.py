@@ -33,6 +33,65 @@ except Exception:
     _HAS_IMAGEHASH = False
 
 
+def retina_mask(rgb: np.ndarray) -> np.ndarray | None:
+    """The retinal field of view as a filled boolean mask — EXPLAINABILITY ONLY.
+
+    Deliberately NOT the ``gray > 7`` mask the gradability gate uses. That tolerance was
+    calibrated against the published thresholds and must not move; it is also far too
+    permissive on JPEG-compressed uploads, where ringing around the aperture lifts the
+    "black" border above 7 (measured: circle_crop is a complete no-op on all twelve
+    held-out test JPEGs, cropping 1600x1200 to 1600x1200).
+
+    Used to answer one question about a Grad-CAM: how much of the model's attention landed
+    on something that is not retina? This project has already been burned once by frame
+    geometry — a classifier on image dimensions alone scored AUC 0.911 — so attention on
+    the black surround is a signal worth measuring, not cropping away silently.
+
+    Returns None when OpenCV is unavailable; callers must degrade rather than guess.
+    """
+    if not _HAS_CV2 or rgb.ndim != 3:
+        return None
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    g = cv2.GaussianBlur(gray, (0, 0), 3)
+    thr, _ = cv2.threshold(g, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Otsu splits the retina's own interior (bright disc vs darker periphery), so it sits
+    # well above the aperture edge. Backing off to 55% of it lands on the true border while
+    # the 10.0 floor keeps a very dark, uniformly-exposed frame from collapsing to "all FOV".
+    thr = max(float(thr) * 0.55, 10.0)
+    m = (g >= thr).astype(np.uint8)
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (21, 21))
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, k)
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(m, 8)
+    if n > 1:
+        m = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+    cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not cnts:
+        return None
+    cnt = max(cnts, key=cv2.contourArea)
+    filled = np.zeros_like(m)
+    cv2.drawContours(filled, [cnt], -1, 1, cv2.FILLED)
+
+    # A fundus aperture is an ellipse. Tracing the bright pixels instead follows every dark
+    # patch of retina inward, carving concave notches that then read as "outside the eye".
+    # Fit the shape and use it when it agrees with what was traced (measured across the 12
+    # held-out test images: recovers 99.2-99.8% of the traced region, and the pixels it adds
+    # back have mean luminance 12-41, i.e. genuine dark border it should not have lost).
+    if len(cnt) >= 5:
+        ell = np.zeros_like(m)
+        cv2.ellipse(ell, cv2.fitEllipse(cnt), 1, cv2.FILLED)
+        inter = int((ell & filled).sum())
+        union = int((ell | filled).sum())
+        if union and inter / union >= 0.95:
+            filled = ell
+    # Shave the bright optical rim. It is the aperture edge — an artifact of the lens, not
+    # tissue — and it is exactly where a border-reading shortcut would park its attention.
+    r = int(0.02 * max(filled.shape))
+    if r > 0:
+        filled = cv2.erode(filled,
+                           cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1)))
+    return filled.astype(bool) if filled.any() else None
+
+
 def _is_readable(path) -> bool:
     try:
         with Image.open(path) as im:

@@ -19,12 +19,30 @@ from PIL import Image
 
 from models.common.config import load_config
 from models.common.architectures import build_from_cfg, get_target_layer
-from models.common.data_quality import gradability
+from models.common.data_quality import gradability, retina_mask
 from models.common.preprocessing import build_transforms, build_tta_transforms
 from models.common.train_utils import predict_with_tta
 from reports.report_generator import recommendation
 
+try:
+    import cv2
+except Exception:                                  # pragma: no cover - optional at import
+    cv2 = None
+
 DISPLAY = 320
+
+
+def _resize_f32(a: np.ndarray, size: int) -> np.ndarray:
+    """Bicubic resize of a float32 map, WITHOUT the uint8 round-trip.
+
+    Quantising a 12x12 Grad-CAM to 256 levels before upsampling flattened the low end of
+    the ramp into visible bands; interpolating in float keeps the gradient smooth.
+    """
+    if cv2 is not None:
+        return cv2.resize(a, (size, size), interpolation=cv2.INTER_CUBIC)
+    idx = np.linspace(0, a.shape[0] - 1, size)
+    rows = np.stack([np.interp(idx, np.arange(a.shape[1]), r) for r in a])
+    return np.stack([np.interp(idx, np.arange(a.shape[0]), c) for c in rows.T], axis=1)
 
 
 def _load_metrics(disease_dir):
@@ -152,6 +170,276 @@ def _device():
     return torch.device("cpu")
 
 
+def _model_frame(tfm, image: Image.Image) -> np.ndarray:
+    """The image AS THE MODEL SEES IT, at display size.
+
+    A Grad-CAM lives on the grid of the preprocessed tensor. Overlaying it on the raw
+    upload is only correct while preprocessing happens to be geometry-preserving —
+    circle_crop retimes the frame and Resize((s,s)) squashes the aspect ratio, so the two
+    agree by luck, not by construction. Rendering the preprocessed frame makes the
+    correspondence exact and shows the operator what was actually classified.
+    """
+    pre = tfm.transforms[0]                          # FundusPreprocess: PIL -> PIL
+    return np.array(pre(image).convert("RGB").resize((DISPLAY, DISPLAY)))
+
+
+def _gradcam_core(model, target, tfm, device, image: Image.Image, objective):
+    """Return ``(overlay_b64, evidence)`` — the map, and what it is worth.
+
+    Shared by both served models so a heatmap can never be produced by a different network
+    than the verdict it is supposed to explain. `objective(out)` selects the scalar to
+    differentiate: one class logit for a plain classifier, log P(any ROP) for the
+    structured head, whose decision is not a single logit at all.
+
+    A heatmap with no attached measurement invites the reader to trust whatever blob
+    appears. Two things are measured instead: how much attention fell OUTSIDE the retina
+    (frame-reading, not disease-reading) and how CONCENTRATED it is (a diffuse map has
+    localised nothing). Both are reported next to the picture.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    tensor = tfm(image).unsqueeze(0).to(device)
+    grads, acts = [], []
+    bw = target.register_full_backward_hook(lambda m, gi, go: grads.append(go[0].detach().cpu()))
+    fw = target.register_forward_hook(lambda m, i, o: acts.append(o.detach().cpu()))
+    model.zero_grad()
+    objective(model(tensor)).backward()
+    bw.remove(); fw.remove()
+
+    w = grads[0].mean(dim=[2, 3], keepdim=True)
+    cam = torch.relu((w * acts[0]).sum(1)).squeeze().numpy().astype(np.float32)
+    # Upsample in float with a cubic kernel. Quantising the 12x12 map to uint8 and letting
+    # PIL resize it banded the low end of the ramp into flat plateaus — visible as hard
+    # steps in the blue background of the overlay.
+    cam = np.clip(_resize_f32(cam, DISPLAY), 0.0, None)
+
+    frame = _model_frame(tfm, image)
+    mask = retina_mask(frame)
+    evidence = _cam_evidence(cam, mask)
+
+    # Colour ONLY the retina. Attention on the surround is real and is reported as a number
+    # alongside; painting it keeps the eye on a region where the model has, by
+    # construction, nothing clinical to see.
+    shown = cam.copy()
+    if mask is not None:
+        shown[~mask] = 0.0
+    rng = float(shown.max())
+    shown = shown / rng if rng > 0 else shown
+
+    heat = (plt.get_cmap("jet")(shown)[:, :, :3] * 255).astype(np.uint8)
+    overlay = (0.55 * heat + 0.45 * frame).astype(np.uint8)
+    if mask is not None:
+        outside = ~mask
+        overlay[outside] = (frame[outside] * 0.45).astype(np.uint8)
+        edge = cv2.dilate(mask.astype(np.uint8), np.ones((3, 3), np.uint8)) - mask
+        overlay[edge.astype(bool)] = (255, 255, 255)
+    buf = io.BytesIO()
+    Image.fromarray(overlay).save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode(), evidence
+
+
+def _cam_evidence(cam: np.ndarray, mask: np.ndarray | None) -> dict:
+    """Quantify a saliency map before anyone reads meaning into it."""
+    total = float(cam.sum())
+    ev: dict = {
+        "note": ("Grad-CAM shows the regions whose features moved this score — it is "
+                 "not a lesion outline, and a bright area is not a diagnosis."),
+    }
+    if total <= 0:
+        ev["measurable"] = False
+        return ev
+    ev["measurable"] = True
+
+    if mask is not None:
+        off = float(cam[~mask].sum()) / total * 100.0
+        ev["off_retina_pct"] = round(off, 1)
+        ev["retina_frac_pct"] = round(float(mask.mean()) * 100.0, 1)
+        # Whether the single hottest point missed the retina must be read off the RAW
+        # map. Taking it from the masked copy below makes the answer "yes, inside" by
+        # construction — a check that can only ever pass is not a check.
+        gy, gx = np.unravel_index(int(np.argmax(cam)), cam.shape)
+        ev["peak_inside_retina"] = bool(mask[gy, gx])
+        inside = cam.copy(); inside[~mask] = 0.0
+    else:
+        inside = cam
+
+    # Concentration: the smallest share of the frame that carries half the attention.
+    # Uniform noise gives ~50%; a tight focus gives a few percent.
+    flat = np.sort(inside.ravel())[::-1]
+    cs = np.cumsum(flat)
+    if cs[-1] > 0:
+        half = int(np.searchsorted(cs, cs[-1] * 0.5)) + 1
+        ev["concentration_pct"] = round(half / flat.size * 100.0, 1)
+
+    # Peak position, described geometrically. NOT as temporal/nasal: that needs eye
+    # laterality (OD/OS), which this app never asks for and must not invent.
+    py, px = np.unravel_index(int(np.argmax(inside)), inside.shape)
+    if mask is not None:
+        ys, xs = np.nonzero(mask)
+        cy, cx = ys.mean(), xs.mean()
+        radius = float(np.sqrt(mask.sum() / np.pi))
+        rho = float(np.hypot(py - cy, px - cx) / radius) if radius > 0 else 0.0
+        ev["peak_radial_frac"] = round(rho, 2)
+        ev["peak_zone"] = ("centre of the visible field" if rho < 0.34
+                           else "mid-periphery" if rho < 0.67 else "outer periphery")
+        ang = (np.degrees(np.arctan2(px - cx, cy - py)) + 360.0) % 360.0
+        ev["peak_clock"] = int(round(ang / 30.0)) or 12
+    return ev
+
+
+class StagingPreview:
+    """6-class ICROP staging — RESEARCH PREVIEW, not a clinical output.
+
+    Serves the clinically-structured staging model (ordinal CORN stages + AP-ROP branch;
+    the site-adversary branch is training-time machinery and is inert here). The checkpoint
+    is one cross-validation fold's model (fold 0, seed 42); 5-fold CV puts the family at
+    macro-F1 0.692 ± 0.086, equivalent to a flat softmax — it is served for its
+    taxonomy-faithful outputs, and every response says "research preview" because the locked
+    external test has deliberately never been opened.
+
+    Fails soft: if the checkpoint or config is absent the app runs without the preview.
+    """
+
+    CLASSES = ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5", "AP-ROP"]
+    NOTE = ("Stage breakdown of the SAME model that produced the screening result above — "
+            "not a second opinion. The stage label is a research output: cross-validated, "
+            "single-seed, and not a clinical grade.")
+
+    def __init__(self, device):
+        self.loaded = False
+        self.screening = None
+        cfg_path = Path("configs/rop_staging_structured.yaml")
+        weights = Path("results/rop_staging/weights.pth")
+        if not (cfg_path.exists() and weights.exists()):
+            return
+        try:
+            from models.common.structured import StructuredROPModel, decode_6class
+            cfg = load_config(str(cfg_path))
+            self.cfg = cfg
+            self.tfm = build_transforms(cfg, "val")
+            state = torch.load(weights, map_location=device)
+            n_sites = state["site_head.3.bias"].shape[0]
+            model = StructuredROPModel(cfg.model.arch, n_sites=n_sites, pretrained=False)
+            model.load_state_dict(state, strict=True)
+            self.model = model.to(device).eval()
+            self.decode = decode_6class
+            self.device = device
+            self.thr = float(cfg.train.get("arop_threshold", 0.5))
+            self.base_tfm = self.tfm            # for the shared Grad-CAM helpers
+            self.arch = cfg.model.arch
+            # The re-basing artifact. Its presence is what promotes this model from a
+            # preview to the product: without it there is no vetted threshold and the
+            # binary verdict stays with the retired ResNet50 head.
+            p = Path("results/rop/screening_rebase.json")
+            self.screening = json.loads(p.read_text()) if p.exists() else None
+            self.loaded = True
+            print("[webapp] structured ROP model loaded"
+                  + (f" | SCREENING re-based, threshold {self.screening['threshold']}"
+                     if self.screening else " | staging preview only (no rebase artifact)"))
+        except Exception as e:                       # pragma: no cover - defensive boot
+            print(f"[webapp] structured model unavailable: {e}")
+
+    @torch.no_grad()
+    def probs(self, image: Image.Image):
+        """One forward pass, reused by both the screening verdict and the stage card."""
+        t = self.tfm(image).unsqueeze(0).to(self.device)
+        pred6, prob6 = self.decode(self.model(t), arop_threshold=self.thr)
+        return prob6[0].cpu().numpy(), int(pred6[0])
+
+    def predict(self, image: Image.Image, probs=None, idx=None):
+        if not self.loaded:
+            return None
+        if probs is None:
+            probs, idx = self.probs(image)
+        return {
+            "prediction": self.CLASSES[idx],
+            "scores": {c: round(float(probs[i]) * 100, 1)
+                       for i, c in enumerate(self.CLASSES)},
+            "arop_probability": round(float(probs[5]) * 100, 1),
+            # The argmax label alone would be misleading beside a positive verdict: a
+            # "Normal" winning on 60.9% still carries 39.1% on the disease classes. This is
+            # also the exact quantity the screening decision is now made on, so the two
+            # cards can no longer appear to contradict each other.
+            "any_rop_probability": round(float(probs[1:].sum()) * 100, 1),
+            "preview": True,
+            "note": self.NOTE,
+        }
+
+    def screening_finding(self, probs) -> dict | None:
+        """The binary ROP verdict, decided on P(any ROP).
+
+        Replaces the ResNet50 screening head, which an external audit found degenerate at
+        the held-out hospital: at its 0.1933 threshold it flagged 663 of 663 images because
+        the site's whole score distribution sits above the cut-off (external AUC 0.691 vs
+        this model's 0.821). Threshold and both sites' measured behaviour come from
+        scripts/rop_rebase_screening.py — never hardcoded here.
+        """
+        if not self.screening:
+            return None
+        s = self.screening
+        thr = float(s["threshold"])
+        any_rop = float(probs[1:].sum())
+        positive = any_rop > thr
+        risk, rec = recommendation("ROP", 1 if positive else 0)
+        internal, external = s["new_model"]["internal_oof"], s["new_model"]["external_dev"]
+        return {
+            "disease": "ROP", "available": True, "status": "ok",
+            "prediction": "ROP Detected" if positive else "No ROP",
+            "grade": 1 if positive else 0,
+            "score": round(any_rop * 100, 1),
+            "scores": {"No ROP": round((1 - any_rop) * 100, 1),
+                       "ROP Detected": round(any_rop * 100, 1)},
+            "risk": risk, "recommendation": rec,
+            # No temperature was fitted for this head, and none is claimed. The bootstrap
+            # in structured_bootstrap_calibration.json covers staging metrics, not the
+            # binary score's calibration, so "unverified" is the accurate badge.
+            "calibration": {"status": "unverified", "applied": False,
+                            "note": "No calibration has been fitted for this binary score. "
+                                    "Read it as a ranking, not a probability of disease."},
+            "decision": {
+                "score": round(any_rop * 100, 1),
+                "threshold": round(thr * 100, 2),
+                "positive": positive,
+                "positive_class": "ROP Detected",
+                "note": "Screened positive when the score exceeds the decision line.",
+                "model": "structured staging model · P(any ROP)",
+                "measured": {
+                    "sensitivity": round(internal["sensitivity"] * 100, 1),
+                    "specificity": round(internal["specificity"] * 100, 1),
+                    "false_alarm": round((1 - internal["specificity"]) * 100, 1),
+                    "n": internal["n"],
+                },
+                "external": {
+                    "n": external["n"],
+                    "site": "held-out hospital (dev half)",
+                    "sensitivity": round(external["sensitivity"] * 100, 1),
+                    "specificity": round(external["specificity"] * 100, 1),
+                    "false_alarm": round((1 - external["specificity"]) * 100, 1),
+                    "auc": s["new_model"]["auc_external_dev"],
+                    "selection_caveat": True,
+                },
+            },
+            "uncertain": False,
+        }
+
+    def gradcam(self, image: Image.Image, class_idx: int):
+        """Grad-CAM on the head that actually produced the verdict.
+
+        Explaining a decision with a different model's saliency is worse than showing none.
+        The target is P(any ROP) — the quantity the screening decision turns on — not one
+        stage logit.
+        """
+        if not self.loaded:
+            return None, None
+        return _gradcam_core(
+            self.model, get_target_layer(self.model.backbone, self.arch), self.tfm,
+            self.device, image,
+            lambda out: torch.log(self.decode(out, arop_threshold=self.thr)[1][0, 1:].sum()
+                                  + 1e-9))
+
+
 class DiseaseModel:
     def __init__(self, disease, cfg, weights, device):
         self.disease = disease
@@ -164,6 +452,15 @@ class DiseaseModel:
         self.model = build_from_cfg(cfg, pretrained=False).to(device)
         self.calibration = self._calibration_state()
         self.abstention = self._load_json("abstention_band.json")
+        # The measured consequence of the served threshold. Shipped with every positive
+        # because "ROP Detected" on a healthy eye is not a malfunction here — it is what
+        # 0.398 specificity looks like from the operator's chair, and a verdict that does
+        # not carry its own false-alarm rate will be read as a diagnosis.
+        self.operating_point = self._load_json("operating_point.json")
+        # How the served threshold behaves at a hospital it was NOT tuned on
+        # (scripts/rop_screening_external_spec.py). Loaded because the internal
+        # specificity, quoted alone, is the more flattering of two measured numbers.
+        self.external = self._load_json("screening_external_spec.json")
         self.loaded = False
         if Path(weights).exists():
             self.model.load_state_dict(torch.load(weights, map_location=device))
@@ -274,6 +571,45 @@ class DiseaseModel:
             "calibration": self.calibration,
         }
 
+        # The decision line, shipped WITH the score. Field-reported confusion: the UI drew
+        # "No ROP 43.7% / ROP Detected 56.3%" as two competing bars, which every reader
+        # interprets against a 50% boundary. This model's boundary is 19.33% — tuned on val
+        # for >=0.90 sensitivity, measured 0.990 sens / 0.398 spec on test. A score of 56.3%
+        # is therefore ~3x the decision line, not a near-tie, and the complement 43.7% is
+        # arithmetic (1 - score), not a second opinion that the eye is healthy. A threshold
+        # the client cannot see is a threshold the client will silently assume.
+        out["decision"] = {
+            "score": round(score * 100, 1),
+            # 2 dp, not 1: the threshold is a fixed constant (19.33%), and rounding it to
+            # 19.3% would let a score of 19.31% render as "above the 19.3% line" by 0.01.
+            "threshold": round(dthr * 100, 2),
+            "positive": bool(score > dthr),
+            "positive_class": self.class_names[-1] if len(self.class_names) == 2 else None,
+            "note": ("Screened positive when the score exceeds the decision line."
+                     if len(self.class_names) == 2 else None),
+        }
+        op = (self.operating_point or {}).get("test") or {}
+        if len(self.class_names) == 2 and op.get("specificity") is not None:
+            out["decision"]["measured"] = {
+                "sensitivity": round(float(op["sensitivity"]) * 100, 1),
+                "specificity": round(float(op["specificity"]) * 100, 1),
+                "false_alarm": round((1.0 - float(op["specificity"])) * 100, 1),
+                "n": op.get("n"),
+            }
+            ext = self.external or {}
+            sop = (ext.get("served_operating_point") or {}).get("screening") or {}
+            if sop:
+                out["decision"]["external"] = {
+                    "n": ext["eval_set"]["n"],
+                    "site": ext["eval_set"]["site"],
+                    "specificity": round(float(sop["specificity"]) * 100, 1),
+                    "flagged_pct": round(float(sop["flagged_frac"]) * 100, 1),
+                    "auc": ext["auc"]["screening"],
+                    # the staging head measured on the SAME external images, so the card
+                    # can say which of the two to believe instead of just asserting one
+                    "staging_auc": ext["auc"].get("staging_any_rop_fold0"),
+                }
+
         # C5 — for an ordinal head the clinically meaningful endpoint is referable disease,
         # not the argmax grade. Report it explicitly instead of leaving it implied.
         ref = self.cfg.eval.get("referable_grade")
@@ -297,94 +633,18 @@ class DiseaseModel:
             out["uncertain"] = False
         return out
 
-    def gradcam(self, image: Image.Image, class_idx: int) -> str | None:
+    def gradcam(self, image: Image.Image, class_idx: int):
+        """Grad-CAM for one class logit of this plain classifier."""
         if not self.loaded:
-            return None
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
+            return None, None
+        return _gradcam_core(self.model, get_target_layer(self.model, self.arch),
+                             self.base_tfm, self.device, image,
+                             lambda out: out[0, class_idx])
 
-        tensor = self.base_tfm(image).unsqueeze(0).to(self.device)
-        grads, acts = [], []
-        target = get_target_layer(self.model, self.arch)
-        bw = target.register_full_backward_hook(lambda m, gi, go: grads.append(go[0].detach().cpu()))
-        fw = target.register_forward_hook(lambda m, i, o: acts.append(o.detach().cpu()))
-        self.model.zero_grad()
-        out = self.model(tensor)
-        out[0, class_idx].backward()
-        bw.remove(); fw.remove()
+    # kept as a class attribute: tests drive it directly to prove the peak check can
+    # answer False, and that is a property of the function, not of any one model.
+    _cam_evidence = staticmethod(_cam_evidence)
 
-        w = grads[0].mean(dim=[2, 3], keepdim=True)
-        cam = torch.relu((w * acts[0]).sum(1)).squeeze().numpy()
-        cam -= cam.min()
-        if cam.max() > 0:
-            cam /= cam.max()
-        cam_img = Image.fromarray((cam * 255).astype(np.uint8)).resize((DISPLAY, DISPLAY))
-        heat = (plt.get_cmap("jet")(np.array(cam_img) / 255.0)[:, :, :3] * 255).astype(np.uint8)
-        orig = np.array(image.convert("RGB").resize((DISPLAY, DISPLAY)))
-        overlay = (0.55 * heat + 0.45 * orig).astype(np.uint8)
-        buf = io.BytesIO()
-        Image.fromarray(overlay).save(buf, format="PNG")
-        return base64.b64encode(buf.getvalue()).decode()
-
-
-class StagingPreview:
-    """6-class ICROP staging — RESEARCH PREVIEW, not a clinical output.
-
-    Serves the clinically-structured staging model (ordinal CORN stages + AP-ROP branch;
-    the site-adversary branch is training-time machinery and is inert here). The checkpoint
-    is one cross-validation fold's model (fold 0, seed 42); 5-fold CV puts the family at
-    macro-F1 0.692 ± 0.086, equivalent to a flat softmax — it is served for its
-    taxonomy-faithful outputs, and every response says "research preview" because the locked
-    external test has deliberately never been opened.
-
-    Fails soft: if the checkpoint or config is absent the app runs without the preview.
-    """
-
-    CLASSES = ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5", "AP-ROP"]
-    NOTE = ("Research preview — a cross-validated staging model whose locked external test "
-            "has not been opened. Not a clinical grade; the binary screening result above "
-            "is the product output.")
-
-    def __init__(self, device):
-        self.loaded = False
-        cfg_path = Path("configs/rop_staging_structured.yaml")
-        weights = Path("results/rop_staging/weights.pth")
-        if not (cfg_path.exists() and weights.exists()):
-            return
-        try:
-            from models.common.structured import StructuredROPModel, decode_6class
-            cfg = load_config(str(cfg_path))
-            self.tfm = build_transforms(cfg, "val")
-            state = torch.load(weights, map_location=device)
-            n_sites = state["site_head.3.bias"].shape[0]
-            model = StructuredROPModel(cfg.model.arch, n_sites=n_sites, pretrained=False)
-            model.load_state_dict(state, strict=True)
-            self.model = model.to(device).eval()
-            self.decode = decode_6class
-            self.device = device
-            self.thr = float(cfg.train.get("arop_threshold", 0.5))
-            self.loaded = True
-            print("[webapp] ICROP staging research preview loaded")
-        except Exception as e:                       # pragma: no cover - defensive boot
-            print(f"[webapp] staging preview unavailable: {e}")
-
-    @torch.no_grad()
-    def predict(self, image: Image.Image):
-        if not self.loaded:
-            return None
-        t = self.tfm(image).unsqueeze(0).to(self.device)
-        pred6, prob6 = self.decode(self.model(t), arop_threshold=self.thr)
-        probs = prob6[0].cpu().numpy()
-        idx = int(pred6[0])
-        return {
-            "prediction": self.CLASSES[idx],
-            "scores": {c: round(float(probs[i]) * 100, 1)
-                       for i, c in enumerate(self.CLASSES)},
-            "arop_probability": round(float(probs[5]) * 100, 1),
-            "preview": True,
-            "note": self.NOTE,
-        }
 
 
 class EmbeddingGate:
@@ -551,6 +811,9 @@ class Registry:
             }
 
         findings, heatmaps = [], []
+        # pre-bound: a routed-out ROP model skips the loop body, and the staging block
+        # below reads these
+        rebased, probs6, idx6 = False, None, None
         for dm in self.models:
             if dm.disease not in allowed:
                 findings.append({
@@ -559,24 +822,40 @@ class Registry:
                             f"(trained for: {', '.join(dm.applies_to)}).",
                 })
                 continue
-            res = dm.predict(image)
+            # ROP is decided by the STRUCTURED model when a vetted threshold exists for it.
+            # The ResNet50 head it replaces was audited at the held-out hospital and found
+            # degenerate there — every one of 663 images flagged, healthy included, because
+            # the whole site's score distribution sits above its 0.1933 cut-off (external
+            # AUC 0.691 vs 0.821). One forward pass serves the verdict, the stage card and
+            # the Grad-CAM, so the page cannot show three views of two different models.
+            rebased = (dm.disease == "ROP" and self.staging.loaded
+                       and self.staging.screening is not None)
+            if rebased:
+                probs6, idx6 = self.staging.probs(image)
+                res = self.staging.screening_finding(probs6)
+                source = self.staging
+            else:
+                res = dm.predict(image)
+                source = dm
             res.setdefault("status", "ok" if res.get("available") else "not_loaded")
             if advisory:
                 res["advisory"] = True
             findings.append(res)
             # one Grad-CAM per positive disease, not one for the whole image
             if res.get("available") and res.get("grade", 0) > 0:
-                cam = dm.gradcam(image, res["grade"])
+                cam, evidence = source.gradcam(image, res["grade"])
                 if cam:
-                    heatmaps.append({"disease": dm.disease, "image": cam})
+                    heatmaps.append({"disease": dm.disease, "image": cam,
+                                     "evidence": evidence})
 
-        # ICROP staging research preview — infant context only, and only when the binary
-        # model actually ran (a routed-out or unloaded product model must not leave the
-        # preview as the only voice on the page).
+        # The stage breakdown — the same forward pass as the verdict when re-based, so the
+        # two cards report one model. Shown only when the product model actually ran; a
+        # routed-out or unloaded model must not leave staging as the only voice on the page.
         staging = None
         if "ROP" in allowed and self.staging.loaded and any(
                 f.get("available") for f in findings):
-            staging = self.staging.predict(image)
+            staging = (self.staging.predict(image, probs6, idx6) if rebased
+                       else self.staging.predict(image))
 
         return {
             "context": context,

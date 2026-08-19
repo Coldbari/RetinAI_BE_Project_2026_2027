@@ -1,0 +1,151 @@
+{
+  "score_distribution": {
+    "screening_normal": {
+      "min": 0.2939,
+      "p5": 0.4479,
+      "median": 0.6454,
+      "p95": 0.8739,
+      "max": 0.9542
+    },
+    "screening_rop": {
+      "min": 0.2788,
+      "p5": 0.4354,
+      "median": 0.797,
+      "p95": 0.9925,
+      "max": 0.999
+    },
+    "served_threshold": 0.1933,
+    "interpretation": "If screening_normal.min exceeds served_threshold, the served operating point calls EVERY image at this hospital positive \u2014 the threshold was tuned on Ostrava and does not transfer."
+  },
+  "eval_set": {
+    "csv": "results/prepared/rop_staging/test_dev.csv",
+    "n": 663,
+    "n_normal": 150,
+    "n_rop": 513,
+    "site": "multiview (held-out hospital), DEV half only",
+    "note": "the locked half is not touched by this script"
+  },
+  "auc": {
+    "screening": 0.6911,
+    "staging_any_rop_fold0": 0.8214,
+    "staging_any_rop_5fold": 0.8315
+  },
+  "served_operating_point": {
+    "screening": {
+      "threshold": 0.1933,
+      "sensitivity": 1.0,
+      "specificity": 0.0,
+      "flagged_frac": 1.0,
+      "ppv": 0.7738,
+      "healthy_flagged": 150,
+      "healthy_total": 150
+    }
+  },
+  "matched_sensitivity": {
+    "0.99": {
+      "screening": {
+        "threshold": 0.3163,
+        "sensitivity": 0.9942,
+        "specificity": 0.0067,
+        "flagged_frac": 0.994,
+        "ppv": 0.7739,
+        "healthy_flagged": 149,
+        "healthy_total": 150,
+        "target_sensitivity": 0.99,
+        "achievable": true
+      },
+      "staging_fold0": {
+        "threshold": 0.0014,
+        "sensitivity": 0.9883,
+        "specificity": 0.04,
+        "flagged_frac": 0.9819,
+        "ppv": 0.7788,
+        "healthy_flagged": 144,
+        "healthy_total": 150,
+        "target_sensitivity": 0.99,
+        "achievable": true
+      },
+      "staging_5fold": {
+        "threshold": 0.0027,
+        "sensitivity": 0.9883,
+        "specificity": 0.0667,
+        "flagged_frac": 0.9759,
+        "ppv": 0.7836,
+        "healthy_flagged": 140,
+        "healthy_total": 150,
+        "target_sensitivity": 0.99,
+        "achievable": true
+      }
+    },
+    "0.95": {
+      "screening": {
+        "threshold": 0.4306,
+        "sensitivity": 0.9513,
+        "specificity": 0.0333,
+        "flagged_frac": 0.9548,
+        "ppv": 0.7709,
+        "healthy_flagged": 145,
+        "healthy_total": 150,
+        "target_sensitivity": 0.95,
+        "achievable": true
+      },
+      "staging_fold0": {
+        "threshold": 0.0076,
+        "sensitivity": 0.9493,
+        "specificity": 0.2667,
+        "flagged_frac": 0.9005,
+        "ppv": 0.8157,
+        "healthy_flagged": 110,
+        "healthy_total": 150,
+        "target_sensitivity": 0.95,
+        "achievable": true
+      },
+      "staging_5fold": {
+        "threshold": 0.0072,
+        "sensitivity": 0.9493,
+        "specificity": 0.2267,
+        "flagged_frac": 0.9095,
+        "ppv": 0.8076,
+        "healthy_flagged": 116,
+        "healthy_total": 150,
+        "target_sensitivity": 0.95,
+        "achievable": true
+      }
+    },
+    "0.90": {
+      "screening": {
+        "threshold": 0.5068,
+        "sensitivity": 0.9006,
+        "specificity": 0.1333,
+        "flagged_frac": 0.8929,
+        "ppv": 0.7804,
+        "healthy_flagged": 130,
+        "healthy_total": 150,
+        "target_sensitivity": 0.9,
+        "achievable": true
+      },
+      "staging_fold0": {
+        "threshold": 0.0159,
+        "sensitivity": 0.9006,
+        "specificity": 0.4,
+        "flagged_frac": 0.8326,
+        "ppv": 0.837,
+        "healthy_flagged": 90,
+        "healthy_total": 150,
+        "target_sensitivity": 0.9,
+        "achievable": true
+      },
+      "staging_5fold": {
+        "threshold": 0.0124,
+        "sensitivity": 0.8986,
+        "specificity": 0.4067,
+        "flagged_frac": 0.8296,
+        "ppv": 0.8382,
+        "healthy_flagged": 89,
+        "healthy_total": 150,
+        "target_sensitivity": 0.9,
+        "achievable": true
+      }
+    }
+  }
+}

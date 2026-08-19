@@ -50,8 +50,14 @@ def _to_reader(image):
 
 
 def generate_pdf(out_path, patient: dict, findings: list[dict],
-                 original_image=None, gradcam_image=None) -> str:
-    """findings: [{"disease","prediction","score","grade"}, ...]."""
+                 original_image=None, gradcam_image=None, staging: dict | None = None,
+                 cam_evidence: dict | None = None) -> str:
+    """findings: [{"disease","prediction","score","grade"}, ...].
+
+    `staging` is the optional 6-class ICROP research preview. It is rendered under its own
+    heading and never inside the findings block: it is not a clinical grade, and a stage
+    printed next to the screening verdict would be read as one.
+    """
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
     from reportlab.pdfgen import canvas
@@ -116,10 +122,21 @@ def generate_pdf(out_path, patient: dict, findings: list[dict],
                      f"{disease}: {f['prediction']}  ({f.get('score', 0):.1f}%)")
         c.setFont("Helvetica", 9)
         c.drawString(95 * mm, y2 - (row * 14 + 5) * mm, f"Risk: {risk} — {rec}")
+        # The operating point belongs on the report. A bare "56.3%" invites the reader to
+        # measure it against 50%; this model decides at 19.3%, tuned for high sensitivity.
+        dec = f.get("decision") or {}
+        if dec.get("positive_class") is not None:
+            c.setFont("Helvetica", 7.5)
+            c.setFillColorRGB(0.42, 0.42, 0.45)
+            c.drawString(95 * mm, y2 - (row * 14 + 9) * mm,
+                         f"Score {dec['score']}% vs decision line {dec['threshold']}% "
+                         f"(tuned for high sensitivity, not a 50% cut-off).")
+            c.setFillColorRGB(0, 0, 0)
         row += 1
 
     # images
     img_y = y - 110 * mm
+    cam_bottom = img_y                 # lowest point the heatmap caption reaches
     orig = _to_reader(original_image)
     cam = _to_reader(gradcam_image)
     if orig:
@@ -128,6 +145,57 @@ def generate_pdf(out_path, patient: dict, findings: list[dict],
     if cam:
         c.setFont("Helvetica-Bold", 9); c.drawString(105 * mm, img_y + 67 * mm, "AI heatmap (Grad-CAM)")
         c.drawImage(cam, 105 * mm, img_y, width=75 * mm, height=65 * mm, preserveAspectRatio=True)
+        # A heatmap on a clinical-looking page is the most over-read element in the report.
+        # The measurements that qualify it travel WITH it or the picture speaks alone.
+        if cam_evidence and cam_evidence.get("measurable"):
+            e = cam_evidence
+            bits = []
+            if e.get("off_retina_pct") is not None:
+                bits.append(f"{e['off_retina_pct']}% of attention fell outside the retina"
+                            + (" — HIGH, map unreliable" if e["off_retina_pct"] >= 15 else ""))
+            if e.get("concentration_pct") is not None:
+                bits.append(f"half the attention in {e['concentration_pct']}% of the image")
+            if e.get("peak_zone"):
+                bits.append(f"strongest region: {e['peak_zone']}, "
+                            f"{e['peak_clock']} o'clock as displayed")
+            c.setFont("Helvetica", 7)
+            c.setFillColorRGB(0.42, 0.42, 0.45)
+            lines = _wrap("; ".join(bits) + ". Grad-CAM shows what moved the score, not a "
+                          "lesion outline.", 62)[:4]
+            for i, line in enumerate(lines):
+                c.drawString(105 * mm, img_y - (4 + i * 3.2) * mm, line)
+            cam_bottom = img_y - (4 + (len(lines) - 1) * 3.2) * mm
+            c.setFillColorRGB(0, 0, 0)
+
+    # ICROP staging research preview — its own section, under the images, well away from
+    # the findings block. Kept visually secondary on purpose: it is a research output, and
+    # the screening verdict above is the only thing this report asserts.
+    if staging:
+        # Clear the heatmap caption, whose length depends on how many evidence lines the
+        # Grad-CAM produced. Pinning this to a constant offset put the staging heading on
+        # the same baseline as the caption's last line — different columns, but the
+        # heading is 105mm wide and ran straight into it.
+        sy = min(img_y - 14 * mm, cam_bottom - 9 * mm)
+        c.setFillColorRGB(0, 0, 0)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(18 * mm, sy, "ICROP staging — research preview (not a clinical grade)")
+        c.setFont("Helvetica-Bold", 10)
+        head = f"Predicted stage: {staging.get('prediction', '—')}"
+        # Without the any-ROP total, a "Normal" that won on 60.9% reads as a clean negative
+        # sitting under a positive screening verdict. The two heads answer different
+        # questions; this is the one they answer in common.
+        if staging.get("any_rop_probability") is not None:
+            head += f"   ·   Any ROP: {staging['any_rop_probability']}%"
+        c.drawString(18 * mm, sy - 7 * mm, head)
+        c.setFont("Helvetica", 8.5)
+        ranked = sorted((staging.get("scores") or {}).items(), key=lambda kv: -kv[1])
+        for i, (name, val) in enumerate(ranked):
+            c.drawString(18 * mm, sy - (13 + i * 4.5) * mm, f"{name}: {val}%")
+        c.setFont("Helvetica-Oblique", 7.5)
+        c.setFillColorRGB(0.42, 0.42, 0.45)
+        for i, line in enumerate(_wrap(staging.get("note", ""), 105)[:3]):
+            c.drawString(18 * mm, sy - (13 + len(ranked) * 4.5 + 3 + i * 3.5) * mm, line)
+        c.setFillColorRGB(0, 0, 0)
 
     # disclaimer
     c.setFillColorRGB(0.6, 0.1, 0.1)

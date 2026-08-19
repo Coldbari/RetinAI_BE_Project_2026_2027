@@ -1,0 +1,50 @@
+{
+  "decision": "binary ROP screening moves from the ResNet50 head to the structured staging model's any-ROP probability",
+  "selection_rule": "largest threshold with sensitivity >= 0.9 at BOTH the training hospitals (5-fold out-of-fold) and the held-out hospital (dev half)",
+  "threshold": 0.0155,
+  "sensitivity_floor": 0.9,
+  "new_model": {
+    "internal_oof": {
+      "sensitivity": 0.9584,
+      "specificity": 0.7813,
+      "healthy_flagged": 839,
+      "healthy_total": 3837,
+      "ppv": 0.7658,
+      "n": 6700
+    },
+    "external_dev": {
+      "sensitivity": 0.9045,
+      "specificity": 0.3867,
+      "healthy_flagged": 92,
+      "healthy_total": 150,
+      "ppv": 0.8345,
+      "n": 663
+    },
+    "auc_internal_oof": 0.9695,
+    "auc_external_dev": 0.8214
+  },
+  "retired_model": {
+    "threshold": 0.1933,
+    "internal_test": {
+      "sensitivity": 0.9903,
+      "specificity": 0.3982,
+      "n": 1502
+    },
+    "external_dev": {
+      "threshold": 0.1933,
+      "sensitivity": 1.0,
+      "specificity": 0.0,
+      "flagged_frac": 1.0,
+      "ppv": 0.7738,
+      "healthy_flagged": 150,
+      "healthy_total": 150
+    },
+    "auc_external_dev": 0.6911
+  },
+  "caveats": [
+    "The external DEV half was used to SELECT this threshold, so its numbers here are in-sample for that choice and are optimistic.",
+    "The locked half is untouched and stays closed; a clean confirmation needs a site neither half has seen.",
+    "Sensitivity is traded down (internal 0.990 -> 0.958) to buy specificity that exists outside the training hospital at all.",
+    "'Any ROP' includes stage 1, which does not itself require treatment."
+  ]
+}

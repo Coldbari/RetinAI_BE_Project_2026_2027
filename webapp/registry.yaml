@@ -13,6 +13,17 @@
 # WHY ROUTING EXISTS: without it, every model ran on every upload. Measured consequence —
 # the ROP model (trained only on preterm infants) flagged 41/45 adult eyes as ROP-positive.
 # The context declaration is mandatory and the operator makes it, never the image.
+# SCREENING RE-BASED, 2026-08-19. The binary ROP verdict is now produced by the STRUCTURED
+# staging model's P(any ROP), not by the ResNet50 below. An external audit
+# (scripts/rop_screening_external_spec.py) ran the ResNet50 over 663 images from a hospital
+# it never trained on and found it degenerate there: at its 0.1933 threshold it flagged
+# every single image, healthy eyes included, because that site's whole score distribution
+# sits above the cut-off. External AUC 0.691; the structured model scored 0.821 on the same
+# images. The threshold lives in results/rop/screening_rebase.json and is chosen by a stated
+# rule (scripts/rop_rebase_screening.py), never hardcoded.
+#
+# The entry below is KEPT deliberately. It anchors the routing table, feeds the dashboard,
+# and is the fallback if the re-basing artifact is ever absent — but it no longer decides.
 models:
   - disease: ROP
     config: configs/rop.yaml

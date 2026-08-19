@@ -146,13 +146,74 @@ button{cursor:pointer;font-family:inherit}
 .steps li.active{color:var(--text)} .steps li.active::before{content:"◌"}
 
 /* results */
-.result-layout{display:grid;grid-template-columns:1fr;gap:16px}
+/* Results run side-by-side: the image stays put on the left while the findings,
+   staging preview and Grad-CAM measurements read down the right. Before this the three
+   stacked, so comparing a heatmap against the numbers that qualify it meant scrolling
+   between them — the one comparison the page exists to support. */
+.result-layout{display:grid;gap:18px;align-items:start;
+  grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);
+  grid-template-areas:"viz cards" "viz staging" "viz .";
+  grid-template-rows:auto auto 1fr}
+#viz{grid-area:viz;position:sticky;top:78px}   /* 64px notch-nav + breathing room */
+#cards{grid-area:cards}
+#stagingcard{grid-area:staging}
+/* if there is no image to show, do not leave half the panel empty */
+.result-layout:has(#viz[hidden]){grid-template-columns:1fr;
+  grid-template-areas:"cards" "staging"}
+@media(max-width:900px){
+  .result-layout{grid-template-columns:1fr;grid-template-areas:"cards" "staging" "viz"}
+  #viz{position:static}
+}
 .card{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:12px}
 .card h3{margin:0 0 4px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
 .card .rec{font-size:13px;color:var(--muted);margin:4px 0 8px}
 .bar{height:7px;background:#0b1120;border-radius:6px;overflow:hidden;margin:5px 0}
 .bar>span{display:block;height:100%;border-radius:6px;background:var(--accent)}
 .scoreline{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+
+/* decision meter — a screening score shown against its own operating point.
+   The tick is the threshold the model actually decides on; without it the bar
+   is read against an implied 50% that this model never uses. */
+.dm{margin-top:6px}
+.dm-track{position:relative;height:10px;background:#0b1120;border-radius:6px;margin:6px 0 4px}
+.dm-fill{display:block;height:100%;border-radius:6px;background:var(--accent2)}
+.dm-fill.on{background:#f87171}
+.dm-tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text);border-radius:2px;transform:translateX(-1px)}
+.dm-axis{position:relative;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);height:15px}
+.dm-thr{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;color:var(--text);font-weight:600}
+.dm-why{font-size:12px;color:var(--muted);margin:12px 0 4px;line-height:1.5}
+.dm-why .dm-pos{color:#f87171} .dm-why .dm-neg{color:var(--accent2)}
+.dm-raw{font-size:11px;color:var(--muted);opacity:.8;margin:4px 0 0;line-height:1.5}
+.dm-fa{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 4px;padding:10px 12px;
+  border-radius:9px;background:rgba(248,113,113,.07);border-left:2px solid #f87171}
+.dm-fa b{color:var(--text)}
+.dm-fa.hard{background:rgba(239,68,68,.12);border-left-color:var(--red)}
+/* Grad-CAM evidence panel — the measurements that say whether the map is worth reading */
+.cam-evidence{margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:11px}
+.cam-evidence h4{margin:0 0 8px;font-size:13px;letter-spacing:.02em}
+ul.cam-ev{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px}
+ul.cam-ev li{font-size:12px;color:var(--muted);line-height:1.55;padding-left:16px;position:relative}
+ul.cam-ev li::before{content:"●";position:absolute;left:0;font-size:8px;top:4px;color:var(--line)}
+ul.cam-ev li.ok::before{color:var(--accent2)}
+ul.cam-ev li.warn::before{color:var(--amber)}
+ul.cam-ev li.warn b{color:var(--amber)}
+ul.cam-ev li .muted{opacity:.7}
+/* The staging card's headline number: "any ROP" is the quantity the screening model also
+   answers, so it is the only one the two can be compared on. */
+.anyrop{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:9px 11px;margin:2px 0 10px;border-radius:9px;background:#0b1120;
+  border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.anyrop i{font-style:normal;opacity:.65;font-size:11px}
+.anyrop b{font-size:16px;color:var(--amber)}
+.reconcile{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 12px;
+  padding:10px 12px;border-radius:9px;background:rgba(251,191,36,.06);
+  border-left:2px solid var(--amber)}
+.reconcile b{color:var(--text)}
+.card.staging{border-color:var(--amber)}
+.card.staging .scoreline .on{color:var(--text);font-weight:600}
+.card.staging .bar>span.on{background:var(--amber)}
+.r-preview{color:var(--amber);border-color:var(--amber)}
+
 .risk{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid}
 .r-low{color:var(--accent2);border-color:var(--accent2)}
 .r-mild{color:var(--accent);border-color:var(--accent)}
@@ -164,7 +225,9 @@ button{cursor:pointer;font-family:inherit}
 .tabs{display:flex;gap:6px;margin-bottom:8px}
 .tab{background:var(--bg2);border:1px solid var(--line);color:var(--muted);padding:6px 14px;border-radius:8px;font-size:13px}
 .tab.on{color:var(--text);border-color:var(--accent)}
-.viz-img{width:100%;border-radius:11px}
+/* Cap the height so the image and the findings beside it fit one screen together —
+   the whole point of the two-column layout. object-fit keeps the fundus undistorted. */
+.viz-img{width:100%;max-height:54vh;object-fit:contain;border-radius:11px}
 .legend{font-size:12px;color:var(--muted);margin:6px 0 2px}
 .legendbar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
 .legendbar i{flex:1;height:8px;border-radius:5px;background:linear-gradient(90deg,#2b54ff,#34d399,#fbbf24,#ef4444)}
@@ -241,7 +304,7 @@ footer strong{color:var(--amber)}
 }
 
 /* ═══════════════ SCREEN PAGE — centered + animated ═══════════════ */
-.screen-stage{position:relative;max-width:680px;margin:0 auto;min-height:74vh;padding-top:6px}
+.screen-stage{position:relative;max-width:1180px;margin:0 auto;min-height:74vh;padding-top:6px}
 
 /* ambient drifting background orbs */
 .bg-orbs{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
@@ -341,7 +404,10 @@ footer strong{color:var(--amber)}
 .btn-pop:disabled{opacity:.45;cursor:not-allowed}
 
 /* results panel centered */
-.results-panel{max-width:680px;margin:18px auto 0}
+/* Wider than the 680px upload card above it: this one holds two columns.
+   .screen-stage is widened to match; .screen-hero and .screen-card keep their own
+   max-width:680px and stay centred, so only the results break out. */
+.results-panel{max-width:1180px;margin:18px auto 0}
 
 /* ═══════════════ TEAM / CONTRIBUTORS GROUP ═══════════════ */
 .team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}

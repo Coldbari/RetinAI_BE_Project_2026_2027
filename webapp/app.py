@@ -234,7 +234,10 @@ def report():
     if result["heatmap"]:
         gradcam_img = Image.open(io.BytesIO(base64.b64decode(result["heatmap"])))
     out = (Path("results/reports") / f"report_{patient.get('id') or 'anon'}.pdf").resolve()
-    generate_pdf(out, patient, findings, original_image=image, gradcam_image=gradcam_img)
+    generate_pdf(out, patient, findings, original_image=image, gradcam_image=gradcam_img,
+                 staging=result.get("staging"),
+                 cam_evidence=(result["heatmaps"][0].get("evidence")
+                               if result.get("heatmaps") else None))
     return send_file(out, as_attachment=True, download_name=out.name)
 
 
@@ -284,7 +287,10 @@ def history_report(hid):
                "context_label": result["context_label"]}
     out = (Path("results/reports") / f"report_{hid}.pdf").resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    generate_pdf(out, patient, findings, original_image=image, gradcam_image=gradcam_img)
+    generate_pdf(out, patient, findings, original_image=image, gradcam_image=gradcam_img,
+                 staging=result.get("staging"),
+                 cam_evidence=(result["heatmaps"][0].get("evidence")
+                               if result.get("heatmaps") else None))
     fname = "screening_" + h["time"].replace(":", "-").replace(" ", "_") + ".pdf"
     return send_file(out, as_attachment=True, download_name=fname)
 
@@ -305,7 +311,8 @@ def _gallery():
             try:
                 image = Image.open(img_path).convert("RGB")
                 res = dm.predict(image)
-                heat = dm.gradcam(image, res["grade"]) if res.get("grade", 0) >= 0 else None
+                heat = (dm.gradcam(image, res["grade"])[0]
+                        if res.get("grade", 0) >= 0 else None)
                 items.append({"name": img_path.name, "thumb": _thumb(image, 200),
                               "heatmap": heat, "prediction": res["prediction"],
                               "score": res["score"], "risk": res.get("risk", "")})

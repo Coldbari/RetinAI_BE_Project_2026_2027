@@ -123,7 +123,13 @@ Android client for capture.
 
 The part of this project we think matters most is not the headline accuracy but the audit of it.
 A device-confound analysis showed that every ROP-positive test image came from a single camera,
-which brings the defensible ROP AUC down from 0.927 pooled to 0.881 device-controlled. A
+which brings the defensible ROP AUC down from 0.927 pooled to 0.881 device-controlled. That
+audit was later carried through to its conclusion: run over 663 images from a hospital it had
+never trained on, the ROP screening model flagged **every single one**, all 150 healthy eyes
+included, because that site's entire score distribution sits above its threshold. We retired it
+and re-based screening onto the staging model, which scores 0.821 rather than 0.691 on the same
+images. The defect was found by one of us uploading a healthy retina to our own web app and not
+believing the answer. A
 source-confound analysis brought Glaucoma from 0.967 pooled to 0.878 source-controlled, with
 zero-shot performance on withheld collections ranging from 0.735 to 0.936. DR referable-disease
 AUC of 0.906 held at 0.837 on external Messidor-2, a drop of 6.9%, inside our 10% pass
@@ -411,6 +417,8 @@ got done that week.
 | Week 9 | 03–09 Aug 2026 | Android client finished (CameraX capture, on-device quality gate, result and report screens, PDF export, instrumented tests). T12 glaucoma zero-shot range. T13 DR on IDRiD plus resolution sensitivity. T16 cross-disease routing. T17 confusion matrices and clinic PPV. 12 evidence figures. PHI incident remediated. ROP staging corpus consolidated from four sources | ROP 6-class ICROP staging, five-backbone benchmark | Six infant patient photographs were being served publicly. Removed and swept. Also found the ROP model fires on 59 of 59 adult eyes | 43 |
 | Week 10 | 10–16 Aug 2026 | ROP 6-class ICROP staging, corpus to conclusions. Corpus consolidated from four sources (6,700 CV images from 1,528 infants, plus 1,324 held-out). Patient-grouped 5-fold splits with a held-out hospital. Five-gate shortcut audit passed. Five-backbone benchmark. Clinically-structured head built and cross-validated against flat softmax — the two are equivalent (macro-F1 0.692 ± 0.086 vs 0.683 ± 0.118), which withdrew our earlier fold-0 claim that the structured head wins. Seven-arm ablation isolating the ordinal head, the AP-ROP branch, the sampler and the adversary. Session-level AP-ROP scoring pooled over all folds (0.84 recall against 0.35 image-level). Patient-clustered bootstrap CIs and calibration (ECE) | Seed repeats 1337 and 2024, session-level scoring of every ablation arm, start the ISBI draft | The fold-0 result we had built the architecture story on did not survive 5-fold CV — fold 0 concentrates the session-labelled AP-ROP infants, and all five backbones had "failed" on the same broken evaluation unit rather than on the disease. The corrected claim is measurement, not architecture | 24 |
 
+| Week 11 | 17–23 Aug 2026 | Number-by-number verification of every published claim (19 errors found in 261, all corrected). Matched head×seed 2×2 closing the sampling confound — the equivalence result's sign flips between seeds. Locked held-out-hospital test **pre-registered, then opened once** on 18 Aug; eye-level QWK 0.79–0.80 across all four arm-seed cells, and both measurement findings replicate externally. Repository narrowed to ROP only (158 renames, zero deletions). Gradability gate rebuilt twice from real uploads: v2 structural checks, v3 a learned feature-space layer. Grad-CAM confined to the retina with its off-retina leakage published as a number. **Binary screening re-based off the ResNet50 onto the structured model** after an external audit found the served threshold degenerate | ISBI draft compressed into the 4-page LaTeX template; contact a pediatric ophthalmologist co-author for label adjudication | Our own web app scored a photograph of furniture, then a night-time temple interior, as ROP-positive — the gate was a colour rule list, not a gate. Then a healthy retina came back "ROP Detected 48.4%", and the audit that followed showed the screening head flags 100% of images at any hospital it did not train on. Both were found by uploading real images to our own product rather than by reading a metric | 16 |
+
 The full commit history, code and results live in our development repository. This log book
 mirrors the milestones. Please ask if direct access to the development history is needed for
 evaluation.
@@ -518,12 +526,12 @@ sampler, 5-view TTA, and early stopping on the disease's primary metric.
 
 | | DR | ROP | Glaucoma |
 |---|---|---|---|
-| Architecture | EfficientNetV2-S | ResNet50 (won the sweep) | EfficientNetV2-S |
+| Architecture | EfficientNetV2-S | EfficientNetV2-S, structured head (re-based 19 Aug 2026; the ResNet50 that won the sweep is retired from deciding) | EfficientNetV2-S |
 | Classes | 5 (No / Mild / Moderate / Severe / Proliferative) | 2 (No ROP / ROP) | 2 (Non-glaucoma / Glaucoma) |
 | Primary metric | QWK, with referable (grade ≥ 2) as the screening endpoint | recall | AUC |
 | Preprocessing | circle-crop + Ben-Graham + CLAHE | circle-crop + CLAHE + strong augmentation | circle-crop + CLAHE |
 | Epochs / patience | 25 / 7 | 30 / 8 | 25 / 7 |
-| Operating point | argmax, referable grade = 2 | threshold 0.1933 | threshold 0.5 |
+| Operating point | argmax, referable grade = 2 | P(any ROP) > 0.0155 — the largest threshold holding sens ≥ 0.90 at **both** the training hospitals and the held-out one (the retired 0.1933 met its target at one site and collapsed at the other) | threshold 0.5 |
 
 **Data handling.** `build_manifest` pools heterogeneous sources into a uniform
 `image_path,label,split` manifest. The ROP database gets split by patient rather than by image.
@@ -665,7 +673,8 @@ is processed differently from what the model was trained on.
 |---|---|---|---|---|
 | DR (referable, grade ≥ 2) | EfficientNetV2-S | AUC 0.906 [0.893, 0.919] | n/a | Messidor-2 0.837 (−6.9%, PASS) |
 | DR (5-class) | EfficientNetV2-S | QWK 0.728 [0.709, 0.746], acc 74.4% | n/a | Messidor-2 QWK 0.654 |
-| ROP | ResNet50 | AUC 0.927 | 0.881 device-controlled | none, no public ROP set exists |
+| ROP screening (current, re-based 19 Aug 2026) | EfficientNetV2-S, structured head, P(any ROP) | AUC 0.970 (5-fold out-of-fold) | — | **held-out hospital AUC 0.821**; at the served threshold 0.0155, sens 0.905 / spec 0.387 |
+| ROP screening (retired 19 Aug 2026) | ResNet50 | AUC 0.927 | 0.881 device-controlled | **held-out hospital AUC 0.691 — flagged 663 of 663 images, spec 0.000** |
 | Glaucoma (exploratory) | EfficientNetV2-S | AUC 0.967 [0.957, 0.976] | 0.878 source-controlled | zero-shot 0.735 (ORIGA) to 0.936 (REFUGE1) |
 
 The confound-controlled column is the one to read. The gap between it and the pooled column is
