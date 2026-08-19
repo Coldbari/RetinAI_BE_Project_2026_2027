@@ -5,8 +5,12 @@
 The two checkpoints are too large for a GitHub repository, so they live in a HuggingFace
 model repository and this script pulls them from there (~180 MB total, one-time):
 
-  results/rop/weights.pth          ROP binary screening model (ResNet50)
-  results/rop_staging/weights.pth  ICROP staging research preview (EfficientNetV2-S)
+  results/rop_staging/weights.pth  THE PRODUCT MODEL (EfficientNetV2-S, structured head).
+                                   Produces BOTH the binary screening verdict and the ICROP
+                                   stage since the 19 Aug 2026 re-basing.
+  results/rop/weights.pth          ROP binary screening (ResNet50) — RETIRED from deciding
+                                   on 19 Aug 2026 after an external audit; kept as the
+                                   routing anchor and as a fallback.
 
 Run it once after cloning; the web app will then load both models. Without the weights the
 app still boots, but every result shows "model not loaded".
@@ -21,10 +25,10 @@ from pathlib import Path
 
 BASE = "https://huggingface.co/Champ610/retinai-rop-weights/resolve/main"
 WEIGHTS = [
-    ("results/rop/weights.pth", "rop_screening_resnet50.pth",
-     "ROP screening (ResNet50)"),
     ("results/rop_staging/weights.pth", "rop_staging_effnetv2s_structured_fold0.pth",
-     "ICROP staging research preview (EfficientNetV2-S)"),
+     "ROP screening + ICROP staging (EfficientNetV2-S, structured) — the product model"),
+    ("results/rop/weights.pth", "rop_screening_resnet50.pth",
+     "ROP screening (ResNet50) — retired, fallback only"),
 ]
 
 ROOT = Path(__file__).resolve().parent.parent
