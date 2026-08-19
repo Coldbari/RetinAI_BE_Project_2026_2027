@@ -1,9 +1,13 @@
-"""Inference backend for the multi-disease web app.
+"""Inference backend for the ROP screening web app.
 
-Loads the three dedicated models from ``registry.yaml``, runs TTA inference using the
-SAME shared preprocessing as training (so train/inference match), and produces a
-generic Grad-CAM for any architecture. Degrades gracefully when a model's weights are
-missing so the app runs before all three are trained.
+Loads the models declared in ``registry.yaml`` — this deployment declares ROP only — runs
+inference through the SAME shared preprocessing as training (so train/serve match), and
+produces a Grad-CAM taken from whichever model produced the verdict. Degrades gracefully
+when a checkpoint is missing, so the app still boots and says so.
+
+Since 19 Aug 2026 the binary ROP decision comes from the STRUCTURED model's P(any ROP)
+rather than the ResNet50 head: an external audit measured that head flagging every image
+at a hospital it never trained on. See ``StagingPreview.screening_finding``.
 """
 from __future__ import annotations
 

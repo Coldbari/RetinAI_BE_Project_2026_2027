@@ -2,7 +2,13 @@
 
 ## Project Title
 
-**RetinAI: Explainable Multi-Disease Retinal Screening from a Single Fundus Photograph**
+**RetinAI: Explainable Screening for Retinopathy of Prematurity from a Single Fundus Photograph**
+
+<sub>Registered earlier in the year as *"Explainable Multi-Disease Retinal Screening from a
+Single Fundus Photograph"*. The title was narrowed to match what the project actually delivers:
+glaucoma was withdrawn after a source-confound audit and DR was parked, leaving ROP as the sole
+screened disease. The multi-disease work and its measurements are retained in this document as
+project history.</sub>
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat&logo=python)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-%E2%89%A52.1-EE4C2C?style=flat&logo=pytorch)](https://pytorch.org/)
