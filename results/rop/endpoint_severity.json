@@ -1,0 +1,67 @@
+{
+  "question": "The served floor guarantees sens>=0.90 on ANY ROP, stage 1 included. Would a floor on severe ROP (stage>=3 proxy) buy meaningful specificity, and what mild-ROP sensitivity would it cost?",
+  "severe_proxy": "label >= 3 (stage_3, stage_4_5, arop). A PROXY ONLY: no zone or plus-disease labels exist in this data, and real treatment criteria (ETROP Type 1) require both.",
+  "served_threshold_profile": {
+    "internal_oof_n6700": {
+      "threshold": 0.0155,
+      "specificity": 0.7813,
+      "healthy_flagged": "839/3837",
+      "sens_stage_1": 0.896,
+      "sens_stage_2": 0.9645,
+      "sens_stage_3": 0.9806,
+      "sens_stage_4_5": 1.0,
+      "sens_arop": 0.979,
+      "sens_any_rop": 0.9584,
+      "sens_severe_stage3plus": 0.9812,
+      "sens_mild_stage12": 0.9388
+    },
+    "external_dev_n663": {
+      "threshold": 0.0155,
+      "specificity": 0.3867,
+      "healthy_flagged": "92/150",
+      "sens_stage_1": 0.8053,
+      "sens_stage_2": 0.9778,
+      "sens_stage_3": 0.9464,
+      "sens_stage_4_5": 1.0,
+      "sens_arop": 1.0,
+      "sens_any_rop": 0.9045,
+      "sens_severe_stage3plus": 0.9521,
+      "sens_mild_stage12": 0.8769
+    }
+  },
+  "counterfactual_severe_floor": {
+    "selection_rule": "identical rule, floor applied to stage>=3 only",
+    "threshold": 0.0245,
+    "internal_oof": {
+      "threshold": 0.0245,
+      "specificity": 0.8275,
+      "healthy_flagged": "662/3837",
+      "sens_stage_1": 0.8856,
+      "sens_stage_2": 0.9604,
+      "sens_stage_3": 0.9806,
+      "sens_stage_4_5": 1.0,
+      "sens_arop": 0.9757,
+      "sens_any_rop": 0.9542,
+      "sens_severe_stage3plus": 0.9797,
+      "sens_mild_stage12": 0.9323
+    },
+    "external_dev": {
+      "threshold": 0.0245,
+      "specificity": 0.5,
+      "healthy_flagged": "75/150",
+      "sens_stage_1": 0.7211,
+      "sens_stage_2": 0.9333,
+      "sens_stage_3": 0.8929,
+      "sens_stage_4_5": 1.0,
+      "sens_arop": 1.0,
+      "sens_any_rop": 0.8441,
+      "sens_severe_stage3plus": 0.9043,
+      "sens_mild_stage12": 0.8092
+    }
+  },
+  "caveats": [
+    "external dev half was used to select BOTH thresholds -> its numbers are in-sample",
+    "class counts at the external site are small for stage_4_5 (14) and arop (6)",
+    "nothing in the served app changes unless the endpoint decision is made explicitly"
+  ]
+}

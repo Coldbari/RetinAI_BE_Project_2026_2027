@@ -1,0 +1,28 @@
+{
+  "what": "location of the structured model's raw Grad-CAM argmax, split so synthetic letterbox padding cannot masquerade as frame-reading",
+  "n": 663,
+  "counts": {
+    "logprob": {
+      "retina": 426,
+      "camera_surround": 77,
+      "synthetic_padding": 160,
+      "dead": 0
+    },
+    "logit": {
+      "retina": 508,
+      "camera_surround": 71,
+      "synthetic_padding": 69,
+      "dead": 15
+    }
+  },
+  "logprob_pct_of_live_maps": {
+    "retina": 64.3,
+    "camera_surround": 11.6,
+    "synthetic_padding": 24.1
+  },
+  "logit_pct_of_live_maps": {
+    "retina": 78.4,
+    "camera_surround": 11.0,
+    "synthetic_padding": 10.6
+  }
+}

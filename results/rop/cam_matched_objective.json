@@ -1,0 +1,43 @@
+{
+  "what": "2x2: both ROP models under both Grad-CAM objective forms, so the peak-outside-retina comparison is finally like-for-like.",
+  "n": 663,
+  "cells": {
+    "structured": {
+      "logprob": {
+        "n_dead_maps": 0,
+        "frac_peak_outside_retina": 0.3575,
+        "off_retina_lift_mean": 0.689,
+        "camera_surround_pct_mean": 13.5,
+        "padding_pct_mean": 27.76
+      },
+      "logit": {
+        "n_dead_maps": 15,
+        "frac_peak_outside_retina": 0.216,
+        "off_retina_lift_mean": 0.65,
+        "camera_surround_pct_mean": 12.69,
+        "padding_pct_mean": 18.24
+      }
+    },
+    "resnet50": {
+      "logprob": {
+        "n_dead_maps": 0,
+        "frac_peak_outside_retina": 0.0196,
+        "off_retina_lift_mean": 0.309,
+        "camera_surround_pct_mean": 7.36,
+        "padding_pct_mean": 0.0
+      },
+      "logit": {
+        "n_dead_maps": 0,
+        "frac_peak_outside_retina": 0.0287,
+        "off_retina_lift_mean": 0.35,
+        "camera_surround_pct_mean": 8.34,
+        "padding_pct_mean": 0.0
+      }
+    }
+  },
+  "matched_peak_gap_structured_minus_resnet": {
+    "logprob": 0.3379,
+    "logit": 0.1873
+  },
+  "reading": "Gap persists with the same sign under both matched forms -> a property of the models, reportable."
+}

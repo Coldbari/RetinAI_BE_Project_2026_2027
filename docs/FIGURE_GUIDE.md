@@ -111,17 +111,29 @@ Ostrava infant supplies 76% of AP-ROP images, so weighting units equally moves t
 before any aggregation happens. **Aggregation**: taking the max over a session's frames moves
 it again. The right panel is the uncomfortable part — on fold-0 val aggregation dominates
 (79%), on the pooled 5-fold split recorded in the same artifact reweighting dominates (70%).
-Both are reported. The paper must pin one denominator and say which.
+Both are shown, and the paper pins the **pooled split as primary**: it covers every internal
+AP-ROP session exactly once, where fold-0 val holds 21 sessions and its decomposition depends
+on which fold drew the dominant infant. Fold-0 appears as the instability, not the estimate.
 
 **17 · Grad-CAM attention audit.** Built to answer "does the model read the eye or the
-frame?", and the honest answer is that the question cannot be settled with this metric.
+frame?", and the honest answer is that the *total-attention-share* metric cannot settle it.
 Swapping the scalar Grad-CAM differentiates moves total off-retina attention by ~25
 percentage points on identical weights and identical images, and the served model letterboxes
 so a quarter of its frame is synthetic padding that carries no information. Our first
 cross-model comparison (40% vs 8%) was measuring those two things, not shortcut reliance.
 Area-normalised, both models prefer retina over frame. The metric keeps the job it was built
 for — flagging an individual map whose evidence sits off the retina — and loses the job it was
-never valid for.
+never valid for. What *can* settle the cross-model question is a matched design, and that is
+figure 18.
+
+**18 · Matched-objective rerun.** The repair of 17's broken comparison: both models measured
+under the same objective form, twice (log-probability of disease, and a raw disease logit).
+The peak-outside-retina gap survives both matchings — structured 35.8% vs ResNet50 2.0% under
+log-prob, 21.6% vs 2.9% under raw logit — so it is a property of the models, not of the
+measurement, and it is reportable. The right panel keeps it honest: under the served
+objective, part of the structured model's off-retina peaks land on synthetic letterbox
+padding, which the ResNet50's frame cannot exhibit, so the like-for-like number is the
+camera-surround share.
 
 ---
 
