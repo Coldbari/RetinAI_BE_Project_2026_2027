@@ -287,11 +287,20 @@ function evidencePanel(h) {
   const rows = [];
   if (e.off_retina_pct !== undefined) {
     const bad = e.off_retina_pct >= 15;
+    // Only the CAMERA's surround counts here. Letterbox padding added by preprocessing is
+    // black by construction and carries no information, so counting it made this model look
+    // like it reads the frame five times more than it does.
+    const pad = e.on_padding_pct > 1
+      ? ` A further <b>${e.on_padding_pct}%</b> landed on the black padding preprocessing adds,
+          which carries no information either way.` : "";
+    const lift = e.off_retina_lift !== undefined && e.off_retina_lift !== null
+      ? ` Relative to how much of the frame is surround, that is
+          <b>${e.off_retina_lift}×</b> what a uniform map would put there.` : "";
     rows.push(`<li class="${bad ? "warn" : "ok"}"><b>${e.off_retina_pct}%</b> of the
-      attention fell <b>outside the retina</b> (on the black surround).
+      attention fell <b>outside the retina</b>, on the camera's own surround.${lift}
       ${bad ? "That is high — on this image the score is partly driven by the frame, "
             + "not the eye. Treat the map as unreliable."
-            : "Low: the model is reading retina, not frame."}</li>`);
+            : "Low: the model is reading retina, not frame."}${pad}</li>`);
   }
   if (e.concentration_pct !== undefined) {
     const diffuse = e.concentration_pct >= 25;

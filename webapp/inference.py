@@ -221,7 +221,7 @@ def _gradcam_core(model, target, tfm, device, image: Image.Image, objective):
 
     frame = _model_frame(tfm, image)
     mask = retina_mask(frame)
-    evidence = _cam_evidence(cam, mask)
+    evidence = _cam_evidence(cam, mask, _padding_mask(tfm, image))
 
     # Colour ONLY the retina. Attention on the surround is real and is reported as a number
     # alongside; painting it keeps the eye on a region where the model has, by
@@ -244,7 +244,45 @@ def _gradcam_core(model, target, tfm, device, image: Image.Image, objective):
     return base64.b64encode(buf.getvalue()).decode(), evidence
 
 
-def _cam_evidence(cam: np.ndarray, mask: np.ndarray | None) -> dict:
+def _padding_mask(tfm, image: Image.Image) -> np.ndarray | None:
+    """The letterbox bars this model's preprocessing adds — black BY CONSTRUCTION.
+
+    Measured consequence of not separating these: the structured model letterboxes, so 24.7%
+    of its display frame is synthetic padding, and 23.5 of its 39.7 percentage points of
+    "off-retina" attention were landing on pixels that carry no information at all. Reported
+    as one number that made the served model look like it reads the camera border far more
+    than the head it replaced (8.3%) — which is not a comparison those two numbers can
+    support, because the retired head does not letterbox.
+
+    Derived analytically from the preprocessing geometry, never by looking for dark rows: a
+    circular aperture inscribed in a rectangle produces genuinely dark rows too, and calling
+    those "padding" would erase exactly the camera surround this is meant to isolate.
+    """
+    pre = getattr(tfm, "transforms", [None])[0]
+    if not getattr(pre, "letterbox", False):
+        return None
+    from models.common.preprocessing import circle_crop
+    rgb = np.array(image.convert("RGB"))
+    if getattr(pre, "circle", True):
+        rgb = circle_crop(rgb)
+    h, w = rgb.shape[:2]
+    if h == w:
+        return np.zeros((DISPLAY, DISPLAY), bool)
+    side = max(h, w)
+    m = np.zeros((DISPLAY, DISPLAY), bool)
+    if h < w:                                   # bars top and bottom
+        off = (side - h) // 2
+        a, b = round(off / side * DISPLAY), round((off + h) / side * DISPLAY)
+        m[:a, :] = True; m[b:, :] = True
+    else:                                       # bars left and right
+        off = (side - w) // 2
+        a, b = round(off / side * DISPLAY), round((off + w) / side * DISPLAY)
+        m[:, :a] = True; m[:, b:] = True
+    return m
+
+
+def _cam_evidence(cam: np.ndarray, mask: np.ndarray | None,
+                  pad: np.ndarray | None = None) -> dict:
     """Quantify a saliency map before anyone reads meaning into it."""
     total = float(cam.sum())
     ev: dict = {
@@ -257,9 +295,26 @@ def _cam_evidence(cam: np.ndarray, mask: np.ndarray | None) -> dict:
     ev["measurable"] = True
 
     if mask is not None:
-        off = float(cam[~mask].sum()) / total * 100.0
+        outside = ~mask
+        # Synthetic letterbox padding is not "the model reading the frame" — those pixels are
+        # black by construction. Counted separately, and excluded from the headline number.
+        if pad is not None:
+            pad = pad & outside
+            surround = outside & ~pad
+            ev["on_padding_pct"] = round(float(cam[pad].sum()) / total * 100.0, 1)
+            ev["padding_frac_pct"] = round(float(pad.mean()) * 100.0, 1)
+        else:
+            surround = outside
+            ev["on_padding_pct"] = 0.0
+            ev["padding_frac_pct"] = 0.0
+        off = float(cam[surround].sum()) / total * 100.0
         ev["off_retina_pct"] = round(off, 1)
         ev["retina_frac_pct"] = round(float(mask.mean()) * 100.0, 1)
+        # Area-normalised: 1.0 means attention is spread as if uniform over the frame; below
+        # 1.0 means it prefers retina. Without this the raw % cannot be compared between two
+        # models whose frames devote different areas to non-retina.
+        area = float(surround.mean())
+        ev["off_retina_lift"] = round(off / 100.0 / area, 2) if area > 0 else None
         # Whether the single hottest point missed the retina must be read off the RAW
         # map. Taking it from the masked copy below makes the answer "yes, inside" by
         # construction — a check that can only ever pass is not a check.

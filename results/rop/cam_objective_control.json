@@ -1,0 +1,30 @@
+{
+  "what": "Grad-CAM off-retina attention for ONE model under three objectives.",
+  "n_images": 120,
+  "frame_geometry_pct": {
+    "retina": 55.35,
+    "synthetic_letterbox_padding": 25.0,
+    "camera_surround": 19.65
+  },
+  "objectives": {
+    "composite log P(any ROP)  [SERVED]": {
+      "on_camera_surround_pct": 14.61,
+      "on_synthetic_padding_pct": 25.93,
+      "total_off_retina_pct": 40.54
+    },
+    "raw AP-ROP logit": {
+      "on_camera_surround_pct": 18.55,
+      "on_synthetic_padding_pct": 31.85,
+      "total_off_retina_pct": 50.4
+    },
+    "raw CORN stage-logit sum": {
+      "on_camera_surround_pct": 12.62,
+      "on_synthetic_padding_pct": 11.53,
+      "total_off_retina_pct": 24.14
+    }
+  },
+  "finding": {
+    "spread_across_objectives_pct_points": 26.26,
+    "reading": "The choice of scalar to differentiate moves total off-retina attention by 26.3 percentage points on identical images and identical weights. Off-retina attention is therefore NOT a model-intrinsic property, and comparing two models measured under different objectives says nothing about either. It remains useful for what it was built for: flagging an individual map whose evidence sits off the retina."
+  }
+}

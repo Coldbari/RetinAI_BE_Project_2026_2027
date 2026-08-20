@@ -1,0 +1,49 @@
+{
+  "what": "Grad-CAM attention falling outside the retinal field of view, per image.",
+  "eval_set": {
+    "csv": "results/prepared/rop_staging/test_dev.csv",
+    "n": 663,
+    "site": "held-out hospital, dev half"
+  },
+  "method": "attention measured on the RAW map before any masking, against a fitted elliptical aperture (models.common.data_quality.retina_mask). The displayed overlay is masked; this measurement is not.",
+  "served_structured": {
+    "model": "structured EfficientNetV2-S, P(any ROP)",
+    "retina_frac_pct_mean": 55.49,
+    "on_synthetic_padding_pct_mean": 27.76,
+    "off_retina_lift_mean": 0.689,
+    "off_retina_pct_camera_surround_only": {
+      "mean": 13.5,
+      "p5": 1.2,
+      "p25": 5.65,
+      "median": 12.2,
+      "p75": 19.1,
+      "p95": 29.56
+    },
+    "frac_images_over_15pct_off_retina": 0.3982,
+    "frac_peak_outside_retina": 0.3575,
+    "concentration_pct_median": 5.3
+  },
+  "retired_resnet50": {
+    "model": "retired ResNet50 screening head",
+    "retina_frac_pct_mean": 75.72,
+    "on_synthetic_padding_pct_mean": 0.0,
+    "off_retina_lift_mean": 0.35,
+    "off_retina_pct_camera_surround_only": {
+      "mean": 8.34,
+      "p5": 1.7,
+      "p25": 3.4,
+      "median": 5.7,
+      "p75": 10.05,
+      "p95": 25.08
+    },
+    "frac_images_over_15pct_off_retina": 0.1357,
+    "frac_peak_outside_retina": 0.0287,
+    "concentration_pct_median": 6.7
+  },
+  "comparison": {
+    "retired_minus_served_off_retina_LIFT": -0.339,
+    "why_lift_not_raw_pct": "the two frames devote different areas to non-retina (structured letterboxes), so raw percentages are not comparable",
+    "prediction_was": "the disqualified head should read the frame MORE than the model that replaced it",
+    "prediction_held": false
+  }
+}

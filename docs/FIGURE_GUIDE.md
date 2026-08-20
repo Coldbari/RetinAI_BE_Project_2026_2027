@@ -105,6 +105,24 @@ appearance at any strength. Note the trap the figure makes visible: the *naive* 
 lower than the *disease-controlled* one, so an uncontrolled probe understates the leakage it is
 supposed to detect.
 
+**16 · Session-unit decomposition.** The familiar AP-ROP headline — recall rising from image
+level to session level — conflates *two* effects, and this splits them. **Reweighting**: one
+Ostrava infant supplies 76% of AP-ROP images, so weighting units equally moves the number
+before any aggregation happens. **Aggregation**: taking the max over a session's frames moves
+it again. The right panel is the uncomfortable part — on fold-0 val aggregation dominates
+(79%), on the pooled 5-fold split recorded in the same artifact reweighting dominates (70%).
+Both are reported. The paper must pin one denominator and say which.
+
+**17 · Grad-CAM attention audit.** Built to answer "does the model read the eye or the
+frame?", and the honest answer is that the question cannot be settled with this metric.
+Swapping the scalar Grad-CAM differentiates moves total off-retina attention by ~25
+percentage points on identical weights and identical images, and the served model letterboxes
+so a quarter of its frame is synthetic padding that carries no information. Our first
+cross-model comparison (40% vs 8%) was measuring those two things, not shortcut reliance.
+Area-normalised, both models prefer retina over frame. The metric keeps the job it was built
+for — flagging an individual map whose evidence sits off the retina — and loses the job it was
+never valid for.
+
 ---
 
 ## What is deliberately not here

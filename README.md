@@ -940,6 +940,8 @@ committed prediction arrays; every number is read from an artifact, none is type
 | 12 | [Confusion, locked](images/paper/12_confusion_locked.png) | Where the errors are: the Normal column, not the diagonal's neighbours |
 | 13 | [Per-class](images/paper/13_per_class_locked.png) | Which classes have the support to be quoted, and which do not |
 | 15 | [Site probe](images/paper/15_site_probe.png) | The site adversary did not work, reported as the negative result it is |
+| 16 | [Session-unit decomposition](images/paper/16_session_unit_decomposition.png) | The AP-ROP image-to-session jump has two causes, and the two analyses disagree on which dominates |
+| 17 | [Grad-CAM attention audit](images/paper/17_cam_attention_audit.png) | We went looking for a shortcut and found a broken metric — the Grad-CAM objective alone moves it 26 points |
 
 </details>
 
