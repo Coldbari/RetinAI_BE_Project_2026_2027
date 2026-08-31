@@ -7,7 +7,12 @@
      are documented future work — see <a href="{{ url_for('about') }}">About</a>.</p>
 </section>
 
-{% if not history %}
+{% if public_deploy %}
+<div class="panel"><p class="muted"><strong>History is disabled on the hosted demo.</strong>
+  This page is served by one shared process, so keeping screenings here would show your
+  uploaded images to the next visitor. Nothing you screen is retained server-side. Run the
+  app locally for the full single-operator history.</p></div>
+{% elif not history %}
 <div class="panel"><p class="muted">No screenings yet. Run one from the
   <a href="{{ url_for('screen') }}">Screen</a> page.</p></div>
 {% else %}

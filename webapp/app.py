@@ -28,7 +28,14 @@ from reports.report_generator import generate_pdf
 
 MAX_UPLOAD = 10 * 1024 * 1024
 REGISTRY = Registry(os.environ.get("REGISTRY", "webapp/registry.yaml"))
-HISTORY = deque(maxlen=24)          # in-memory recent screenings
+# RETENTION IS SINGLE-OPERATOR ONLY. This deque is process-global, so on a PUBLIC
+# deployment (one process, many anonymous visitors) it would show one operator's uploaded
+# infant fundus images — and their downloadable PDF reports — to the next visitor. That is
+# the same exposure class that forced the 14 Aug 2026 hosted-app deletion. maxlen=0 makes
+# every appendleft a silent no-op, so the public build retains nothing rather than
+# depending on a call site remembering to check a flag.
+PUBLIC_DEPLOY = os.environ.get("RETINAI_PUBLIC") == "1"
+HISTORY = deque(maxlen=0 if PUBLIC_DEPLOY else 24)   # in-memory recent screenings
 GALLERY_CACHE = {}                  # disease -> [examples] (computed once)
 
 app = Flask(__name__)
@@ -129,7 +136,8 @@ def screen():
 
 @app.route("/history")
 def history():
-    return render_template("history.html", history=list(HISTORY), page="history")
+    return render_template("history.html", history=list(HISTORY),
+                           public_deploy=PUBLIC_DEPLOY, page="history")
 
 
 @app.route("/about")
@@ -306,16 +314,26 @@ def _gallery():
         folder = base / dm.disease.lower()
         if not folder.exists():
             continue
+        # Route through REGISTRY.analyze — the SAME path /predict serves — not dm.predict.
+        # dm.predict is the retired ResNet50 head, which is degenerate (it flagged all 663
+        # images at the external hospital). Calling it here made the gallery label healthy
+        # eyes "ROP Detected" while /screen called the very same photograph "No ROP":
+        # two pages of one app disagreeing about one image.
+        ctx = next((c for c in dm.applies_to if c in REGISTRY.contexts), None)
+        if ctx is None:
+            continue
         items = []
         for img_path in sorted(folder.glob("*.jpg"))[:6]:
             try:
                 image = Image.open(img_path).convert("RGB")
-                res = dm.predict(image)
-                heat = (dm.gradcam(image, res["grade"])[0]
-                        if res.get("grade", 0) >= 0 else None)
+                res = REGISTRY.analyze(image, ctx)
+                f = next((x for x in res["findings"]
+                          if x["disease"] == dm.disease and x.get("available")), None)
+                if f is None:
+                    continue
                 items.append({"name": img_path.name, "thumb": _thumb(image, 200),
-                              "heatmap": heat, "prediction": res["prediction"],
-                              "score": res["score"], "risk": res.get("risk", "")})
+                              "heatmap": res.get("heatmap"), "prediction": f["prediction"],
+                              "score": f["score"], "risk": f.get("risk", "")})
             except Exception:
                 continue
         if items:
