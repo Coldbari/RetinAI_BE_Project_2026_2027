@@ -405,7 +405,11 @@ than leaving it blank, since the template asks for it.
 | Week 9 (03 Aug) | Android client, confound audits T12–T17, evidence figures | Completed |
 | Week 10 (10 Aug) | ROP 6-class ICROP staging: corpus, shortcut audit, five-backbone benchmark, structured head, full 5-fold CV (flat and structured), seven-arm ablation, bootstrap CIs and calibration | Completed |
 | Week 11 (17 Aug) | Seed repeats and session-level scoring of every arm; claim-by-claim verification; matched head×seed 2×2; **locked test set pre-registered and opened once (18 Aug)**; gradability gate rebuilt twice; **binary screening re-based off the ResNet50 after an external audit** | Completed |
-| Week 12 (24 Aug) | ISBI draft compressed into the 4-page LaTeX template; pediatric-ophthalmologist co-author contacted for label adjudication | Planned |
+| Week 12 (24 Aug) | ISBI draft compressed into the 4-page LaTeX template; pediatric-ophthalmologist co-author contacted for label adjudication | Completed (LaTeX package landed 22 Aug); co-author adjudication still open |
+| Week 13 (31 Aug) | Demo hardening: one-command launch, presenter runbook, cross-page inference consistency | Completed |
+| Week 14 (07 Sep) | Preprocessing investigation: does illumination correction remove the device shortcut? | Completed — the proposal failed its own test, see below |
+| Week 15 (14 Sep) | Package the eleven ROP sources into one releasable, de-identified dataset | Completed |
+| Week 16 (21 Sep) | Log book brought current; September work committed and pushed | Completed |
 
 ---
 
@@ -427,6 +431,16 @@ got done that week.
 
 | Week 11 | 17–23 Aug 2026 | Number-by-number verification of every published claim (19 errors found in 261, all corrected). Matched head×seed 2×2 closing the sampling confound — the equivalence result's sign flips between seeds. Locked held-out-hospital test **pre-registered, then opened once** on 18 Aug; eye-level QWK 0.79–0.80 across all four arm-seed cells, and both measurement findings replicate externally. Repository narrowed to ROP only (158 renames, zero deletions). Gradability gate rebuilt twice from real uploads: v2 structural checks, v3 a learned feature-space layer. Grad-CAM confined to the retina with its off-retina leakage published as a number. **Binary screening re-based off the ResNet50 onto the structured model** after an external audit found the served threshold degenerate | ISBI draft compressed into the 4-page LaTeX template; contact a pediatric ophthalmologist co-author for label adjudication | Our own web app scored a photograph of furniture, then a night-time temple interior, as ROP-positive — the gate was a colour rule list, not a gate. Then a healthy retina came back "ROP Detected 48.4%", and the audit that followed showed the screening head flags 100% of images at any hospital it did not train on. Both were found by uploading real images to our own product rather than by reading a metric | 16 |
 
+| Week 12 | 24–30 Aug 2026 | No repository activity. The ISBI LaTeX package and the editable Word version had landed on 22 Aug, at the end of Week 11, and this week went to the co-author approach for label adjudication, which is correspondence rather than code | Make the demo runnable by someone who is not us | The pediatric-ophthalmologist co-author contact has not yet produced an adjudication agreement, so the label-quality ceiling described in the Limitations section is still unaddressed. It is the single biggest open risk in the project | 0 |
+
+| Week 13 | 31 Aug–06 Sep 2026 | **Two pages of the app stopped disagreeing about the same photograph.** The Gallery was still calling the retired ResNet50 head directly while /screen went through the registry, so one image could be "ROP Detected" on one page and "No ROP" on the other. Gallery now routes through the same `REGISTRY.analyze` path the product serves. Session history retention forced to zero on any public build, so a hosted deployment cannot show one operator's infant fundus uploads and PDF reports to the next visitor. `demo.sh` — one command, waits for the app to answer before opening the browser — plus `DEMO.md`, a presenter runbook with the numbers to quote. 34 demo images vetted and fixed into the private repository with their measured scores | Test whether a better preprocessing pipeline removes the known device shortcut | The retention deque was process-global. On a single-operator laptop that is a feature; on a public deployment it is the same exposure class that forced the 14 Aug hosted-app deletion. Found by reasoning about the deployment, not by a test failing | 3 |
+
+| Week 14 | 07–13 Sep 2026 | **Preprocessing investigation, and an honest negative result.** Four scripts. `rop_enhance_demo` renders one photograph nine ways — red-free, illumination, CLAHE, vesselness, black-hat, blue-red LUT — all computed inside the retinal mask, since every local-contrast method will otherwise amplify sensor noise in the black surround into something that looks like pathology. `rop_rgb_illum_demo` shows the same correction in the RGB the model actually receives, and separates shared-gain from per-channel: per-channel removes more device signature and destroys the colour that carries choroidal pigmentation and haemorrhage. `rop_device_fingerprint` put the claim to a test instead of a picture — fit a logistic regression to predict *which source* an image came from using only its radial brightness profile. `rop_pipeline_ab` then follows the measurement that did hold | Package the ROP sources into one releasable dataset | **The proposal failed its own test.** Illumination correction moved device separability only **46.7% → 45.0% against 20% chance**. The vignette is not where the site signature lives, so the original case for training on corrected input does not survive. `preprocessing.py` already recorded where it does live — the R/B ratio, post-CLAHE mean blue 53.6/73.3/74.5 across training sites against 87.6 at the held-out hospital. The revised proposal targets colour directly with grey-world normalisation. Logged as a negative result rather than quietly dropped | 1 |
+
+| Week 15 | 14–20 Sep 2026 | `build_rop_release.py`: the eleven ROP sources on disk packaged into one self-describing tree a stranger can unzip and use. It re-derives no labels — the four-source ICROP reconciliation and the patient-grouped folds each already have one owner, and it reads those and extends them to the sources they never covered rather than creating a second source of truth that drifts. Three label schemas stay in three folders because the sources do not share a label *type*: 10,613 staged images, 1,533 plus-disease images with five independent rater opinions, 733 image+mask pairs. De-identification is part of packaging: ROP-VL embeds an exam date, COph100 inherits Ostrava's sex/GA/birth-weight filenames, and littlevision carries hospital record numbers and is excluded outright | Bring the log book current | Pooling the three schemas into one `labels.csv` would have been convenient and would have been a lie — a plus-disease rater opinion is not an ICROP stage | 1 |
+
+| Week 16 | 21 Sep 2026 | Log book brought current after a four-week gap. September work committed and pushed. Code drift between the development repository and this log book closed: `configs/rop.yaml`, four `models/` modules, and the web app's history view were all behind. **The 34 demo images were deliberately not published here** — their filenames encode infant ID, sex, gestational age and birth weight, and this is a public repository. `DEMO.md` reports what they produced instead of shipping them | Co-author adjudication; train and evaluate the grey-world pipeline against the current one | This log book went four weeks without an update against a two-week expectation. The work existed — it was committed late, not done late — but the gap is real and is recorded here rather than papered over by backdating | 2 |
+
 The full commit history, code and results live in our development repository. This log book
 mirrors the milestones. Please ask if direct access to the development history is needed for
 evaluation.
@@ -440,6 +454,8 @@ evaluation.
 | System architecture | [images/system_architecture.png](images/system_architecture.png) | Training and serving data flow |
 | Flowchart | [images/flowchart.png](images/flowchart.png) | Gate, route, preprocess, infer, explain, report |
 | Model evidence figures | [images/](images/) | 12 figures covering every headline claim |
+| Preprocessing investigation | [images/enhancement/](images/enhancement/) | Nine enhancement methods, the RGB the model receives, and the device-fingerprint test that the illumination proposal failed |
+| Demo runbook | [DEMO.md](DEMO.md) | One-command launch (`./demo.sh`) and the numbers to quote while presenting |
 | Project video | [YouTube — RetinAI project walkthrough](https://youtu.be/fQpp9Fr1Up4) | 4 min 35 s presentation walkthrough, streams directly, no sign-in needed |
 | Software design | [software/software.md](software/software.md) | Module-by-module implementation notes |
 | Literature survey | [docs/literarture_survey.md](docs/literarture_survey.md) | Reviewed work and how it shaped our design |
@@ -584,6 +600,9 @@ What this repository contains — the log book plus the runnable ROP application
 RetinAI_BE_Project_2026_2027/
 │
 ├── README.md                   ← this log book
+├── Run for me.md               ← two-command quickstart
+├── DEMO.md                     ← 5-minute presenter runbook
+├── demo.sh                     ← one command: boots the app and opens the browser
 ├── requirements.txt
 │
 ├── webapp/                     ← the Flask application (the product)
@@ -598,7 +617,10 @@ RetinAI_BE_Project_2026_2027/
 │
 ├── configs/                    ← rop.yaml (screening) · rop_staging_structured.yaml (preview)
 ├── reports/                    ← ReportLab clinical-PDF generator
-├── scripts/get_weights.py      ← one-time checkpoint download (~180 MB)
+├── scripts/                    ← get_weights.py (one-time checkpoint download, ~180 MB)
+│                                 rop_enhance_demo.py · rop_rgb_illum_demo.py
+│                                 rop_device_fingerprint.py · rop_pipeline_ab.py
+│                                 build_rop_release.py (dataset packaging + de-identification)
 │
 ├── results/                    ← recorded metrics, calibration, operating points
 │   ├── rop/                    ← binary model: metrics, calibration, device-audit CIs
@@ -607,6 +629,7 @@ RetinAI_BE_Project_2026_2027/
 │   └── gate_thresholds.json    ← the gradability gate's calibrated bounds
 │
 ├── images/                     ← the evidence figures cited throughout this README
+│   └── enhancement/            ← the Week 14 preprocessing investigation
 ├── docs/ · reference/          ← literature survey, software notes, IEEE references
 ├── hardware/                   ← honest "not applicable" (software-only project)
 └── demo/                       ← pointer to the project video on YouTube
@@ -663,6 +686,12 @@ them, but every result then says "model not loaded".
 ### Step 4: Run the Web App
 
 From the repository root:
+
+```bash
+./demo.sh                       # → boots, waits until it answers, opens the browser
+```
+
+or, if you would rather run it yourself:
 
 ```bash
 python webapp/app.py            # → http://127.0.0.1:5002
