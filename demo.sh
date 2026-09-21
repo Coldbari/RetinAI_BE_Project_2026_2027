@@ -36,6 +36,8 @@ for _ in $(seq 1 90); do
     echo "  No fundus images ship with this repository. The evaluation set is private"
     echo "  infant patient photographs and stays out of a public repo; supply your own."
     echo
+    echo "  DEMO.md is the presenter runbook: what to say, and the numbers to quote."
+    echo
     echo "  Ctrl-C to stop."
     wait $APP
     exit 0
