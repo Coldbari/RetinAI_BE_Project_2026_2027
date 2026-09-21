@@ -62,7 +62,14 @@ def build_loss(cfg, class_counts):
 
     weight = None
     if bool(cfg.train.get("class_balanced", False)) and name != "ordinal":
-        weight = class_balanced_weights(class_counts)
+        # beta controls how hard the reweighting bites. The default 0.9999 is Cui et al.'s
+        # ImageNet-scale value, but "effective number" only differs from raw count while
+        # beta^n is non-negligible — at n in the hundreds, beta=0.9999 gives essentially RAW
+        # inverse frequency (for our ROP staging counts: ratio 11.85 vs a raw 12.5). Lower
+        # beta actually damps: 0.999 -> ~7.9, 0.99 -> ~1.7. Expose it so a small-n task can
+        # ask for damping instead of silently getting none.
+        beta = float(cfg.train.get("class_balanced_beta", 0.9999))
+        weight = class_balanced_weights(class_counts, beta=beta)
 
     if name == "ce":
         loss_fn = nn.CrossEntropyLoss(weight=weight, label_smoothing=label_smoothing)

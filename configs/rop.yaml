@@ -14,6 +14,12 @@ data:
       val_dir: dataset_split/val
       test_dir: dataset_split/test
       # ImageFolder maps class dirs alphabetically: DG0 -> 0 (No ROP), DG1 -> 1 (ROP)
+      # Filenames are <infantID>_<sex>_GA..._BW..._PA..._DG..._PF..._D<device>_S<serie>_<n>.
+      # These splits are PRE-assigned, so this key does not choose them — it lets
+      # build_manifest VERIFY them. Checked against the committed manifest: 188 infants,
+      # 0 spanning more than one split, in both the original and the device-stratified
+      # rebuild. The claim in the comment above is therefore tested, not just asserted.
+      group_pattern: '^(\d+)_'
 
 preprocess:
   image_size: 384

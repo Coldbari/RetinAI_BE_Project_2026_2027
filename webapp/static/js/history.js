@@ -16,6 +16,10 @@ function viewItem(id) {
       $h("hm-img").src = "data:image/jpeg;base64," + d.image;
       $h("hm-findings").innerHTML = d.findings.map(f => {
         const risk = f.risk ? `<span class="risk r-${f.risk.toLowerCase()}">${f.risk}</span>` : "";
+        if (f.available === false) {
+          const lbl = f.status === "not_applicable" ? "Not assessed" : "Not graded";
+          return `<div class="hm-find na"><span>${f.disease}: <b>${lbl}</b></span></div>`;
+        }
         return `<div class="hm-find"><span>${f.disease}: <b>${f.prediction}</b> (${f.score}%)</span>${risk}</div>`;
       }).join("");
       $h("hm-dl").onclick = () => dlReport(id);

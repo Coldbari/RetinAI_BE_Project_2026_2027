@@ -37,18 +37,44 @@ def main():
     ap.add_argument("--internal-referable", type=float, default=None,
                     help="internal referable AUC, to report the referable drop (DR)")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--source", default=None,
+                    help="name of the external source (default: derived from the config "
+                         "filename). Output files are keyed by it so two external sets for "
+                         "the SAME disease cannot overwrite each other.")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite an existing report for this disease+source")
     ap.add_argument("--set", nargs="*", default=[])
     args = ap.parse_args()
 
     cfg = load_config(args.config, overrides=args.set)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    # Outputs used to be keyed by disease alone, so evaluating glaucoma on G1020 and then on
+    # REFUGE silently destroyed the first result. Key by disease + source.
+    source = args.source or Path(args.config).stem
+    for prefix in ("external_", f"{cfg.disease}_"):
+        if source.startswith(prefix):
+            source = source[len(prefix):]
+    tag = f"{cfg.disease}_{source}" if source else str(cfg.disease)
 
     manifest_path = Path(cfg.data.manifest)
     manifest = build_manifest(cfg) if not manifest_path.exists() else \
         __import__("pandas").read_csv(manifest_path)
 
+    out = Path(args.out or f"results/external_{tag}.json")
+    if out.exists() and not args.force:
+        raise SystemExit(
+            f"{out} already exists. Refusing to overwrite an external-validation report — "
+            f"silently replacing one is how a prior result disappears. Pass --force, or "
+            f"--source <name> to write a separate report.")
+
     loader, ds = build_eval_loader(cfg, manifest, "test")
-    model = build_from_cfg(cfg).to(device)
+    model = build_from_cfg(cfg, pretrained=False).to(device)
     model.load_state_dict(torch.load(args.weights, map_location=device))
 
     _, decode_fn, _ = build_loss(cfg, [1] * int(cfg.data.num_classes))
@@ -93,11 +119,45 @@ def main():
             report["internal_referable"] = args.internal_referable
             report["referable_drop"] = d
 
-    if pr is not None:
-        np.savez(f"results/external_{cfg.disease}_preds.npz",
-                 y_true=yt, y_pred=yp, y_prob=pr)
+    # Binary diseases (glaucoma, ROP) previously got no operating point and no interval at
+    # all — only multiclass got the referable block. A bare AUC hides the thing that
+    # actually breaks across populations: the decision threshold.
+    if pr is not None and num_classes == 2:
+        from models.common.metrics import best_threshold_for_sensitivity
+        from models.evaluation.statistical_tests import bootstrap_ci, clopper_pearson
+        from sklearn.metrics import roc_auc_score
 
-    out = Path(args.out or f"results/external_{cfg.disease}.json")
+        score = pr[:, 1]
+        auc, lo, hi = bootstrap_ci(yt, score, roc_auc_score, n_boot=2000)
+        target = float(cfg.eval.get("target_sensitivity", 0.90))
+        thr, sn, sp = best_threshold_for_sensitivity(yt, score, target)
+        deployed = cfg.eval.get("screen_threshold")
+        binr = {"auc": auc, "auc_ci": [lo, hi], "target_sensitivity": target,
+                "op_threshold": float(thr), "op_sensitivity": float(sn),
+                "op_specificity": float(sp)}
+        print(f"binary  AUC {auc:.4f} (95% CI {lo:.3f}-{hi:.3f})  | @sens{target:.2f} "
+              f"thr {thr:.3f} sens {sn:.3f} spec {sp:.3f}")
+        if deployed is not None:
+            pred = (score >= float(deployed)).astype(int)
+            tp = int(((pred == 1) & (yt == 1)).sum()); fn = int(((pred == 0) & (yt == 1)).sum())
+            tn = int(((pred == 0) & (yt == 0)).sum()); fp = int(((pred == 1) & (yt == 0)).sum())
+            d_sn, sn_lo, sn_hi = clopper_pearson(tp, tp + fn)
+            d_sp, sp_lo, sp_hi = clopper_pearson(tn, tn + fp)
+            binr["deployed_threshold"] = float(deployed)
+            binr["deployed_sensitivity"] = [d_sn, sn_lo, sn_hi]
+            binr["deployed_specificity"] = [d_sp, sp_lo, sp_hi]
+            print(f"        at the DEPLOYED threshold {float(deployed):.4f}: "
+                  f"sens {d_sn:.3f} [{sn_lo:.3f},{sn_hi:.3f}]  "
+                  f"spec {d_sp:.3f} [{sp_lo:.3f},{sp_hi:.3f}]")
+        report["binary"] = binr
+
+    report["source"] = source
+    report["config"] = args.config
+    report["weights"] = args.weights
+
+    if pr is not None:
+        np.savez(f"results/external_{tag}_preds.npz", y_true=yt, y_pred=yp, y_prob=pr)
+
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2))
     print(f"[external] -> {out}")

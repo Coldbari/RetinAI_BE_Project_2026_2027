@@ -32,6 +32,53 @@ def bootstrap_ci(y_true, y_score, metric_fn, n_boot=2000, alpha=0.05, seed=42):
     return float(point), float(lo), float(hi)
 
 
+# ── cluster bootstrap ────────────────────────────────────────────────────────
+def cluster_bootstrap_ci(y_true, y_score, groups, metric_fn, n_boot=2000,
+                         alpha=0.05, seed=42):
+    """95% CI resampling GROUPS (e.g. patients) with replacement, not rows.
+
+    Required whenever rows are correlated within a cluster. The ROP test split is 1,502
+    images from only 29 infants — several photographs of the same eye on the same day.
+    Row-level bootstrap treats those as independent and reports an interval far tighter
+    than the data supports.
+
+    Returns (point, lo, hi, n_effective_clusters).
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    groups = np.asarray(groups)
+    uniq = np.unique(groups)
+    idx_by_group = {g: np.flatnonzero(groups == g) for g in uniq}
+
+    rng = np.random.default_rng(seed)
+    point = metric_fn(y_true, y_score)
+    stats_ = []
+    for _ in range(n_boot):
+        picked = rng.choice(uniq, size=len(uniq), replace=True)
+        idx = np.concatenate([idx_by_group[g] for g in picked])
+        if len(np.unique(y_true[idx])) < 2:
+            continue
+        try:
+            stats_.append(metric_fn(y_true[idx], y_score[idx]))
+        except Exception:
+            continue
+    if not stats_:
+        return float(point), float("nan"), float("nan"), len(uniq)
+    lo, hi = np.percentile(stats_, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return float(point), float(lo), float(hi), len(uniq)
+
+
+def clopper_pearson(k, n, alpha=0.05):
+    """Exact binomial CI. Use for sensitivity/specificity on small denominators —
+    the ROP test split has only 7 positive patients, where normal approximations lie."""
+    k, n = int(k), int(n)
+    if n == 0:
+        return float("nan"), 0.0, 1.0
+    lo = 0.0 if k == 0 else float(stats.beta.ppf(alpha / 2, k, n - k + 1))
+    hi = 1.0 if k == n else float(stats.beta.ppf(1 - alpha / 2, k + 1, n - k))
+    return k / n, lo, hi
+
+
 # ── McNemar ──────────────────────────────────────────────────────────────────
 def mcnemar_test(y_true, pred_a, pred_b):
     """Paired test on where two models disagree. Exact binomial for small discordance,

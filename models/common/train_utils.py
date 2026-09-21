@@ -97,6 +97,16 @@ def train_model(cfg, model, loaders, logger, device):
     grad_accum = max(1, int(cfg.train.get("grad_accum", 1)))
     grad_clip = float(cfg.train.get("grad_clip", 1.0))
     patience = int(cfg.train.get("patience", 7))
+    # eval.early_stopping: false disables BOTH halves of val-based selection, which are
+    # separate mechanisms and were previously entangled — patience alone stops the run early,
+    # but the argmax-over-epochs checkpoint below is what actually biases the reported metric.
+    # With 16-19 images in the rarest class per val fold, macro-F1 swings epoch to epoch, and
+    # taking its maximum over 30 epochs reports the luckiest epoch rather than the model.
+    # Default stays True so DR / ROP-binary runs behave exactly as before.
+    early_stop = bool(cfg.eval.get("early_stopping", True))
+    if not early_stop:
+        patience = epochs + 1          # never trips
+    keep_last = not early_stop         # save every epoch, so the file ends up at the last one
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=float(cfg.train.lr),
                                   weight_decay=float(cfg.train.get("weight_decay", 1e-4)))
@@ -160,13 +170,14 @@ def train_model(cfg, model, loaders, logger, device):
         history["val_macro_recall"].append(vm["macro_recall"])
         history["val_primary"].append(val_primary)
 
-        flag = ""
-        if val_primary > best:
+        improved = val_primary > best
+        if improved:
             best, no_improve = val_primary, 0
-            logger.save_weights(model.state_dict())
-            flag = "  ✓ saved"
         else:
             no_improve += 1
+        if improved or keep_last:
+            logger.save_weights(model.state_dict())
+        flag = "  ✓ saved" if (improved or keep_last) else ""
 
         print(f"Epoch {epoch:2d}/{epochs}  loss {history['train_loss'][-1]:.4f}  "
               f"acc {vm['accuracy']*100:.2f}%  F1 {vm['macro_f1']*100:.2f}%  "
@@ -181,7 +192,9 @@ def train_model(cfg, model, loaders, logger, device):
             print(f"Early stopping at epoch {epoch} (best {primary}={best:.4f}).")
             break
 
-    return history, best
+    # When keeping the last epoch, return ITS score. Returning `best` would report a
+    # maximum-over-epochs number next to a last-epoch checkpoint — two different models.
+    return history, (val_primary if keep_last else best)
 
 
 # ── inference ────────────────────────────────────────────────────────────────

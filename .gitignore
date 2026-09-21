@@ -4,3 +4,4 @@ __pycache__/
 # Model weights are fetched by scripts/get_weights.py, never committed (too large for git)
 results/**/weights.pth
 results/reports/
+.DS_Store
