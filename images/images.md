@@ -114,3 +114,17 @@ No patient images. There is no fundus photograph of any real patient here, adult
 During development we found six infant patient photographs being served publicly. Those were
 removed, the history was swept and an egress guard was added. Nothing of that kind is in this
 repository and nothing of that kind should be added to it.
+
+## enhancement/ — preprocessing investigation (Week 14)
+
+Whether a different preprocessing pipeline removes the device shortcut this corpus is
+known to carry. The short answer is no, and that is the finding.
+
+| Figure | What it shows |
+|---|---|
+| `00_master_grid.png` | One photograph rendered nine ways — red-free, illumination, CLAHE, vesselness, black-hat, blue-red LUT — across sampled ICROP cases. Everything is computed inside the retinal mask, because local-contrast methods otherwise amplify sensor noise in the black surround into something that looks like pathology |
+| `00_rgb_illumination.png` | The same correction in the RGB the model actually receives. Shared-gain multiplies R, G and B by one field, so hue survives; per-channel flattens colour and takes choroidal pigmentation and haemorrhage with it |
+| `00_device_fingerprint.png` | **The test.** A logistic regression predicting which source an image came from, using only its radial brightness profile. Correction moved separability 46.7% → 45.0% against 20% chance — the vignette is not where the site signature lives |
+| `00_pipeline_ab.png` | Current pipeline against the revised proposal on five images, one per source. The proposal targets the R/B ratio, which is the signature the corpus actually has, with grey-world normalisation |
+
+Panel labels carry ICROP stage, source and image dimensions only — never a filename.
