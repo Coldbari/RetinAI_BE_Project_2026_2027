@@ -171,23 +171,9 @@ button{cursor:pointer;font-family:inherit}
 .bar>span{display:block;height:100%;border-radius:6px;background:var(--accent)}
 .scoreline{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 
-/* decision meter — a screening score shown against its own operating point.
-   The tick is the threshold the model actually decides on; without it the bar
-   is read against an implied 50% that this model never uses. */
-.dm{margin-top:6px}
-.dm-track{position:relative;height:10px;background:#0b1120;border-radius:6px;margin:6px 0 4px}
-.dm-fill{display:block;height:100%;border-radius:6px;background:var(--accent2)}
-.dm-fill.on{background:#f87171}
-.dm-tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text);border-radius:2px;transform:translateX(-1px)}
-.dm-axis{position:relative;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);height:15px}
-.dm-thr{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;color:var(--text);font-weight:600}
-.dm-why{font-size:12px;color:var(--muted);margin:12px 0 4px;line-height:1.5}
-.dm-why .dm-pos{color:#f87171} .dm-why .dm-neg{color:var(--accent2)}
+/* the small print under a card's numbers */
 .dm-raw{font-size:11px;color:var(--muted);opacity:.8;margin:4px 0 0;line-height:1.5}
-.dm-fa{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 4px;padding:10px 12px;
-  border-radius:9px;background:rgba(248,113,113,.07);border-left:2px solid #f87171}
-.dm-fa b{color:var(--text)}
-.dm-fa.hard{background:rgba(239,68,68,.12);border-left-color:var(--red)}
+
 /* Grad-CAM evidence panel — the measurements that say whether the map is worth reading */
 .cam-evidence{margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:11px}
 .cam-evidence h4{margin:0 0 8px;font-size:13px;letter-spacing:.02em}

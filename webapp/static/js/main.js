@@ -78,55 +78,6 @@ $("analyze").onclick = async () => {
   $("results").scrollIntoView({ behavior: "smooth" });
 };
 
-// What a positive is actually worth. Buying 99% sensitivity at this threshold costs
-// specificity, and the price is measured: most healthy eyes are flagged too. A verdict
-// that reads "ROP Detected" without that number beside it will be read as a diagnosis,
-// which is how a correctly-behaving screen looks like a broken one on a healthy baby.
-// ONE short warning, not two long ones. Field feedback on the first version: "the two box
-// section, you have shown that doesn't know the meaning as well" — a caveat nobody finishes
-// reading protects nobody. Both measurements still appear; they are just one sentence each.
-function falseAlarmNote(d) {
-  const m = d.measured, e = d.external;
-  if (!m || !d.positive) return "";
-  // Both measurements, one sentence each. The external one is always the worse of the two
-  // and is the number a user in a different NICU actually needs.
-  const ext = e ? ` At a hospital it never trained on that rises to
-    <b>${e.false_alarm}%</b> (AUC ${e.auc}).` : "";
-  return `<p class="dm-fa hard"><b>Do not read this as a diagnosis.</b>
-    This cut-off flags <b>${m.false_alarm}% of healthy eyes</b> at its own hospitals.${ext}
-    A positive means <b>"have a clinician look"</b> — nothing more.</p>`;
-}
-
-// A screening score drawn against its OWN decision line, not against an implied 50%.
-// The line is the operating point the model actually ships with; the distance from it is
-// the only thing the number means.
-function decisionMeter(f) {
-  const d = f.decision, s = d.score, t = d.threshold;
-  const side = d.positive
-    ? `<b class="dm-pos">above</b> the decision line — screened positive`
-    : `<b class="dm-neg">below</b> the decision line — screened negative`;
-  const ratio = t > 0 ? (s / t).toFixed(1) : null;
-  const raw = Object.entries(f.scores).map(([k, v]) => `${k} ${v}%`).join(" · ");
-  return `
-    <div class="dm">
-      <div class="scoreline"><span>Model score</span><span><b>${s}%</b></span></div>
-      <div class="dm-track">
-        <span class="dm-fill${d.positive ? " on" : ""}" style="width:${Math.min(s, 100)}%"></span>
-        <i class="dm-tick" style="left:${Math.min(t, 100)}%"></i>
-      </div>
-      <div class="dm-axis"><span>0%</span>
-        <span class="dm-thr" style="left:${Math.min(t, 100)}%">▲ flagged above ${t}%</span>
-        <span>100%</span></div>
-      <p class="dm-why">Anything scoring above <b>${t}%</b> gets flagged, so this one is
-         ${side}${ratio ? ` (${ratio}× the cut-off)` : ""}. The cut-off is set that low on
-         purpose — the model is built to rarely miss disease, which means it flags many
-         healthy eyes too.</p>
-      ${falseAlarmNote(d)}
-      <p class="dm-raw">${raw} — the second number is just <i>100 − score</i>, not a
-         separate finding of health.</p>
-    </div>`;
-}
-
 // The 6-class ICROP staging research preview. The backend has always returned it; nothing
 // rendered it, so the preview advertised on three pages never once reached the screen.
 // Reconcile the two models IN THE UI. They answer different questions with different
@@ -232,10 +183,11 @@ function render(res) {
     }
     // Two competing bars imply a 50% decision boundary. This screening model's boundary is
     // 19.3% (tuned for high sensitivity), so "No ROP 43.7%" read as "43.7% chance it's
-    // healthy" when it is only 1 - score. A binary finding gets a threshold-anchored meter
-    // instead; the raw class numbers stay, demoted to what they are.
+    // healthy" when it is only 1 - score. A binary finding therefore shows no bars at all:
+    // the verdict and the score carry it. The threshold, the measured false-alarm rates and
+    // the external audit stay in the /predict response under `decision`.
     const bars = f.decision && f.decision.positive_class
-      ? decisionMeter(f)
+      ? ""
       : Object.entries(f.scores).map(([k, v]) =>
         `<div class="scoreline"><span>${k}</span><span>${v}%</span></div>
          <div class="bar"><span style="width:${v}%"></span></div>`).join("");
