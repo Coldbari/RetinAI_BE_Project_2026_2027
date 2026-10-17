@@ -410,6 +410,8 @@ than leaving it blank, since the template asks for it.
 | Week 14 (07 Sep) | Preprocessing investigation: does illumination correction remove the device shortcut? | Completed — the proposal failed its own test, see below |
 | Week 15 (14 Sep) | Package the eleven ROP sources into one releasable, de-identified dataset | Completed |
 | Week 16 (21 Sep) | Log book brought current; September work committed and pushed | Completed |
+| Week 16–18 (22 Sep – 11 Oct) | Post-proposal review: evidence package, review decks, proposal document, metric sheet; review presented | Completed |
+| Week 19 (12 Oct) | Respond to review feedback: eye-level model redesign — data audit and literature survey first | In progress |
 
 ---
 
@@ -440,6 +442,8 @@ got done that week.
 | Week 15 | 14–20 Sep 2026 | `build_rop_release.py`: the eleven ROP sources on disk packaged into one self-describing tree a stranger can unzip and use. It re-derives no labels — the four-source ICROP reconciliation and the patient-grouped folds each already have one owner, and it reads those and extends them to the sources they never covered rather than creating a second source of truth that drifts. Three label schemas stay in three folders because the sources do not share a label *type*: 10,613 staged images, 1,533 plus-disease images with five independent rater opinions, 733 image+mask pairs. De-identification is part of packaging: ROP-VL embeds an exam date, COph100 inherits Ostrava's sex/GA/birth-weight filenames, and littlevision carries hospital record numbers and is excluded outright | Bring the log book current | Pooling the three schemas into one `labels.csv` would have been convenient and would have been a lie — a plus-disease rater opinion is not an ICROP stage | 1 |
 
 | Week 16 | 21 Sep 2026 | Log book brought current after a four-week gap. September work committed and pushed. Code drift between the development repository and this log book closed: `configs/rop.yaml`, four `models/` modules, and the web app's history view were all behind. **The 34 demo images were deliberately not published here** — their filenames encode infant ID, sex, gestational age and birth weight, and this is a public repository. `DEMO.md` reports what they produced instead of shipping them | Co-author adjudication; train and evaluate the grey-world pipeline against the current one | This log book went four weeks without an update against a two-week expectation. The work existed — it was committed late, not done late — but the gap is real and is recorded here rather than papered over by backdating | 2 |
+
+| Week 16–19 | 22 Sep – 17 Oct 2026 | **Post-proposal review prepared and presented.** On 22–23 Sep: an evidence package arranging the artifacts behind every number so a reviewer can check them rather than trust them; a plain-language write-up of the project; six rival papers read for method rather than for their headline numbers. Then the review materials: a 19-slide [post-proposal review deck](docs/review/RetinAI_Post_Proposal_Review.pptx) with every slide tagged to the review criterion it answers, a [plain-language version](docs/review/RetinAI_ROP_Plain_Review.pptx) for readers who do not read confusion matrices, the [project proposal](docs/PROJECT_PROPOSAL.docx), and a [one-page metric sheet](images/rop_metrics/rop_metric_sheet.png) in which each table names the artifact its numbers come from. The web app's decision meter was removed from the result card; its threshold and false-alarm numbers stay in the `/predict` response. **Review feedback:** change the model and the approach — not EfficientNet, possibly a design of our own; diagnose per *eye* (all photographs of one eye in, one diagnosis out) instead of per photograph; train more and target higher accuracy and F1 on every metric. Started the response with an audit of what eye-level data each source actually records and a literature survey of eye-level ROP models and retinal foundation models | Agree the eye-level model design and write it up; build the eye-level data pipeline; define a new pre-registered test, because the sealed held-out half was spent on 18 Aug and cannot score a new model | Eye-level training data is thin: most training eyes have a single photograph, and the largest source (Ostrava) records one diagnosis per examination with no left/right eye, so there the unit is the examination, not the eye. The number of photographs per examination also differs between diseased and normal exams, so it must be held fixed or a model can learn to count photographs instead of reading retinas. The log book again went about four weeks without an update, and renaming the 34 demo images in the development repository (never published here) is still open | 9 |
 
 The full commit history, code and results live in our development repository. This log book
 mirrors the milestones. Please ask if direct access to the development history is needed for
@@ -629,8 +633,11 @@ RetinAI_BE_Project_2026_2027/
 │   └── gate_thresholds.json    ← the gradability gate's calibrated bounds
 │
 ├── images/                     ← the evidence figures cited throughout this README
-│   └── enhancement/            ← the Week 14 preprocessing investigation
+│   ├── enhancement/            ← the Week 14 preprocessing investigation
+│   └── rop_metrics/            ← one-page metric sheet (dark + light/ for print)
 ├── docs/ · reference/          ← literature survey, software notes, IEEE references
+│   ├── PROJECT_PROPOSAL.docx   ← the capstone proposal
+│   └── review/                 ← post-proposal review deck + plain-language version
 ├── hardware/                   ← honest "not applicable" (software-only project)
 └── demo/                       ← pointer to the project video on YouTube
 ```
@@ -937,6 +944,10 @@ failed tests are where this project actually learned something.
 Two sets. The **ROP paper figures** below are the current ones; figures 01-12 further down are
 the earlier multi-disease phase, kept because their measurements are still the record of what
 we found.
+
+**Every measured number on one page:** the [metric sheet](images/rop_metrics/rop_metric_sheet.png)
+([light version for print](images/rop_metrics/light/rop_metric_sheet.png)). Each table names the
+committed artifact its numbers come from.
 
 ### The ROP paper figure set
 
