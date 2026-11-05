@@ -1,0 +1,55 @@
+\chapter{Implementation and Integration}\label{ch:implementation}
+\section{Development Environment and Tools}
+The code is a Python~3.14 repository on GitHub (private), with PyTorch and the timm library for models, scikit-learn for metrics, pandas and NumPy for data, Flask for the web application and ReportLab for the PDF. Training ran in Kaggle kernels on Tesla T4 GPUs (16~GB) with CUDA; CPU work (preprocessing cache, scoring, figures) ran on an Apple M5 laptop. Development followed a reviewed, test-first process: every task had a written brief, an implementer, a code review with written findings, and a fix round; 400+ automated tests run before each commit. The repository, the protocol and the result files are version-controlled; every figure in this report is produced by a committed script from committed result files.
+
+\section{Subsystem Implementation}
+\textbf{Data pipeline.} Fundus preprocessing was run once over all 7{,}363 photographs (6{,}700 pool plus 663 development half) and cached at 768~px as PNG under anonymised paths; a gate compared the baseline model's predictions from the cache with those from the originals (argmax agreement 99.2\%, $|\Delta$QWK$|$ 0.0006, PSNR 52.9~dB) before the cache was used. The 14 exact-duplicate images found in the pool by the paper-1 audit are dropped from every training set and every metric.
+
+\textbf{Model code.} The two transformer arms are built through one function that sets the input size to 392~px, average pooling and a fresh six-way head; RETFound-Green's weights are loaded strictly onto the backbone keys, with any non-head mismatch raised as an error. Normalisation is read from the configuration in both the training and the serving path (0.5/0.5 for RETFound-Green, ImageNet statistics for DINOv2). Per-layer learning-rate groups are built from the layer index and logged at the first step.
+
+\textbf{Examination-level loss and adaptation.} For model~D a batch sampler alternates image batches (16 photographs) with session batches (2 sessions $\times$ up to 8 frames); the frames' logits are pooled by Equation~\ref{eq:lse} and scored with the same loss object. For model~F an exponential-moving-average teacher (decay 0.99) is updated after each step; each step adds 16 unlabelled photographs of the new hospital, read from a manifest with the label column dropped before anything parses it, and penalises the squared difference between the teacher's prediction on a weakly augmented view and the student's on a strongly augmented view wherever the teacher is at least 90\% confident. The saved weights are the teacher's.
+
+\textbf{Training on Kaggle.} One kernel trains one arm and one seed: five folds plus the site fold (Shenzhen held out), 20 epochs each, batch 16, mixed precision, gradient clipping at 1.0, strong augmentation and site-randomising colour augmentation, last-epoch weights. A launch check verifies that the cache's preprocessing flags match the configuration and that every manifest row has a cached file; a wall-clock guard stops before the 8~h limit. A pusher rewrites the kernel's knobs (arm, seed, folds, learning rate, variant) by line-anchored substitution that must match exactly one line, and refuses a learning rate other than the probe's choice. Each kernel saves per-fold validation predictions and development-half predictions as compressed arrays.
+
+\textbf{Collector and scorer.} The collector downloads a kernel's output and refuses it unless the configuration matches the kernel's identity, each fold trained on its de-duplicated manifest, validation labels align row-for-row with the committed fold file and development predictions are in manifest order; it merges a run that was split over two kernels. The scorer computes every protocol metric from the saved predictions only (it raises if PyTorch is imported), runs a reproduction check on the baseline first, and writes one JSON with per-seed, pooled, selection-rule, paired-contrast and confusion blocks.
+
+\textbf{The v4 round.} The audit script computes sharpness, luminance and emptiness for every pool photograph, derives each Ostrava camera's thresholds from that camera's own frames, and writes the audit report (failing frames by camera, class and reason; near-duplicate pairs by distance, kind and pixel difference) before the pool builder runs; the pool builder then writes the v4 fold files, whose validation rows are checked to be identical to v3's, and a pool summary that was committed before any kernel was pushed. The recipe of model~I is implemented in the shared training code and switched on only by its configuration: the EMA reuses the adaptation model's teacher class; the Fourier swap runs on the normalised batch, where the zero-frequency term carries the sign of the channel mean, so the swap copies the partner's complete zero-frequency term and only the amplitudes of the other eight low-frequency entries, which a unit test shows to equal the swap done in pixel space. Two issues found in the code review before any v4 kernel were fixed and disclosed in a dated pre-run note: a class with no training rows in a fold (stage~4/5 in the ROP-VL leave-out fold) had received the largest class weight, because its count was clamped to one, and now receives zero weight, which leaves every v3 weight bit-identical; and the EMA's start from the pre-trained weights, which leaves about 5\% of them in the final average, was recorded rather than changed. Each v4 model and seed ran in two kernels (``-a'': five cross-validation folds; ``-b'': site fold and the two LOSO folds), and B's two LOSO folds ran in one further kernel per seed.
+
+\textbf{Web application.} The \texttt{/predict\_eye} route accepts up to 16 photographs (10~MB each, 160~MB per request, JSON~413 beyond that), requires the eye's context, runs the per-photograph model (model~B, the mean of the probabilities of its five seed-42 fold models), applies the worst-view rule, and returns the eye summary; \texttt{/report} validates the summary and renders the PDF with the eye block on its second page.
+
+\section{System Integration}
+The interfaces between subsystems are files with checked formats: the fold manifests (CSV with image path, label, split, patient, source), the cache (PNG files at anonymised paths plus a stamp of the preprocessing flags), the kernel's output (summary JSON plus per-fold arrays), the collected runs (one folder per arm and seed), the scores JSON and the report-data JSON. Integration tests cover each interface: the cache gate, the kernel-substitution tests, the collector's alignment checks on synthetic kernel outputs, the scorer's end-to-end test with the baseline's predictions posing as a new arm, and the route tests with demo photographs. The faults found and resolved during integration are listed in Section~\ref{sec:challenges}.
+
+\section{Prototype and Operating Procedure}
+To grade one eye: start the application (\texttt{python webapp/app.py}), open the screening page, choose the eye (left or right) and the context, add its photographs, and submit. The page shows each photograph's stage and probability, the eye's stage, and marks the driving photograph; the "Download report" button returns the PDF. The application refuses photographs that are not gradable fundus images and reports a staging-unavailable error if the model is not loaded. For training and scoring, the procedure is: build the cache; push a kernel with the pusher; collect the output with the collector; run the scorer; run the report-data and figure scripts. Each step is one command and is documented in the repository.
+
+\textbf{The served model.} The application serves the selected model~B as the mean of the probabilities of its five seed-42 fold models, each trained on four fifths of the pool, so the served model has seen every training infant. Scored on the held-out hospital's development half with the protocol's own scoring code, this exact configuration reaches an eye-level QWK of \DeployedQWK{} (95\% CI \DeployedQWKCI), accuracy \DeployedAcc{}, macro-F1 \DeployedMF{} and stage-1 recall \DeployedSOne{} on \DeployedEyes{} eyes, in line with B's pooled 0.756; the numbers are generated by \url{scripts/rop_v3_report_tables.py} and are descriptive, like every development-half number.
+
+\section{Implementation Challenges and Changes}\label{sec:challenges}
+\begin{itemize}
+\item \textbf{Slow reads from the Kaggle mount.} The first smoke run trained at 2.5 photographs/s because it read the cache lazily from the mounted dataset. Fix: copy only the files the launch needs to local disk with 32 threads (50~s for 7{,}363 files); throughput rose to 30~photographs/s.
+\item \textbf{JPEG cache failed the agreement gate} (98.9\% against the 99\% threshold). Diagnosed as chroma subsampling; the cache was rebuilt as PNG at 768~px (99.2\%).
+\item \textbf{Average pooling renamed a layer} in the transformer, so a strict weight load would have failed silently on the norm layer. Fix: keep the final norm in the backbone and load strictly.
+\item \textbf{Duplicates were not removed from training} in the first kernel version although the protocol said so. Found before the main runs; fixed and recorded as a protocol amendment, with the probe runs that had used them disclosed.
+\item \textbf{Temperature scaling was fitted at the photograph level} while the calibration endpoint is per eye. Fixed to fit on eye-level driving-photograph vectors and recorded as Amendment~1.
+\item \textbf{The adaptation model's confidence mask stayed closed} in its 2-epoch test because the teacher had not yet become confident; an 8-epoch test confirmed the mask opening. No setting was changed, and the small final mask rate (about 8\%) is reported as a result.
+\item \textbf{Kaggle silently drops a third concurrent kernel,} so a queue script runs two at a time and confirms each push before waiting on it.
+\end{itemize}
+
+\section{Bill of Materials and Actual Cost}
+The project is software-only. Table~\ref{tab:bom} lists what was used and what it cost.
+\begin{table}[htbp]
+\caption{Resources used and actual cost}\label{tab:bom}
+\begingroup\TightTable
+\begin{tabularx}{\textwidth}{@{}p{48mm}Yp{22mm}@{}}\toprule
+Item & Quantity and source & Cost (INR)\\\midrule
+Kaggle GPU time (T4) & about 45 GPU-hours over four weeks: 24 main sessions (14 in v3, 10 in v4), 7 probes, smoke runs & 0\\
+Laptop (Apple M5) & team member's own, for preprocessing, scoring and writing & 0\\
+Public datasets & Ostrava/RIDIRP, ROP-VL, Shenzhen, Multi-View ROP; licences respected & 0\\
+Pre-trained weights & DINOv2 (Apache-2.0), RETFound-Green (non-commercial) & 0\\
+Software & Python, PyTorch, timm, scikit-learn, Flask, ReportLab, Tectonic: all open source & 0\\
+Hosting of the demo & local machine & 0\\\midrule
+Total & & 0\\
+\bottomrule\end{tabularx}\endgroup
+\end{table}
+Running cost is that of one laptop for inference (about 1~s per photograph on CPU) and nothing for the trained models. Maintenance cost is the time to re-run the test suite and the scorer, both of which are one command.

@@ -1,0 +1,344 @@
+% !TeX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=20mm]{geometry}
+\usepackage{fontspec}
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{%
+\setmainfont{NimbusRoman-Regular.otf}[BoldFont=NimbusRoman-Bold.otf,
+ItalicFont=NimbusRoman-Italic.otf,BoldItalicFont=NimbusRoman-BoldItalic.otf]}
+\usepackage{setspace}\setstretch{1.08}
+\usepackage{titlesec}
+\titlespacing*{\subsection}{0pt}{9pt}{4pt}
+\usepackage{array,tabularx,longtable,booktabs,enumitem}
+\usepackage[hidelinks]{hyperref}\usepackage{xurl}\urlstyle{same}
+\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
+\setlist{leftmargin=5mm,topsep=3pt,itemsep=1pt,parsep=0pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\Page}[1]{\clearpage\section*{#1}}
+\newcommand{\Key}[1]{\textbf{#1}}
+\begin{document}
+{\Large\bfseries BE Project Report Preparation Instructions}\par
+VESIT\quad Department of Automation and Robotics\par
+Student handout\quad 23 October 2026
+
+Prepare a report that explains your own engineering work and provides verifiable
+evidence for its results. Follow the supplied report-format PDF for institutional
+requirements. The chapter plan and evidence checklists below are recommendations;
+your guide should approve adaptations.
+
+\subsection*{1 Start the LaTeX project}
+\begin{enumerate}
+\item Upload the ZIP to Overleaf as a new project, or extract it for local use.
+Set \texttt{main.tex} as the main document and select \Key{XeLaTeX}.
+\item Edit \texttt{project\_details.tex}. Enter the approved title, exact degree
+and program wording, students and roll numbers, guide, department, institute and
+submission year. Do not infer the award year from the academic year.
+\item Place the approved institute emblem at
+\texttt{figures/institute\_logo.png}. Do not reuse the other institute's
+emblem in the supplied PDF specimen.
+\item Replace all square-bracketed writing prompts. Four student placeholders
+are provided; see the README for changing team size.
+\item Compile until the contents and reference numbers settle. Locally run
+\texttt{latexmk -xelatex main.tex}, or run \texttt{xelatex main.tex} at least twice.
+\end{enumerate}
+
+\subsection*{2 Required report format}
+\begin{tabularx}{\textwidth}{@{}p{46mm}Y@{}}\toprule
+Item & Requirement or selected implementation\\\midrule
+Paper & A4, 210 by 297 mm; BE report printed on both sides\\
+Body text & Times New Roman, 12 pt, 1.5 line spacing\\
+Writing area & 160 mm wide by 245 mm high\\
+Margins without header & Top 30 mm; bottom 22 mm; left 30 mm; right 20 mm\\
+Page number & Centre of footer; Roman preliminary pages, Arabic main text\\
+Headings & Chapter 18 pt centred; section 16 pt and subsection 14 pt bold, left aligned\\
+Captions & Table title above; figure caption below; numbers by chapter\\
+\bottomrule\end{tabularx}
+
+\Key{Required font.} The included preview uses Nimbus Roman because Times New
+Roman was unavailable during compilation. This substitute is not claimed to
+meet the final font requirement. Install Times New Roman or upload legally
+obtained \texttt{times.ttf}, \texttt{timesbd.ttf}, \texttt{timesi.ttf} and
+\texttt{timesbi.ttf} into \texttt{fonts/}. The source selects Times New Roman
+when it is available. Inspect the final PDF fonts before submission.
+
+\Page{Order of Pages and Pagination}
+\subsection*{3 Preliminary pages in order}
+\begin{enumerate}
+\item \Key{Inner title sheet}: first printed report page, following Specimen A.
+Include the title, submission statement, degree, students and roll numbers,
+supervisor, department, institute and submission year. Outer-cover artwork is separate.
+\item \Key{Dedication}: optional. If included, it is auxiliary page i with its
+printed number hidden. Disable it when not used.
+\item \Key{Certificate}: internal approval sheet following Specimen B. With no
+dedication, it is auxiliary page i, counted but unprinted. Obtain genuine signatures.
+\item \Key{Project Report Approval for B.E.}: Specimen C, included only in the
+post-viva final hardbound copy after successful examination and actual approval.
+\item \Key{Declaration of Academic Honesty and Integrity}: Specimen D, adapted
+for a team and signed by every student. It follows approval when included;
+otherwise follows the certificate.
+\item \Key{Abstract}: 500 words explaining the problem, method, important results
+and contribution. Also provide a brief chapter-wise report layout and keywords.
+\item \Key{Contents}: chapters, sections and subsections with page numbers at the right.
+\item \Key{List of Figures}: figure numbers, captions and page numbers.
+\item \Key{List of Tables}: table numbers, titles and page numbers.
+\item \Key{Abbreviations, Notation and Nomenclature}: the complete list used in
+this report, including Greek letters, subscripts, superscripts and relevant units.
+\end{enumerate}
+
+\subsection*{4 Main text and ending sections}
+Introduction is the first chapter; Review of Literature is normally second.
+Results and Discussions is the penultimate main chapter and Conclusions is last.
+Then place \Key{Appendix I, Appendix II and so on}, followed by
+\Key{Literature Cited}, optional \Key{Publications by the Students}, and
+\Key{Acknowledgements} signed and dated by students. The appendix and
+acknowledgement positions follow the supplied PDF.
+
+\subsection*{5 Numbering and submission stage}
+The title and optional outer cover have no printed page numbers. Preliminary
+pages use continuous lower-case Roman numbering from the first auxiliary sheet,
+with the first number hidden. Introduction resets to Arabic page 1, also hidden;
+the next page shows 2. Subsequent pages continue sequentially. Chapters start on
+fresh pages without automatically inserted blank recto pages.
+
+Keep \texttt{\string\finalcopyfalse} before viva. Change it to
+\texttt{\string\finalcopytrue} only for the final approved copy. Never pre-fill
+examiner approval or signatures. The source contains a numbering typo in section
+3.7; this template follows one continuous Roman sequence.
+
+\Page{Suggested Contents for Chapters 1 to 4}
+Here ``index'' means \Key{Table of Contents}. An alphabetical subject index is
+not requested by the supplied guidelines. Adapt the technical headings to the
+actual project with guide approval.
+
+\subsection*{Chapter 1 Introduction}
+\begin{itemize}
+\item 1.1 Background and Motivation
+\item 1.2 Problem Statement
+\item 1.3 Aim and Objectives
+\item 1.4 Scope and Limitations
+\item 1.5 Project Contributions
+\item 1.6 Organisation of the Report
+\end{itemize}
+Define the need, engineering problem and measurable objectives. Distinguish
+original contributions from reused components or software.
+
+\subsection*{Chapter 2 Review of Literature}
+\begin{itemize}
+\item 2.1 Review Method and Sources
+\item 2.2 Related Work and Existing Systems
+\item 2.3 Comparative Analysis
+\item 2.4 Research or Engineering Gap
+\end{itemize}
+Critically compare relevant papers, standards, data sheets and products. Explain
+the gap supported by the review rather than listing unrelated summaries.
+
+\subsection*{Chapter 3 Problem Analysis and Requirements}
+\begin{itemize}
+\item 3.1 Stakeholders and Use Cases
+\item 3.2 Functional Requirements
+\item 3.3 Performance and Other Requirements
+\item 3.4 Constraints and Feasibility
+\item 3.5 Risks and Applicable Standards
+\item 3.6 Requirements Traceability Plan
+\end{itemize}
+Assign requirement IDs and define acceptance criteria before validation.
+
+\subsection*{Chapter 4 System Design and Methodology}
+\begin{itemize}
+\item 4.1 Proposed System Architecture
+\item 4.2 Design Alternatives and Selection
+\item 4.3 Hardware and Mechanical Design
+\item 4.4 Software and Algorithm Design
+\item 4.5 Mathematical Model and Design Calculations
+\item 4.6 Safety Sustainability Ethics and Cost Decisions
+\end{itemize}
+Use calculations and comparisons to justify choices. Rename irrelevant headings,
+for example hardware design in a software-only project.
+
+\Page{Suggested Contents for Chapters 5 to 8 and Appendices}
+\subsection*{Chapter 5 Implementation and Integration}
+\begin{itemize}
+\item 5.1 Development Environment and Tools
+\item 5.2 Subsystem Implementation
+\item 5.3 System Integration
+\item 5.4 Prototype and Operating Procedure
+\item 5.5 Implementation Challenges and Changes
+\item 5.6 Bill of Materials and Actual Cost
+\end{itemize}
+Describe what was actually built and configured, with technical evidence,
+software versions, implementation problems and corrective changes.
+
+\subsection*{Chapter 6 Testing and Validation Methodology}
+\begin{itemize}
+\item 6.1 Test Plan and Acceptance Criteria
+\item 6.2 Experimental Setup and Instruments
+\item 6.3 Datasets and Test Conditions
+\item 6.4 Test Procedures and Repeated Trials
+\item 6.5 Performance Metrics and Analysis Method
+\item 6.6 Fault Safety and Robustness Tests
+\end{itemize}
+Provide reproducible and safe procedures, trial counts, units, uncertainty,
+data selection and operating conditions.
+
+\subsection*{Chapter 7 Results and Discussions}
+\begin{itemize}
+\item 7.1 Measured Results
+\item 7.2 Verification of Project Requirements
+\item 7.3 Comparison with Baseline or Existing System
+\item 7.4 Interpretation and Engineering Tradeoffs
+\item 7.5 Safety Cost and Sustainability Evaluation
+\item 7.6 Limitations and Contribution of the Work
+\end{itemize}
+Separate measured findings from estimates and simulations. Explain failed trials
+and unmet requirements rather than omitting them.
+
+\subsection*{Chapter 8 Conclusions}
+8.1 Summary of the Work; 8.2 Conclusions against Objectives;
+8.3 Scope for Future Work. Enumerate conclusions separately, supported by results.
+Do not introduce new experimental claims in the conclusions.
+
+\subsection*{Appendices and remaining entries}
+\Key{Appendix I}: detailed design;
+\Key{Appendix II}: raw tests and supporting data;
+\Key{Appendix III}: software and reproducibility;
+\Key{Appendix IV}: project management and supporting records.
+Then Literature Cited, optional Publications, and Acknowledgements.
+Meeting logs, individual contributions and outcome mapping are recommended
+departmental evidence, not additional mandatory pages in the formatting PDF.
+
+\Page{Writing in LaTeX and Maintaining References}
+\subsection*{6 Generate contents automatically}
+Use structural commands. Do not type contents page numbers by hand.
+\begin{verbatim}
+\chapter{System Design and Methodology}
+\section{Proposed System Architecture}
+\subsection{Sensor Interface}
+\label{sec:sensor}
+See Section~\ref{sec:sensor}.
+\end{verbatim}
+Add subsections where helpful; the template lists them as 4.1.1 and so on.
+Deeper subdivisions need not be numbered or included in the contents.
+
+\subsection*{7 Figures and tables}
+Mention each figure or table before its first appearance. Keep small items near
+that mention and use separate pages for large ones where appropriate. Label
+axes and units. Cite reproduced material on a separate line in the caption.
+\begin{verbatim}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.85\textwidth]{prototype.png}
+  \caption{Prototype with labelled subsystems}
+  \label{fig:prototype}
+\end{figure}
+\end{verbatim}
+Place a table caption and label \Key{above} its tabular contents. Place a figure
+caption and label \Key{below} its image. Use \texttt{longtable} for multipage
+tables and repeat column headings. Do not use screenshots of tables or equations.
+
+\subsection*{8 Citations and bibliography}
+Use one consistent approved journal style, such as IEEE where appropriate. The
+provided bibliography is a minimal editable scaffold, not real literature.
+Replace its demonstration entry and citation.
+\begin{verbatim}
+Prior work is discussed in~\cite{motor-control}.
+% In backmatter/references.tex:
+\bibitem{motor-control}
+... complete, verified bibliographic details ...
+\end{verbatim}
+Give all author names with initials, full title, source, volume, issue, pages and
+year as applicable. Website citations need author/organisation, title, URL and
+last-accessed date. Personal communications need author, title if any and receipt
+date. Check every cited source; never invent bibliographic details.
+
+\subsection*{9 Common source checks}
+Escape special text characters: \verb|\&|, \verb|\%|, \verb|\_|,
+\verb|\#| and \verb|\$|. Use \verb|\url{...}| for web links. Use numbered
+equation environments and cross-references. Recompile after adding labels,
+figures, citations or chapters. Resolve undefined references before submission.
+
+\Page{Project Evidence and Final Submission Checklist}
+\subsection*{10 Verification of project requirements}
+Maintain the complete requirement-versus-result table in Results and Discussions.
+For each requirement record:
+\begin{enumerate}
+\item Requirement ID and approved requirement.
+\item Acceptance criterion, units and conditions.
+\item Test ID, procedure, date, equipment and trial count.
+\item Actual measured result; use Not tested if pending.
+\item Status: Met, Partially met or Not met, with a reason.
+\item Evidence reference to a test log, figure, appendix or versioned file.
+\end{enumerate}
+A vision project may need accuracy on an independent labelled dataset, throughput
+under a defined load and robustness under defined lighting. Set justified targets
+and report actual observations. Template examples must not be used as measured
+project results.
+
+Retain raw data, code versions, calibration details and test sheets in appendices
+or permitted digital attachments. Document individual contributions, guide
+feedback and action closure. Discuss relevant safety, ethics, environmental
+effects, sustainability, cost and standards using evidence. An SDG label alone
+is insufficient.
+
+\subsection*{11 Before guide approval}
+\begin{itemize}
+\item Replace every placeholder and check title, names, roll numbers and degree wording.
+\item Use the approved emblem and verify Times New Roman is actually embedded.
+\item Check the 500-word abstract, additional report layout and keywords. Keep the
+electronic abstract consistent with the report.
+\item Verify the correspondence between objectives, requirements, tests and conclusions.
+\item Check contents, figure/table lists, captions, equations and bibliography.
+\item Obtain genuine signatures; do not simulate approvals in the template.
+\item Resolve missing images, undefined citations, text overflow and font substitution.
+\end{itemize}
+
+\subsection*{12 Printing and binding}
+Print BE reports double-sided on A4 white bond paper of at least 70 gsm and
+whiteness of 95\% or above. Print at actual size, not Fit to page. Final hard
+binding after viva is black with gold embossed cover and spine lettering. The
+spine includes degree, candidate name and year. Ask for two white sheets at the
+beginning and end, in addition to normal binding sheets. Confirm team-name spine
+arrangement and final copy requirements with the department; no copy count is
+invented here.
+
+\Page{Source Notes and Formatting Decisions}
+\subsection*{13 Source requirements and recommended content}
+Source: \textit{Guidelines for Preparation of Thesis, Dissertations and Project
+Reports}, user-provided 16-page PDF. Content structure is on PDF pages 2--4;
+formatting on pages 5--7; auxiliary pages and binding on pages 7--10; specimens
+A--F on pages 11--16. Page numbers here count from the cover.
+
+Introduction first, Literature Review normally second, Results and Discussions
+penultimate and Conclusions last are source rules. The exact titles and number
+of intervening chapters depend on the investigation. The eight-chapter plan is a
+recommended BE structure, not a prescribed university index.
+
+\subsection*{14 Interpretations to confirm with the guide before binding}
+\begin{itemize}
+\item \Key{Chapter top spacing}: the source says an additional top margin of
+about 75 mm. The template applies 75 mm above the numbered chapter heading,
+relative to the normal 30 mm top margin, with 12 mm gaps between number, title
+and body. If the department treats 75 mm as a total top distance, adjust the
+central chapter spacing in settings.tex after confirmation.
+\item \Key{Paragraph separation}: the source requests about 2.5-line spacing
+between paragraphs and normally a 12 mm first-line indent. The template uses a
+12 mm indent and an interpreted paragraph baseline gap of 2.5 ordinary baselines.
+Confirm this approximate spacing before final printing.
+\item \Key{Duplex margins}: the source gives physical left 30 mm and right
+20 mm. The template preserves these on both sides. Confirm any mirrored
+inner/outer binding-margin variation with the guide.
+\item \Key{Headers}: the source allows no header with a 30 mm top margin. This
+option is used, retaining the 160 by 245 mm writing area and centred footer.
+\item \Key{Approval sequence}: the source has inconsistent numbering words
+around iii. A continuous lower-case Roman sequence is used. Examiner approval
+is disabled until the final post-viva version.
+\end{itemize}
+
+\subsection*{15 Adapting the package responsibly}
+The certificate and declaration specimens are adapted to a four-student team.
+Confirm final wording with the guide. For a different team size, edit all name
+lists and signature macros, not just the title sheet. A logo area and blank
+signature lines are placeholders, not authorised emblems or approvals.
+
+The preview is an instructional template, not a completed thesis. It contains no
+fabricated results or real project bibliography. This handout is an instruction
+sheet; thesis formatting is implemented in main.tex and settings.tex.
+\end{document}

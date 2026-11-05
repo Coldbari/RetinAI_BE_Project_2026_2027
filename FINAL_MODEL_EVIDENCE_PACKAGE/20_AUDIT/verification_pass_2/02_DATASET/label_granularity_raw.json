@@ -1,0 +1,17 @@
+{
+  "images": 1324,
+  "patients": 232,
+  "eyes": 460,
+  "eyes_single_label": 436,
+  "eyes_multi_label": 24,
+  "patients_single_label": 210,
+  "patients_multi_label": 22,
+  "label_values": {
+    "Normal": 382,
+    "3": 312,
+    "2": 299,
+    "1": 295,
+    "4": 18,
+    "AROP": 18
+  }
+}

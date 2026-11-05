@@ -1,0 +1,55 @@
+% !TeX program = xelatex
+% Compile this file with XeLaTeX, twice (or latexmk -xelatex main.tex).
+\documentclass[12pt,a4paper,twoside,openany]{report}
+\input{settings}
+\input{fillmacros}
+\input{tables/deployed_macros}% served-model metrics, written by scripts/rop_v3_report_tables.py
+\input{project_details}
+\begin{document}
+\hypersetup{pdftitle={\ProjectTitle},pdfauthor={\StudentNamesPlain}}
+\hypersetup{pageanchor=false}
+% Cover is optional for the electronic report; the title sheet is mandatory.
+\ifprintcover\input{frontmatter/cover}\fi
+\input{frontmatter/title}
+\clearpage\pagenumbering{roman}\pagestyle{plain}
+\hypersetup{pageanchor=true}
+% Title sheet is outside auxiliary numbering. The first auxiliary page is
+% counted as i, but its printed number is suppressed.
+\ifdedication
+  \FrontHeading{Dedication}\thispagestyle{empty}
+  \noindent\textit{[Optional dedication. Replace this text or disable in \texttt{project\_details.tex}.]}
+  \clearpage
+\fi
+\input{frontmatter/certificate}
+\iffinalcopy\input{frontmatter/approval}\fi
+\input{frontmatter/declaration}
+\input{frontmatter/abstract}
+\begingroup\setlength{\parskip}{0pt}\singlespacing
+\titlespacing*{\chapter}{0pt}{0pt}{12mm}
+\clearpage\phantomsection\addcontentsline{toc}{chapter}{Contents}
+\tableofcontents
+\clearpage\phantomsection\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\clearpage\phantomsection\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+\clearpage\endgroup
+\input{frontmatter/nomenclature}
+\clearpage\pagenumbering{arabic}\pagestyle{plain}
+\input{chapters/01_introduction}
+\input{chapters/02_literature}
+\input{chapters/03_requirements}
+\input{chapters/04_design}
+\input{chapters/05_implementation}
+\input{chapters/06_testing}
+\input{chapters/07_results}
+\input{chapters/08_conclusions}
+\appendix
+\renewcommand{\thechapter}{\Roman{chapter}}
+\input{backmatter/appendices}
+% The supplied guidelines put appendices BEFORE literature cited.
+\input{backmatter/references}
+\ifpublications\input{backmatter/publications}\fi
+% Acknowledgements follow literature cited (and optional publications).
+\input{backmatter/acknowledgements}
+\input{backmatter/checklist}
+\end{document}

@@ -1,0 +1,33 @@
+\chapter{Review of Literature}\label{ch:literature}
+\section{Review Method and Sources}
+We searched PubMed, Google Scholar, the MICCAI proceedings and arXiv between August and October 2026 for deep-learning work on ROP staging, with emphasis on papers that use the same public cohorts as this project (Ostrava/RIDIRP, ROP-VL, Shenzhen) and on retinal foundation models. Twelve papers were read in full for the first version of the project; a further eight were checked in October 2026 as prior art for the present design. The clinical references are the ICROP-3 classification~\cite{icrop3} and the two inter-expert agreement studies~\cite{gschliesser2015,campbell2016}. Methods references are the DINOv2~\cite{oquab2024} and RETFound-Green~\cite{engelmann2025} pre-training papers, EfficientNetV2~\cite{tan2021}, class-balanced loss~\cite{cui2019}, self-ensembling domain adaptation~\cite{french2018} and the shortcut-learning literature~\cite{degrave2021,oakden2020}.
+
+\section{Related Work and Existing Systems}
+\textbf{Staging on the same cohorts.} Vahidmoghadam et al.~\cite{vahid2026} apply EfficientNet-B4 to the Ostrava corpus and report 0.98 stage accuracy and 1.000 plus-disease accuracy under an 80/16/4 split made at the image level, on a dataset that averages about 32 frames per infant and comes from three camera systems, with no external validation. VEA-Net~\cite{wang2026} trains on Ostrava, FARFUM-ROP and A-Fundus with a subject-level 10-fold split and reports 74.8\% stage accuracy, a far more honest number from almost the same images. ROPDeepX~\cite{kumar2026} combines three cohorts and reports 99.7\% on RIDIRP under an image-level split. Together these three papers show the range a single corpus can produce depending on the split alone.
+
+\textbf{Evaluation unit.} Peng et al.~\cite{peng2021} report both image-level and examination-level results and Campbell's i-ROP group~\cite{campbell2018,derks2025} score plus disease at the examination level, aggregating an eye as the mean of its photographs and an infant as the maximum of its eyes. Wang et al.~\cite{wang2021} report referral-warranted ROP at image, eye and patient level and find F1 falling from 0.956 to 0.898 as the unit coarsens. Lan et al.~\cite{lan2026} pool five fixed fields of view per eye for type-1 ROP and find that fusing the photographs' features (multiple-instance learning) beats fusing their outcomes, which is what our worst-view rule does. None of these quantifies the unit effect on identical predictions or gives its anatomical cause; our first paper did, finding the opposite sign and roughly three times the magnitude for staging~\cite{nagpure2026}.
+
+\textbf{Foundation models for the retina.} RETFound-Green~\cite{engelmann2025} is a ViT-S pre-trained on retinal photographs and was evaluated on the Shenzhen ROP cohort by linear probe only. Mahboob et al.~\cite{mahboob2025} fine-tuned the adult-retina RETFound for ROP staging and found it no better than ImageNet classifiers, again with architectures that differ. ROP-Bench~\cite{luo2026} compares DINOv2 ViT-B/14 with RETFound ViT-L/16 on four ROP cohorts for binary tasks and finds the natural-image model wins everywhere, but its two models differ in size, patch and resolution, so the pre-training domain is confounded with architecture. SABPI-Net~\cite{chen2025} fine-tunes RETFound ViT-L on 174{,}540 photographs for five classes including AP-ROP at the image level. DeepAdapter~\cite{zhao2026} pre-trains a ResNet-50 on 500{,}000 infant photographs and adds unsupervised domain adaptation for a held-out hospital, for a binary task.
+
+\textbf{Human agreement.} Gschlie\ss{}er et al.~\cite{gschliesser2015} report inter-expert kappa 0.24 for stage and 0.35 for AP-ROP; Campbell et al.~\cite{campbell2016} report 40\% expert disagreement on stage but over 95\% agreement on treatment-requiring disease. Any reported machine accuracy above the human ceiling is evidence about the protocol rather than the model.
+
+\section{Comparative Analysis}
+Table~\ref{tab:literature} compares the closest work on the axes that matter for this project.
+\begin{table}[htbp]
+\caption{Comparison of related work on deep-learning ROP staging}\label{tab:literature}
+\begingroup\TightTable\small
+\begin{tabularx}{\textwidth}{@{}p{24mm}YYYY@{}}\toprule
+Source & Data and split & Unit scored & Reported result & Limitation or gap\\\midrule
+Vahidmoghadam 2026~\cite{vahid2026} & Ostrava only; image-level split & image & stage acc.\ 0.98 & frames of one infant in train and test; no external set\\
+VEA-Net 2026~\cite{wang2026} & 3 cohorts; subject-level 10-fold & image & stage acc.\ 74.8\% & AP-ROP folded into stage 4; adaptation claim not probed\\
+Peng 2021~\cite{peng2021} & 1 centre, private & image and exam & $\kappa$ 0.979 & single centre; private data\\
+i-ROP DL~\cite{campbell2018,derks2025} & multi-centre; patient split & examination & plus AUC 0.968 & plus disease only, not stage\\
+ROP-Bench 2026~\cite{luo2026} & 4 cohorts; patient split & image & DINOv2 $>$ RETFound & binary tasks; architectures not matched\\
+SABPI-Net 2025~\cite{chen2025} & 174k photos; patient split & image & acc.\ 95.3\% & private corpus; image level\\
+Mahboob 2025~\cite{mahboob2025} & large public ROP set & not stated in abstract & RETFound $\approx$ ImageNet models & architectures not matched\\
+This work & 3 cohorts CV + held-out hospital; patient split; pre-registered & photograph, eye and exam & eye QWK 0.744--0.776, nine models (new hospital) & labels not re-graded; few severe eyes at new hospital\\
+\bottomrule\end{tabularx}\endgroup
+\end{table}
+
+\section{Research or Engineering Gap}
+Four gaps follow from the review and set this project's objectives. First, no published study tests retinal versus natural-image pre-training for multi-class ICROP-3 staging with the architecture, resolution, preprocessing and training recipe held equal; ROP-Bench and Mahboob et al.\ leave exactly that question open. Second, no multi-class staging system has been evaluated at the eye level on an unseen hospital with an operating point and calibration fixed in advance. Third, no study trains at the examination unit when the labels are per examination; the field either scores per image against examination labels or discards the multi-frame structure. Fourth, no ROP staging paper pre-registers its endpoints and its selection rule before training, although the agreement studies show that the measurement, not the model, is where most of the uncertainty lies. Objectives O2 to O5 address these gaps in turn.

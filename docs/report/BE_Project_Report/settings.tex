@@ -1,0 +1,89 @@
+% Format implementation of the supplied report guidelines.
+\usepackage{fontspec}
+\newif\ifactualtimes
+\IfFontExistsTF{Times New Roman}{%
+  \setmainfont{Times New Roman}\actualtimestrue
+}{%
+  \IfFileExists{fonts/times.ttf}{%
+    \setmainfont{times.ttf}[Path=fonts/,BoldFont=timesbd.ttf,
+      ItalicFont=timesi.ttf,BoldItalicFont=timesbi.ttf]\actualtimestrue
+  }{%
+    \IfFontExistsTF{NimbusRoman-Regular.otf}{%
+      \setmainfont{NimbusRoman-Regular.otf}[BoldFont=NimbusRoman-Bold.otf,
+        ItalicFont=NimbusRoman-Italic.otf,BoldItalicFont=NimbusRoman-BoldItalic.otf]%
+    }{\setmainfont{TeX Gyre Termes}}
+    \actualtimesfalse
+    \PackageWarningNoLine{BEReport}{PREVIEW FONT SUBSTITUTE IN USE. Install licensed Times New Roman before final submission}
+  }
+}
+\usepackage[a4paper,asymmetric,left=30mm,right=20mm,top=30mm,
+ bottom=22mm,headheight=3mm,headsep=12mm,footskip=10mm]{geometry}
+% 210 - 30 - 20 = 160 mm text width; 297 - 30 - 22 = 245 mm text height.
+% No running header is used. The guidelines explicitly allow a 30 mm top
+% margin without a header. "asymmetric" keeps physical left/right margins
+% fixed on duplex pages; ask the guide before switching to mirrored margins.
+\usepackage{setspace}
+\onehalfspacing
+\raggedbottom
+\setlength{\parindent}{12mm}
+% Interprets "about 2.5 line spacing" between paragraphs as the baseline
+% gap across the paragraph break, including the ordinary next-line baseline.
+\AtBeginDocument{\setlength{\parskip}{1.5\baselineskip}}
+\widowpenalty=10000\clubpenalty=10000
+\brokenpenalty=10000
+\setlength{\emergencystretch}{1em}
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+ {\centering\normalfont\bfseries\fontsize{18}{22}\selectfont}
+ {\chaptertitlename\ \thechapter}{2mm}{}
+% "Additional top margin of about 75 mm" is applied literally relative
+% to the normal text area. Guide may confirm interpretation before binding.
+\titlespacing*{\chapter}{0pt}{0mm}{12mm}
+\titleformat{\section}{\normalfont\bfseries\fontsize{16}{20}\selectfont}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\bfseries\fontsize{14}{18}\selectfont}{\thesubsection}{1em}{}
+\titlespacing*{\section}{0pt}{15mm}{15mm}
+\titlespacing*{\subsection}{0pt}{15mm}{15mm}
+\setcounter{secnumdepth}{2}\setcounter{tocdepth}{2}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{array,tabularx,longtable,booktabs}
+\usepackage{amsmath,amssymb}
+\numberwithin{equation}{chapter}
+\usepackage{caption}
+\captionsetup{font=normalsize,labelfont=bf}
+\captionsetup[table]{position=top}
+\captionsetup[figure]{position=bottom}
+\usepackage{enumitem}
+\setlist{topsep=3pt,itemsep=3pt,parsep=0pt}
+\usepackage[hidelinks,unicode]{hyperref}
+\usepackage{xurl}
+\urlstyle{same}
+\usepackage{etoolbox}
+% Suppress ONLY the page number 1 of Introduction. Keep later chapter
+% opening page numbers and footer page numbers centred.
+\newcommand{\FrontHeading}[1]{%
+ \clearpage\phantomsection\addcontentsline{toc}{chapter}{#1}%
+ {\centering\fontsize{18}{22}\selectfont\bfseries #1\par}\vspace{12mm}}
+\newcommand{\BackHeading}[1]{\FrontHeading{#1}}
+\newcommand{\Prompt}[1]{\noindent\textit{[Replace with #1]}\par}
+\newcommand{\Blank}[1][35mm]{\rule{#1}{0.3pt}}
+\newcommand{\InstituteLogo}{%
+ \IfFileExists{figures/institute_logo.png}{%
+  \includegraphics[width=50mm,height=50mm,keepaspectratio]{institute_logo.png}%
+ }{\begingroup\setlength{\fboxsep}{0pt}%
+  \fbox{\parbox[c][49.2mm][c]{49.2mm}{\centering
+   \fontsize{11}{14}\selectfont Approved institute emblem\\50 mm diameter area}}\endgroup}}
+\newcommand{\StudentTitleRows}{%
+ \StudentOne\quad(\RollOne)\\
+ \StudentTwo\quad(\RollTwo)\\
+ \StudentThree\quad(\RollThree)\\
+ \StudentFour\quad(\RollFour)}
+\newcommand{\StudentSignatures}{%
+ \begin{tabularx}{\textwidth}{@{}Xl@{}}
+ \StudentOne\ (\RollOne) & Signature: \Blank[32mm]\\[8mm]
+ \StudentTwo\ (\RollTwo) & Signature: \Blank[32mm]\\[8mm]
+ \StudentThree\ (\RollThree) & Signature: \Blank[32mm]\\[8mm]
+ \StudentFour\ (\RollFour) & Signature: \Blank[32mm]
+ \end{tabularx}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\TightTable}{\setlength{\parskip}{0pt}\singlespacing\renewcommand{\arraystretch}{1.35}}

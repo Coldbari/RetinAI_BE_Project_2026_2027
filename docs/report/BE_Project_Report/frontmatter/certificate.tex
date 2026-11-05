@@ -1,0 +1,26 @@
+% Specimen B. First auxiliary sheet is counted as i but unprinted
+% when no dedication precedes it.
+\FrontHeading{Certificate}
+\ifdedication\else\thispagestyle{empty}\fi
+\noindent This is to certify that the project entitled
+``\ProjectTitle'' is a bonafide work of \StudentOne\ (\RollOne),
+\StudentTwo\ (\RollTwo), \StudentThree\ (\RollThree), and
+\StudentFour\ (\RollFour), submitted to the \UniversityName\ in
+partial fulfillment of the requirements for the award of the degree of
+\DegreeName\ in \ProgramName.
+\vspace{28mm}
+\begingroup\setlength{\parskip}{0pt}\singlespacing
+\noindent\begin{minipage}[t]{.46\textwidth}\centering
+\Blank[55mm]\\\GuideName\\Supervisor or Guide
+\end{minipage}\hfill
+\begin{minipage}[t]{.46\textwidth}\centering
+\ifcoguide\Blank[55mm]\\\CoGuideName\\Co-supervisor or Co-guide\fi
+\end{minipage}
+\par\vspace{30mm}
+\noindent\begin{minipage}[t]{.46\textwidth}\centering
+\Blank[55mm]\\\HoDName\\Head of Department
+\end{minipage}\hfill
+\begin{minipage}[t]{.46\textwidth}\centering
+\Blank[55mm]\\\PrincipalName\\Principal
+\end{minipage}
+\endgroup\clearpage

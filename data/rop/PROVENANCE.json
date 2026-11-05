@@ -1,0 +1,264 @@
+{
+  "generated_by": "scripts/rop_data_inventory.py",
+  "total_images_excluding_redundant": 13037,
+  "total_bytes": 14468422589,
+  "datasets": [
+    {
+      "folder": "ostrava",
+      "images": 6004,
+      "masks_or_overlays": 0,
+      "other_files": 0,
+      "bytes": 2609359237,
+      "extensions": {
+        ".jpg": 6004
+      },
+      "order": 1,
+      "title": "Retinal Image Dataset of Infants and ROP",
+      "region": "Ostrava, Czechia",
+      "doi": "figshare collection 6626162",
+      "licence": "CC0",
+      "mirror": "Kaggle jananowakova/retinal-image-dataset-of-infants-and-rop",
+      "labels": "ICROP stage 0-3, AP-ROP, treated (st.p. ROP), 4 non-ROP diagnoses; plus-form; 3 cameras",
+      "role": "TRAINING - this is what the shipped model was built on",
+      "note": "Symlink to ../../dataset_split (the prepared split). PRIVATE infant photographs. Stage labels are recoverable only by joining docs/infant_retinal_database_info.csv on (ID, serie, device). 43% of its 'ROP-positive' class is NOT ROP.",
+      "caveat": "Image resolution is a perfect 1:1 proxy for camera, and camera carries most of the label signal: dimensions alone score AUC 0.911 on its test split."
+    },
+    {
+      "folder": "rop_vl",
+      "images": 2020,
+      "masks_or_overlays": 0,
+      "other_files": 2,
+      "bytes": 700051161,
+      "extensions": {
+        ".jpg": 2020,
+        ".xlsx": 2
+      },
+      "order": 2,
+      "title": "ROP-VL",
+      "region": "Shenzhen Eye Hospital, China",
+      "doi": "10.6084/m9.figshare.30143461",
+      "licence": "CC BY 4.0",
+      "mirror": "Kaggle nazimriyadh1/rop-vl (unattributed re-upload - prefer figshare)",
+      "labels": "8 classes: normal, Stage 1-5, A-ROP, laser-treated. Per-infant GA, birth weight, plurality, delivery mode. Per-class clinical text (vision-language).",
+      "role": "THE key acquisition - only public source of Stage 4 and Stage 5 anywhere",
+      "note": "Overlaps Shenzhen by only ~1-2% of images (20-22 shared photographs) despite the same hospital and 6 shared authors. Where they overlap ROP-VL holds the higher-resolution original. No zone axis, no plus axis.",
+      "caveat": "Filenames embed exam dates at day granularity - a date-of-service identifier. Do not propagate those filenames into anything public."
+    },
+    {
+      "folder": "farfum_rop",
+      "images": 1533,
+      "masks_or_overlays": 0,
+      "other_files": 2,
+      "bytes": 2164162041,
+      "extensions": {
+        ".jpg": 1533,
+        ".xlsx": 2
+      },
+      "order": 3,
+      "title": "FARFUM-RoP",
+      "region": "Farabi Hospital, Iran",
+      "doi": "figshare collection 6721269",
+      "licence": "CC BY 4.0",
+      "mirror": "-",
+      "labels": "Retinopathy grade + ICROP stage, recorded INDEPENDENTLY by five paediatric ophthalmologists (A-E), plus per-patient details.",
+      "role": "The plus/pre-plus axis, and the only inter-rater data we have",
+      "note": "Ships as 68 per-patient RAR5 archives. p7zip cannot decode RAR5 and will silently write zero-byte files - use `unar`.",
+      "caveat": "ZERO of its 1,533 images are graded unanimously. Every image has 2 or 3 distinct grades among the 5 graders, and the split is systematic (C and E consistently more conservative). Treat as soft labels, never as ground truth."
+    },
+    {
+      "folder": "multiview",
+      "images": 1324,
+      "masks_or_overlays": 0,
+      "other_files": 4,
+      "bytes": 2107242869,
+      "extensions": {
+        ".jpg": 1324,
+        ".xlsx": 4
+      },
+      "order": 4,
+      "title": "Multi-View ROP",
+      "region": "China",
+      "doi": "HuggingFace lijuanliao/ROP-DATASET",
+      "licence": "CC BY-NC 4.0",
+      "mirror": "-",
+      "labels": "Per-image ICROP stage (1-4, A-ROP, Normal) + 6 acquisition views (L/R x temporal/posterior-pole/nasal) + neonatal risk factors (oxygen therapy, ventilation, sepsis, transfusion).",
+      "role": "The only source with acquisition-view labels - directly attacks the view confound",
+      "note": "Discoverable ONLY via HuggingFace full-text search; absent from Kaggle, figshare and ordinary web search.",
+      "caveat": "NON-COMMERCIAL licence - do not mirror publicly. Its zone/plus/treatment columns are nearly empty (zone 13 of 232 patients, plus 17, treatment 14); only the per-image stage labels are complete."
+    },
+    {
+      "folder": "shenzhen",
+      "images": 1099,
+      "masks_or_overlays": 0,
+      "other_files": 1,
+      "bytes": 202933271,
+      "extensions": {
+        ".jpg": 1099,
+        ".xlsx": 1
+      },
+      "order": 5,
+      "title": "Shenzhen ROP (Zhao 2024)",
+      "region": "Shenzhen Eye Hospital, China",
+      "doi": "10.6084/m9.figshare.25514449",
+      "licence": "CC BY 4.0",
+      "mirror": "Kaggle errorrific/fundus-image-dataset-to-retinopathy-of-prematurity",
+      "labels": "Normal, Stage 1-3, laser scars. zip information.xlsx maps image -> infant -> eye.",
+      "role": "FIRST DATASET DOWNLOADED in this effort - the original external-validation target",
+      "note": "All 512x512. Largely superseded by ROP-VL (same hospital, higher resolution), but 98% of its images are NOT in ROP-VL, so it still contributes.",
+      "caveat": "3 images are filed under two different stage folders at once. Binary labels are unaffected; staging labels contradict for those 3."
+    },
+    {
+      "folder": "hvdropdb",
+      "images": 485,
+      "masks_or_overlays": 300,
+      "other_files": 0,
+      "bytes": 607919301,
+      "extensions": {
+        ".png": 785
+      },
+      "order": 6,
+      "title": "HVDROPDB",
+      "region": "H.V. Desai Eye Hospital, Pune, India",
+      "doi": "10.17632/xw5xc7xrmp.3 (Mendeley)",
+      "licence": "CC BY 4.0",
+      "mirror": "Kaggle tonimaislamlamia/hvdropdb-datasets",
+      "labels": "Binary ROP/Normal classification, plus segmentation masks for RIDGE (demarcation line), blood vessels and optic disc. RetCam and Neo cameras.",
+      "role": "The ridge masks - the feature that defines ICROP stages 1 and 2",
+      "note": "785 files but only 329 UNIQUE fundus images: 21 classification files are byte duplicates and 97 images appear in both the classification and segmentation subsets.",
+      "caveat": "Every file is named 1.png..50.png, so basenames collide across all 16 folders. Never flatten this directory."
+    },
+    {
+      "folder": "shantou_od",
+      "images": 129,
+      "masks_or_overlays": 0,
+      "other_files": 129,
+      "bytes": 105413483,
+      "extensions": {
+        ".json": 129,
+        ".jpg": 129
+      },
+      "order": 7,
+      "title": "ROP optic disc segmentation (Shantou)",
+      "region": "Shantou, China",
+      "doi": "10.17632/tv3b2bt6dy.2 (Mendeley)",
+      "licence": "CC BY 4.0",
+      "mirror": "-",
+      "labels": "Optic disc segmentation, LabelMe JSON per image.",
+      "role": "Segmentation only",
+      "note": "UUID.N filenames, same convention as Multi-View and FARFUM.",
+      "caveat": "-"
+    },
+    {
+      "folder": "shantou_bv",
+      "images": 101,
+      "masks_or_overlays": 101,
+      "other_files": 101,
+      "bytes": 113715155,
+      "extensions": {
+        ".jpg": 202,
+        ".json": 101
+      },
+      "order": 8,
+      "title": "ROP retinal vessel segmentation (Shantou)",
+      "region": "Shantou, China",
+      "doi": "10.17632/prcy36j53v.2 (Mendeley)",
+      "licence": "CC BY 4.0",
+      "mirror": "-",
+      "labels": "Retinal blood vessel segmentation: image + LabelMe JSON + binary mask.",
+      "role": "Segmentation only - vessel tortuosity is the substrate of plus disease",
+      "note": "Companion release to shantou_od, same authors and date.",
+      "caveat": "-"
+    },
+    {
+      "folder": "orvs_seg",
+      "images": 251,
+      "masks_or_overlays": 251,
+      "other_files": 1,
+      "bytes": 8453215,
+      "extensions": {
+        ".jpg": 502,
+        ".zip": 1
+      },
+      "order": 9,
+      "title": "ORVS + ROP vessel segmentation",
+      "region": "mixed",
+      "doi": "Kaggle ojaskundlia/orvs-rop-1-2",
+      "licence": "unstated",
+      "mirror": "-",
+      "labels": "Vessel segmentation image/label pairs, ROP V1 and V2 plus the adult ORVS set.",
+      "role": "Small segmentation supplement",
+      "note": "V1 and V2 are two mask revisions of one image set.",
+      "caveat": "Licence is not stated anywhere - do not redistribute."
+    },
+    {
+      "folder": "ropstages_sample",
+      "images": 91,
+      "masks_or_overlays": 0,
+      "other_files": 0,
+      "bytes": 136058640,
+      "extensions": {
+        ".jpg": 91
+      },
+      "order": 10,
+      "title": "ROP stages (reviewed) sample",
+      "region": "unstated",
+      "doi": "Kaggle solennollivier/ropstages-reviewed",
+      "licence": "unstated",
+      "mirror": "-",
+      "labels": "Stage 1-3 and NoROP encoded in the filename, with a patient number.",
+      "role": "Small independent stage-labelled sample",
+      "note": "Folder is literally named NewROPDataset_Sample_justtotry - it is a sample, not a release.",
+      "caveat": "Provenance and licence both unknown. Do not train on this."
+    },
+    {
+      "folder": "coph100_annotations",
+      "images": 0,
+      "masks_or_overlays": 648,
+      "other_files": 651,
+      "bytes": 131685761,
+      "extensions": {
+        ".png": 648,
+        ".gz": 324,
+        ".json": 324,
+        ".py": 1,
+        ".txt": 1,
+        ".xlsx": 1
+      },
+      "order": 11,
+      "title": "COph100",
+      "region": "derived from Ostrava",
+      "doi": "10.6084/m9.figshare.27061084",
+      "licence": "CC BY",
+      "mirror": "-",
+      "labels": "Registration control points (LabelMe JSON) + vessel masks + overlays.",
+      "role": "ANNOTATIONS ONLY - adds no new photographs",
+      "note": "Ships masks and overlays keyed to Ostrava filenames, which we already hold. Its filenames preserve the TRUE Ostrava DG codes.",
+      "caveat": "Do not count these as additional images."
+    },
+    {
+      "folder": "_redundant",
+      "images": 8710,
+      "masks_or_overlays": 0,
+      "other_files": 74,
+      "bytes": 5581428455,
+      "extensions": {
+        ".jpg": 8679,
+        ".png": 31,
+        ".py": 22,
+        ".0": 13,
+        ".txt": 9,
+        ".pth": 8
+      },
+      "order": 99,
+      "title": "Redundant re-uploads (quarantined)",
+      "region": "-",
+      "doi": "-",
+      "licence": "-",
+      "mirror": "-",
+      "labels": "-",
+      "role": "QUARANTINE - safe to delete",
+      "note": "littlevision (Kaggle hemanathrvh13996/rop-dataset-for-little-vision) re-ships Ostrava byte-identically AND FARFUM re-encoded (all 1,533 filenames match). Kept only so nobody re-downloads it to find out.",
+      "caveat": "Its folder names contain medical record numbers and exam dates."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+\FrontHeading{Abbreviations Notation and Nomenclature}
+\begingroup\TightTable
+\begin{longtable}{@{}p{30mm}p{95mm}p{25mm}@{}}
+\toprule Symbol & Meaning & Unit\\\midrule\endhead
+ROP & Retinopathy of prematurity & --\\
+ICROP-3 & International Classification of ROP, third edition (2021) & --\\
+AP-ROP & Aggressive ROP (formerly aggressive posterior ROP) & --\\
+S1--S3, S4/5 & ICROP-3 stages 1 to 3; stages 4 and 5 merged & --\\
+CV & Cross-validation & --\\
+OOF & Out-of-fold (a prediction made by the model that did not train on that photograph) & --\\
+LOSO & Leave-one-source-out (train on two hospitals, score every photograph of the third) & --\\
+v3, v4 & The two model rounds of this version: arms A--G, and arms H and I with the audited pool & --\\
+QWK & Quadratic weighted kappa (Cohen's $\kappa$ with quadratic disagreement weights) & --\\
+$\kappa$ & Cohen's kappa, unweighted & --\\
+F1 & Harmonic mean of precision and recall & --\\
+Macro-F1 & Mean of per-class F1 over the classes present & --\\
+AUC & Area under the receiver operating characteristic curve & --\\
+AP & Average precision (area under the precision--recall curve) & --\\
+ECE & Expected calibration error & --\\
+NLL & Negative log-likelihood & --\\
+CI & Confidence interval (95\%, infant-clustered bootstrap unless stated) & --\\
+MDE & Minimum detectable effect at 80\% power & --\\
+ViT-S/14 & Vision transformer, small, 14-pixel patches & --\\
+DINOv2 & Self-supervised vision transformer pre-trained on natural images (Meta) & --\\
+RETFound-Green & Self-supervised ViT-S pre-trained on retinal photographs & --\\
+EfficientNetV2-S & Convolutional network pre-trained on ImageNet (baseline) & --\\
+CLAHE & Contrast-limited adaptive histogram equalisation & --\\
+dHash & Difference hash: a 256-bit fingerprint of an image's brightness gradients & --\\
+EMA & Exponential moving average (of model weights) & --\\
+LSE & Log-sum-exp pooling & --\\
+AdamW & Adam optimiser with decoupled weight decay & --\\
+AMP & Automatic mixed precision & --\\
+GPU & Graphics processing unit & --\\
+$N$ & Number of photographs in a set & --\\
+$K$ & Number of frames sampled from one examination session (model D) & --\\
+$\tau$ & Temperature of the log-sum-exp pooling & --\\
+$T$ & Temperature-scaling constant fitted on cross-validation & --\\
+$p_c$ & Predicted probability of class $c$ for one photograph & --\\
+$\eta$ & Peak learning rate & --\\
+$\lambda$ & Layer-wise learning-rate decay factor & --\\
+$\beta$ & Class-balancing hyperparameter (Cui et al.) & --\\
+$d$ & Decay of the weight EMA (model I) & --\\
+$A$, $\varphi$ & Amplitude and phase of an image's discrete Fourier transform & --\\
+px & Pixel & --\\
+\bottomrule\end{longtable}\endgroup
+\clearpage

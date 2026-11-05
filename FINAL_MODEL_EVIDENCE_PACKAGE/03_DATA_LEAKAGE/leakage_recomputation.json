@@ -1,0 +1,7 @@
+{
+  "patient_overlaps_total": 0,
+  "image_overlaps_total": 0,
+  "val_folds_exactly_partition_corpus": true,
+  "union_val_images": 6700,
+  "verdict": "PASS"
+}

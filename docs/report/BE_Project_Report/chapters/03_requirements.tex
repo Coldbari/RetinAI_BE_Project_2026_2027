@@ -1,0 +1,41 @@
+\chapter{Problem Analysis and Requirements}\label{ch:requirements}
+\section{Stakeholders and Use Cases}
+The users of the system are the readers of ROP screening photographs: paediatric ophthalmologists, and in a telemedicine setting, trained non-physician graders who refer suspicious cases. The operating scenario is one examination of one eye: the camera operator takes several photographs of the eye (the Multi-View hospital takes three fixed views), uploads them together, and receives one stage for the eye, the photograph that drove the decision, a per-photograph breakdown, and a PDF that can go into the record. Secondary stakeholders are the research community, who need the evaluation to be reproducible, and the examiners of this project, who need every claim to trace to evidence. The system is a decision-support and research tool, not a diagnostic device.
+
+\section{Functional Requirements}
+\begin{enumerate}
+\item[R1] The application shall accept 1 to 16 photographs of one eye with the eye's laterality and context, and return one ICROP-3 stage for the eye, the index of the driving photograph and a per-photograph stage, as JSON. Acceptance: automated tests on the route, including malformed input, oversize uploads (JSON 413) and missing context.
+\item[R2] The eye stage shall be the most severe predicted stage over the eye's photographs (worst-view rule), with AP-ROP reported as a form. Acceptance: unit test on synthetic photographs.
+\item[R3] The application shall produce a PDF report for the eye containing the eye summary, the per-photograph table and the driving photograph. Acceptance: report generated for the demo set and validated input.
+\item[R4] The training pipeline shall train any supported backbone on the committed fold manifests with one command and save per-fold predictions on the fold's validation rows and on the held-out hospital's development half. Acceptance: collector refuses any run whose predictions are misaligned with the manifests.
+\item[R5] The scorer shall compute every pre-registered metric from saved predictions only, with no model run, and refuse to write results if its reproduction check on the baseline fails. Acceptance: reproduction check equal to the committed paper-1 numbers to 3 decimals.
+\item[R6] No code path shall read the locked half of the held-out hospital. Acceptance: a guard that rejects any path containing \texttt{test\_locked}, and an AST test over all training code.
+\end{enumerate}
+
+\section{Performance and Other Requirements}
+\begin{enumerate}
+\item[P1] Cross-validation QWK (5-class map) $\ge 0.80$ for the selected model, with a 95\% infant-clustered confidence interval.
+\item[P2] Eye-level QWK at the held-out hospital $\ge 0.75$ for the selected model.
+\item[P3] Stage-1 eye recall at the held-out hospital above the baseline's 0.40.
+\item[P4] Each training session (five folds and the site fold, 20 epochs) shall fit in one free Kaggle GPU kernel, i.e.\ under 8~h wall-clock.
+\item[P5] Eye-level inference for 16 photographs shall complete in under 10~s on a laptop CPU.
+\item[P6] Reproducibility: every reported number shall be recomputable from committed predictions by a committed script; two random seeds for every trained arm.
+\item[P7] Maintainability: the full automated test suite shall pass before every commit; new behaviour comes with tests.
+\end{enumerate}
+
+\section{Constraints and Feasibility}
+Compute: free Kaggle GPU time only (about 30~GPU-hours per week, T4 or P100 at random, two concurrent kernels, 9~h kernel limit) plus an Apple M5 laptop for CPU work. Budget: zero; no paid cloud, no paid venue. Data: public cohorts only; the Multi-View hospital is CC~BY-NC and RETFound-Green's weights are licensed for non-commercial use, which the report and the application state. Schedule: three weeks from the review to the results, which fixed the design to one pre-training comparison plus a small number of pre-registered follow-ups, not a hyperparameter sweep. Clinical input: no clinician on the team, so labels could not be re-graded; this is why the evaluation is pre-registered and every number carries an interval. Feasibility was established by a frozen-feature spike before the design: fine-tuning a retina-pretrained transformer was the one lever with a measurable effect, and a 2-epoch smoke run on Kaggle confirmed 30 photographs/s at 392~px, i.e.\ about 33~min per fold.
+
+\section{Risks and Applicable Standards}
+\begin{itemize}
+\item \textbf{Leakage.} Frames of one infant in both training and test would inflate every number. Mitigation: patient-grouped folds, exact-duplicate exclusion (14 in-pool images), and a hospital held out entirely.
+\item \textbf{Selection on the test set.} Tuning on the held-out hospital would make its score meaningless. Mitigation: the selection rule is cross-validation only; the development half is reported as descriptive; the locked half is opened once.
+\item \textbf{Shortcut learning.} Camera colour and image size identify the hospital and correlate with disease. Mitigation: site-randomising augmentation and a metadata-only performance floor from paper~1.
+\item \textbf{Label noise.} Examination-level labels stamped on every frame. Mitigation: evaluation at the unit each cohort's labels describe, and model~D trained at that unit.
+\item \textbf{Privacy.} Some source file names encode clinical attributes. Mitigation: anonymised file names in every uploaded dataset, a sweep that refuses to build a bundle containing patient-pattern names, and private Kaggle datasets for images and weights.
+\item \textbf{Misuse.} The application could be read as a diagnosis. Mitigation: the interface and report state that the output is decision support for a trained reader.
+\end{itemize}
+Applicable standards and guidance: ICROP-3 for the class definitions~\cite{icrop3}; the TRIPOD+AI and CLAIM reporting checklists for the manuscript; ISO/IEC~25010 quality characteristics (functional suitability, reliability, maintainability) as the framing for the software requirements.
+
+\section{Requirements Traceability Plan}
+Each requirement is linked to a design element in Chapter~\ref{ch:design}, a test in Chapter~\ref{ch:testing} and a result row in Table~\ref{tab:verification}. Functional requirements R1--R6 are verified by the automated test suite and by the scorer's own checks; performance requirements P1--P3 by the committed scores file; P4 by the Kaggle kernel logs; P5 by a timed request; P6 and P7 by the repository history. The protocol document and its amendments are the pre-registration record: each is dated and committed before the experiment it governs.

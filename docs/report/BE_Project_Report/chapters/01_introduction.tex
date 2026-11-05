@@ -1,0 +1,44 @@
+\chapter{Introduction}\label{ch:introduction}
+\thispagestyle{empty}% Page 1 counted, not printed.
+\section{Background and Motivation}
+Retinopathy of prematurity (ROP) is a disease of the developing retinal blood vessels in infants born early or with low birth weight. If it is found in time it can be treated with laser or an injected drug, and the eye keeps its sight; if it is missed, the retina can detach and the infant is blind for life. It is one of the leading preventable causes of childhood blindness, and the number of infants at risk is growing fastest in middle-income countries, India among them, where more premature infants now survive than can be screened by the small number of paediatric ophthalmologists.
+
+Screening is done by photographing the retina with a wide-field camera, typically several photographs per eye taken from different angles, and having a trained reader grade the images against the International Classification of ROP, third edition (ICROP-3)~\cite{icrop3}. The classification gives the disease a stage from 1 (a thin demarcation line at the edge of the vascularised retina) to 5 (total retinal detachment), and names a separate aggressive form (AP-ROP) that does not follow the stage ladder. The decision to treat depends on the stage, its location and the state of the vessels at the back of the eye.
+
+The reading step is the constraint. Human experts also disagree with one another about stage far more than is generally assumed: in the largest study of its kind seven experts agreed on stage with a kappa of only 0.24, and the same expert, re-reading the same photograph eight weeks later, agreed with their earlier self with a kappa of 0.56~\cite{gschliesser2015}. Automated grading has therefore attracted a steady stream of deep-learning systems, many of which report image-level accuracies above 0.95. Our own earlier work~\cite{nagpure2026} showed why those numbers should be read with care: most of the published gains are decided by how the data are split and by the unit at which the labels are scored, rather than by the model.
+
+\section{Problem Statement}
+Build and validate a software system that takes every fundus photograph of one eye from one examination, grades each photograph into the six ICROP-3 classes, and returns one stage for the eye, in the way a clinician would read the examination, and do this with evaluation that would hold up at a new hospital and in peer review.
+
+The specific engineering problem posed to the team at the post-proposal review was fourfold: (i) replace the EfficientNet classifier of the first version with a different, preferably self-designed, approach; (ii) move from photograph-to-photograph grading to eye-to-eye grading; (iii) raise accuracy, F1 and the other metrics; and (iv) produce a publishable result.
+
+\section{Aim and Objectives}
+The aim is an eye-level ROP staging system whose performance claims are pre-registered, reproducible and externally validated. The measurable objectives, numbered for traceability, are:
+\begin{enumerate}
+\item[O1] Implement eye-level inference: all photographs of one eye in, one stage out, with the photograph that drove the decision identified, and a PDF report. Acceptance: the route returns within 10~s for 16 photographs and is covered by automated tests.
+\item[O2] Replace the backbone with a retina-pretrained vision transformer and compare it, under identical training recipes, with a natural-image-pretrained transformer of the same architecture and with the EfficientNet baseline. Acceptance: all arms trained with two seeds under one committed protocol.
+\item[O3] Fix the evaluation before training: patient-grouped folds, a held-out hospital, one primary endpoint, a selection rule that never sees the held-out hospital, clustered confidence intervals, and a stated minimum detectable effect.
+\item[O4] Reach a cross-validation QWK of at least 0.80 and an eye-level QWK at the held-out hospital of at least 0.75, and report every metric with its interval.
+\item[O5] Test at least two further pre-registered improvements chosen from the error analysis (resolution, training unit, ensembling, decision rule, adaptation) and report their effect honestly, including null results.
+\item[O6] Produce a manuscript whose every number traces to a committed artefact.
+\end{enumerate}
+
+\section{Scope and Limitations}
+In scope: stage classification from colour fundus photographs of the three public ROP cohorts (Ostrava, ROP-VL, Shenzhen) and the Multi-View held-out hospital; eye-level aggregation; the web application; the evaluation protocol and the statistical analysis. Out of scope: plus disease and zone (not labelled consistently across the cohorts), treatment recommendation, real-time camera integration, and any clinical deployment. The models are not medical devices and have not been used on patients.
+
+The main limitations, stated here and discussed in Chapter~\ref{ch:results}, are that the labels were released by the source institutions and not re-graded by a clinician; that two cohorts attach one label to every frame of an examination, so some training labels describe the examination rather than the frame; that the severe classes (stage~4/5, AP-ROP) have five and two eyes at the held-out hospital and cannot be evaluated there; and that the locked half of the held-out hospital, reserved for the final scoring, awaits the guide's approval for its single opening.
+
+\section{Project Contributions}
+Original work by the team:
+\begin{itemize}
+\item the eye-level screening route, worst-view aggregation, driving-photograph attribution and PDF report in the RetinAI web application;
+\item a pre-registered evaluation protocol (Protocol v2 with five dated amendments) committed before each experiment, with infant-clustered paired bootstrap, operating point and calibration all fitted on cross-validation only;
+\item the training pipeline for the transformer arms: preprocessing cache, per-layer learning-rate decay, learning-rate probe, Kaggle kernels, run collector and scorer, with 400+ automated tests;
+\item an examination-level training loss (log-sum-exp pooling over the frames of a session) for cohorts whose labels are per examination;
+\item nine trained and scored model arms in 24 training sessions, including a per-camera data-quality audit of the Ostrava frames, a near-duplicate check and a regularising training recipe tested against a pre-set adoption margin and a leave-one-hospital-out guard, and the finding that matching the training unit to the label unit is the one change that moves the result;
+\item the model report dashboard, this report and the manuscript draft.
+\end{itemize}
+Reused components, all cited: the DINOv2 and RETFound-Green pre-trained weights, the timm, PyTorch and scikit-learn libraries, the three public ROP datasets, the EfficientNetV2-S baseline predictions from our first version, and the self-ensembling adaptation method of French et al.
+
+\section{Organisation of the Report}
+Chapter~\ref{ch:literature} reviews the literature and states the gap. Chapter~\ref{ch:requirements} gives the requirements, constraints and risks. Chapter~\ref{ch:design} describes the architecture, the models, the design alternatives and the evaluation protocol. Chapter~\ref{ch:implementation} describes what was built. Chapter~\ref{ch:testing} gives the test plan, datasets and metrics. Chapter~\ref{ch:results} reports and discusses the results against the requirements. Chapter~\ref{ch:conclusions} concludes and lists future work.

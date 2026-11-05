@@ -1,0 +1,8 @@
+% Fill-in markers: search the PDF/DOCX for "FILL-" to find every item the team must complete.
+% Delete this file's \FILL uses (or redefine \FILL to print nothing) before the final copy.
+\usepackage{xcolor}
+\newcommand{\FILL}[2]{\textcolor{red}{\textbf{[FILL-#1: #2]}}}
+% Requirement P5, measured 27 Oct 2026 on the team's Apple M5 laptop (PyTorch MPS backend), EfficientNetV2-S served by the app.
+\newcommand{\PFIVE}{6.62~s for 16 photographs; 0.38~s for one}
+\newcommand{\PFIVESTATUS}{Met}
+\newcommand{\PFIVETEXT}{Requirement P5 was re-timed on 2 November 2026 after the application switched to the DINOv2 ViT-S/14 5-fold ensemble (five checkpoints, probabilities averaged). The application was started as in the demo script and its eye-level endpoint was called over HTTP with the bundled ROP test photographs on the team's Apple M5 laptop (PyTorch MPS backend), three runs each, median reported: one photograph in 0.38~s and 16 photographs in 6.62~s (runs 6.48--6.86~s), plus 2.5~s to load and warm up the five networks once at start-up. Both are under the 10~s acceptance limit. The ensemble does five times the work of the single EfficientNetV2-S timed earlier (2.78~s for 16), and the heatmap is computed only for the photograph that drives the eye's stage. Timings depend on machine load: an earlier in-process measurement taken while other jobs loaded the laptop (load average 10 to 30) took 12--16~s for 16 photographs, so the margin holds on an otherwise idle laptop, not under contention.}

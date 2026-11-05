@@ -1,0 +1,43 @@
+{
+  "checkpoint": "results/rop_staging/weights.pth",
+  "sha256": "11b439608690024700cdc927dece45d51ebc78b648aef81090cb6be3e7dc747c",
+  "size_bytes": 82964554,
+  "size_mb": 79.12,
+  "state_dict_keys": 788,
+  "n_sites": 3,
+  "arch": "effnetv2s",
+  "image_size": 384,
+  "params": {
+    "total": 20512600,
+    "backbone": 20177488,
+    "dropout": 0,
+    "stage_head": 5124,
+    "arop_head": 1281,
+    "grl": 0,
+    "site_head": 328707
+  },
+  "params_million": 20.51,
+  "inference_only_params": 20.18,
+  "preprocess_ms_single_image": 120.04,
+  "latency_single_forward": {
+    "cpu": {
+      "median_ms": 113.56,
+      "p90_ms": 147.25,
+      "mean_ms": 116.25,
+      "n_runs": 20
+    },
+    "mps": {
+      "median_ms": 32.3,
+      "p90_ms": 56.9,
+      "mean_ms": 36.59,
+      "n_runs": 20
+    }
+  },
+  "tta_used_at_serve_time": false,
+  "note_tta": "webapp/inference.py runs ONE forward pass per uploaded image for the staging model. The 5-view TTA in the artifacts belongs to the RETIRED ResNet50 screening path (results/rop/operating_point.json, 'derived_on: 5-view TTA').",
+  "forward_passes_per_uploaded_image": 1,
+  "examination_estimate_6_frames_ms": {
+    "cpu": 1401.6,
+    "mps": 914.1
+  }
+}

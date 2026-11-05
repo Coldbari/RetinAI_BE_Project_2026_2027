@@ -1,0 +1,74 @@
+{
+  "served_weights_path": "results/rop_staging/weights.pth",
+  "served_weights_bytes": 82964554,
+  "served_weights_sha256": "11b439608690024700cdc927dece45d51ebc78b648aef81090cb6be3e7dc747c",
+  "served_weights_mtime": "2026-08-26T21:12:53",
+  "state_dict_keys": 788,
+  "n_sites_in_checkpoint": 3,
+  "total_parameters": 20512600,
+  "trainable_parameters": 20512600,
+  "frozen_parameters": 0,
+  "backbone_parameters": 20177488,
+  "head_parameters": {
+    "stage_head": 5124,
+    "arop_head": 1281,
+    "site_head": 328707
+  },
+  "served_rerun_seconds": 109.8,
+  "served_rerun_per_image_ms": 165.6,
+  "served_checkpoint_match_vs_committed_dev_predictions": {
+    "fold0_ckpt": {
+      "pred_agreement": 1.0,
+      "max_abs_prob_diff": 3.039836883544922e-06
+    },
+    "fold1_ckpt": {
+      "pred_agreement": 0.8853695324283559,
+      "max_abs_prob_diff": 0.9429109040647745
+    },
+    "fold2_ckpt": {
+      "pred_agreement": 0.8883861236802413,
+      "max_abs_prob_diff": 0.8531273752450943
+    },
+    "fold3_ckpt": {
+      "pred_agreement": 0.8717948717948718,
+      "max_abs_prob_diff": 0.9120957478880882
+    },
+    "fold4_ckpt": {
+      "pred_agreement": 0.8793363499245852,
+      "max_abs_prob_diff": 0.9789096266031265
+    },
+    "fold0_ckpt_seed1337": {
+      "pred_agreement": 0.8853695324283559,
+      "max_abs_prob_diff": 0.9797335416078568
+    },
+    "fold1_ckpt_seed1337": {
+      "pred_agreement": 0.8823529411764706,
+      "max_abs_prob_diff": 0.8711698055267334
+    },
+    "fold2_ckpt_seed1337": {
+      "pred_agreement": 0.8929110105580694,
+      "max_abs_prob_diff": 0.9170462712645531
+    },
+    "fold3_ckpt_seed1337": {
+      "pred_agreement": 0.8748114630467572,
+      "max_abs_prob_diff": 0.9638899601995945
+    },
+    "fold4_ckpt_seed1337": {
+      "pred_agreement": 0.8929110105580694,
+      "max_abs_prob_diff": 0.8916933480650187
+    }
+  },
+  "best_match": {
+    "checkpoint": "fold0_ckpt",
+    "pred_agreement": 1.0,
+    "max_abs_prob_diff": 3.039836883544922e-06
+  },
+  "identified": true,
+  "environment": {
+    "torch": "2.12.0",
+    "python": "3.14.6",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "numpy": "2.4.6"
+  },
+  "git_commit": "f0d4508707970697280f63943ef4f4496e54bafe"
+}

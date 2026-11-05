@@ -1,0 +1,258 @@
+% =====================================================================
+%  Paper 3 — RetinAI ROP staging: results compendium. IEEE two-column (IEEEtran, conference layout).
+%  Build:  .venv/bin/python scripts/paper3_figures.py   (writes figs3/: figures, tab_*.tex, numbers.tex)
+%          tectonic -X compile paper3_results.tex
+%  Every number in this file is a macro from figs3/numbers.tex or a cell of a figs3/tab_*.tex table, both
+%  generated from the files named in Table~\ref{tab:repro}; none is typed here.
+%  Items in \FILL{...} must be completed by the authors before submission.
+% =====================================================================
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx,booktabs,amsmath,amssymb,xcolor,url,array}
+\graphicspath{{figs3/}}
+\newcommand{\FILL}[1]{\textcolor{red}{\textbf{[FILL: #1]}}}
+\IEEEoverridecommandlockouts
+% Times with real bold/italic under tectonic (XeTeX); without it IEEEtran falls back to Latin Modern regular only
+\usepackage{iftex}\ifXeTeX\usepackage{fontspec}\setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]\fi
+\raggedbottom
+\input{figs3/numbers}
+\renewcommand{\arraystretch}{1.05}
+% a results compendium is mostly floats: let pages carry several, full-width ones included
+\setcounter{topnumber}{4}\setcounter{dbltopnumber}{4}\setcounter{totalnumber}{10}
+\renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.8}\renewcommand{\dblfloatpagefraction}{0.8}
+
+\title{RetinAI ROP Staging: A Results Compendium of Every Model Trained (2026)}
+
+\author{\IEEEauthorblockN{Praharsh Nagpure, \FILL{R. Bait full name}, \FILL{P. Rangnekar full name},\\ \FILL{Y. Shengale full name}, and \FILL{A. Kumar full name}}
+\IEEEauthorblockA{Department of Automation and Robotics, Vivekanand Education Society's Institute of Technology, Mumbai, India\\
+Corresponding author: \FILL{name, e-mail, ORCID}}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document reports, without discussion, every model the RetinAI project trained for staging retinopathy of prematurity (ROP) in 2026, the protocol each was scored under, and the file each number comes from. The current generation (\nArms{} arms, A--I) shares one pre-registered protocol: patient-grouped five-fold cross-validation (CV) on \poolImages{} photographs of \poolInfants{} infants from \poolSources{} hospitals, eye-level scoring at a fourth hospital unseen in training, and leave-one-source-out folds. The selected model, B (DINOv2 ViT-S/14), scores CV QWK5 \BcvQ{} \BcvQci{} and, at the unseen hospital, eye-level QWK5 \BdevQ{} \BdevQci{}. Earlier generations are tabulated separately under their own protocols.
+\end{abstract}
+
+\begin{IEEEkeywords}
+retinopathy of prematurity, ICROP-3, staging, benchmark, results, pre-registration
+\end{IEEEkeywords}
+
+\section{How to Read}
+\textbf{Settings.} (i)~\emph{CV per photograph}: five patient-grouped folds, out-of-fold, seeds \seedA{} and \seedB{} pooled, \dupExcl{} duplicates excluded. (ii)~\emph{Unseen hospital per eye}: Multi-View development half (\devImages{} photographs, \devEyes{} eyes); eye = most severe predicted stage; descriptive; locked half unopened for A--I. (iii)~\emph{LOSO}: train on two sources, score the third.
+\textbf{Metrics.} QWK5: quadratic-weighted kappa, five ordinal levels, AP-ROP folded onto stage~4/5~\cite{icrop3}; mF1: mean per-class F1, present classes; Acc.: exact six-class matches; CIs: 95\% percentile bootstrap, \nReps{} infant resamples.
+\textbf{Pre-registration.} \path{PROTOCOL_V2.md} (\texttt{\protoCommit}, \protoDate{}; \nAmend{} amendments to \lastAmendDate{}); selection on CV only.
+\textbf{Caveats} (\path{MODEL_HISTORY.md}): QWK definitions, eye rules and test halves changed across generations; the June binary numbers carry a device shortcut. Section~\ref{sec:hist} is never pooled with A--I.
+
+\section{Current Generation (Protocol v2, Arms A--I)}
+Tables~\ref{tab:headline}--\ref{tab:secondary} and Figs.~\ref{fig:selection}--\ref{fig:training}. Arms: A RETFound-Green~\cite{engelmann2025}, B DINOv2~\cite{oquab2024}, C EfficientNetV2-S~\cite{tan2021} from~\cite{nagpure2026}, D--I variants of B (Table~\ref{tab:recipe}).
+
+\begin{table*}[!t]
+\caption{Headline results, all arms, both seeds pooled. CV: pooled out-of-fold, per photograph. Dev: unseen hospital, development half, per eye. QWK5 with 95\% infant-clustered CI; Acc.\ six-class accuracy; Bal.\,acc.\ mean per-class recall; mF1 macro-F1 over present classes; AUC and AP: any ROP vs normal (mean over each arm's models). Bold letter: selected arm. $^\dagger$Transductive: saw the dev photographs unlabelled in training.}
+\label{tab:headline}
+\centering\scriptsize\setlength{\tabcolsep}{3pt}
+\input{figs3/tab_headline}
+\end{table*}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_selection.pdf}
+\caption{Selection. (a) CV QWK5 per photograph, pooled out-of-fold, 95\% CI. Dotted: B, chosen by the v3 rule. Dashed: the Amendment~5c adoption bar (B $+$ \marginCV{}) a v4 arm (H, I) had to reach. (b) Its second condition: mean LOSO QWK5 over three held-out sources at least B $-$ \marginLOSO{} (dashed). No v4 arm met both; \selArm{} stays.}
+\label{fig:selection}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_dev_eye.pdf}
+\caption{Unseen hospital, development half: eye-level QWK5, 95\% CI, \devLists{} fold-seed models per arm. Descriptive; selected nothing. $^\dagger$Transductive.}
+\label{fig:dev}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_loso.pdf}
+\caption{LOSO QWK5 per photograph with 95\% CI (Table~\ref{tab:loso}); bars labelled by arm. Fold compositions in Table~\ref{tab:losofolds}.}
+\label{fig:loso}
+\end{figure}
+
+\begin{table*}[!t]
+\caption{Recall / precision per class, both seeds pooled. Upper block: CV per photograph; lower block: unseen hospital (dev half) per eye. Class counts in each block's header. Classes~\cite{icrop3}: S stage, AP aggressive ROP.}
+\label{tab:stage}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_stage}
+\end{table*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_stage_recall.pdf}
+\caption{Recall per class, all arms: (a) CV per photograph; (b) unseen hospital per eye. n below each class: photographs (a), eyes (b). Arm identity by colour and marker.}
+\label{fig:stage}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_confusion_dev_eye.pdf}
+\caption{Eye-level confusion matrices at the unseen hospital (dev half), all arms. Cell: share of the true-class row in \%, averaged over the arm's \devLists{} models (diagonal = recall); blank = 0. True-class eye counts in parentheses. N normal, S stage, AP AP-ROP. $^\dagger$Transductive.}
+\label{fig:cm}
+\end{figure*}
+
+\begin{table}[!t]
+\caption{CV QWK5 per photograph per fold (F0--F4) and seed, each fold scored by its own model; mean and SD over the five folds.}
+\label{tab:folds}
+\centering\scriptsize\setlength{\tabcolsep}{3.2pt}
+\input{figs3/tab_folds}
+\end{table}
+
+\begin{table*}[!t]
+\caption{Leave-one-source-out (LOSO), per photograph, seeds pooled: QWK5, mF1 and accuracy with 95\% infant-clustered CI, and mean recall per class (-- absent from the held-out source). Shenzhen is the protocol's site fold; the Ostrava and ROP-VL folds were added by Amendment~5 for B, H and I. Pool: the training pool (Table~\ref{tab:pool}).}
+\label{tab:loso}
+\centering\scriptsize\setlength{\tabcolsep}{3.2pt}
+\input{figs3/tab_loso}
+\end{table*}
+
+\begin{table*}[!t]
+\caption{All \nPairs{} pre-specified paired contrasts (first arm minus second): QWK5 and mF1, both arms on the same infant resample, 95\% CI. CV: selection context; dev: descriptive. No row is a confirmatory test; the primary endpoint (locked-half eye-level A$-$C) is unscored.}
+\label{tab:contrasts}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_contrasts}
+\end{table*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_contrasts.pdf}
+\caption{Paired contrasts in QWK5 with 95\% CI (Table~\ref{tab:contrasts}): (a) CV, \cvScored{} photographs; (b) dev half, \devEyes{} eyes. A line crossing zero is a tie; point differences at right.}
+\label{fig:contrasts}
+\end{figure*}
+
+\begin{table*}[!t]
+\caption{Operating point and calibration, per arm and seed. Threshold: the largest value of the unit any-ROP score, $\max_i(1-p_{i,\mathrm{normal}})$, that keeps CV unit-level any-ROP sensitivity at or above 0.90; carried unchanged to the dev half, where sensitivity and specificity are means over the seed's five fold models. Severe: stage~\nSevereFrom{} or worse, including AP-ROP, at the same threshold. $T$: temperature fitted on CV out-of-fold unit vectors. ECE: ten bins, dev eyes, seeds pooled, as trained and after $T$ (Fig.~\ref{fig:reliability}).}
+\label{tab:operating}
+\centering\scriptsize\setlength{\tabcolsep}{3.4pt}
+\input{figs3/tab_operating}
+\end{table*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_reliability_dev_eye.pdf}
+\caption{Reliability of the eye-level top-class probability at the unseen hospital (dev half), ten equal-width bins, seeds pooled: as trained (colour) and after each seed's CV temperature $T$ (grey). $^\dagger$Transductive.}
+\label{fig:reliability}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_roc_pr_dev_eye.pdf}
+\caption{Any ROP vs normal per eye at the unseen hospital (dev half), all arms. Curves use the eye score averaged over each arm's \devLists{} models, so their AUC and AP (legend) differ slightly from Table~\ref{tab:headline}, which averages per-model values. Dotted: prevalence.}
+\label{fig:rocpr}
+\end{figure*}
+
+\begin{table*}[!t]
+\caption{Recipe and cost. Shared by every trained arm: circle-crop, letterbox, CLAHE; class-balanced cross-entropy~\cite{cui2019}; strong and site-randomising augmentation; batch 16; AdamW; one-cycle cosine schedule; last-epoch weights. LLRD: layer-wise lr decay; LS: label smoothing. F's adaptation is self-ensembling~\cite{french2018}. Cost: mean over CV folds 0--4 and both seeds on Kaggle \gpu{} GPUs (kernel logs); C and E were not trained in this generation.}
+\label{tab:recipe}
+\centering\scriptsize\setlength{\tabcolsep}{3pt}
+\input{figs3/tab_recipe}
+\end{table*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_training_curves.pdf}
+\caption{Training curves, mean over each arm's \nRuns{} runs (five CV folds $\times$ two seeds): (a) training loss; (b) macro-F1 on the held-out fold per epoch. I's loss sits higher by construction (its label smoothing, Table~\ref{tab:recipe}) and its F1 is measured on EMA weights. C and E have no curves.}
+\label{fig:training}
+\end{figure*}
+
+\begin{table*}[!t]
+\caption{Secondary readouts. Dev per photograph: QWK5 with 95\% CI, no eye aggregation. CV per cohort at its label unit: Ostrava examination session, ROP-VL eye examination, Shenzhen photograph~\cite{nagpure2026}. Ordinal decoder (Amendment~3b): expected stage cut by four thresholds fitted on CV only; argmax remains primary.}
+\label{tab:secondary}
+\centering\scriptsize\setlength{\tabcolsep}{5pt}
+\input{figs3/tab_secondary}
+\end{table*}
+
+\clearpage
+\section{Earlier Generations (Historical)}\label{sec:hist}
+Each table keeps its own protocol and definitions; none is comparable with Tables~\ref{tab:headline}--\ref{tab:secondary} without its caveat. Glaucoma and diabetic-retinopathy models (\path{MODEL_HISTORY.md}) are outside this ROP compendium.
+
+\begin{table}[!t]
+\caption{v1 (June 2026): EfficientNet-B3, one shared model for binary ROP and DR. P / R: precision / recall. \emph{Caveat}: image-level split and two diseases in one model; retired.}
+\label{tab:v1}
+\centering\scriptsize\setlength{\tabcolsep}{2.0pt}
+\input{figs3/tab_v1}
+\end{table}
+
+\begin{table}[!t]
+\caption{June 2026 binary sweep (ROP yes/no, Ostrava, sweep validation split; QWK$_2$ binary kappa), and, $^\ast$, a separate ResNet50 run on its own validation and test split (\texttt{results/rop/metrics.json}). \emph{Caveat}: inflated by a device shortcut (image dimensions alone predicted ROP with AUC \shortcutAUC{}).}
+\label{tab:sweep}
+\centering\scriptsize\setlength{\tabcolsep}{2.2pt}
+\input{figs3/tab_sweep}
+\end{table}
+
+\begin{table*}[!t]
+\caption{v2 (August 2026): EfficientNetV2-S structured head (CORN ordinal + AP-ROP branch + site adversary, \vtStructParams{} parameters) vs flat softmax, natural sampling, five-fold CV. QWK$_6$: legacy six-class definition; QWK5$_d$: v2's ``corrected'' definition, rows with true or predicted AP-ROP removed (optimistic); QWK5: the v3 definition used in Table~\ref{tab:headline}. Dev and locked: unseen hospital; eye = max over views; locked half opened once (\lockedOpened{}); dev and locked values are means over the five fold checkpoints. The served fold-0 checkpoint (structured, seed \seedA{}) scored per photograph QWK5$_d$ \vtServedImgQ{}, accuracy \vtServedImgAcc{}, any-ROP AUC \vtServedImgAUC{}, and per eye QWK5$_d$ \vtServedEyeQ{} \vtServedEyeQci{}, accuracy \vtServedEyeAcc{}, mF1 \vtServedEyeMF{}. \emph{Caveat}: arm C re-scores the flat arm under v3 rules; v2's headline eye number was on the locked half, v3's on the dev half.}
+\label{tab:v2}
+\centering\scriptsize\setlength{\tabcolsep}{3.4pt}
+\input{figs3/tab_v2}
+\end{table*}
+
+\begin{table}[!t]
+\caption{v2 five-backbone staging sweep (flat softmax, six classes, fold~0 and the leave-site fold, seed \seedA{}). \emph{Caveat}: one fold and one seed; the in-fold spread lies inside one run's end-of-schedule noise; legacy QWK not recomputed.}
+\label{tab:backbones}
+\centering\scriptsize\setlength{\tabcolsep}{1.8pt}
+\input{figs3/tab_backbones}
+\end{table}
+
+\begin{table}[!t]
+\caption{Retired v2 structured arm trained with a class-balanced sampler, fold~0. \emph{Caveat}: fold~0 only, legacy six-class QWK; the CORN cascade calibrates to the training prevalence.}
+\label{tab:sampler}
+\centering\scriptsize\setlength{\tabcolsep}{3pt}
+\input{figs3/tab_sampler}
+\end{table}
+
+\begin{table}[!t]
+\caption{Retired ResNet50 binary screener: external audit at the unseen hospital (663 dev photographs). \emph{Caveat}: its threshold was set at another hospital; the v2 dev AUC is in-sample for v2's own threshold choice.}
+\label{tab:screener}
+\centering\scriptsize\setlength{\tabcolsep}{3pt}
+\input{figs3/tab_screener}
+\end{table}
+
+\section{Data}
+Ostrava~\cite{timkovic2024} labels one examination session; ROP-VL one photograph with an eye-examination identifier; Shenzhen one photograph; Multi-View one eye.
+
+\begin{table*}[!t]
+\caption{Data by hospital and class. CV pool: every photograph lies in exactly one validation fold. Training-eligible: after per-infant caps (training sides only); the v4 pool adds a per-device Ostrava quality filter. $^\ast$Locked-half labels were not read; counts from the protocol.}
+\label{tab:pool}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_pool}
+\end{table*}
+
+\begin{table*}[!t]
+\caption{LOSO fold compositions: held-out source (test photographs after duplicate exclusion, infants) and training photographs by class in the v3 pool (A, B, D) and the v4 pool (H, I).}
+\label{tab:losofolds}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_loso_folds}
+\end{table*}
+
+\section{Reproducibility}
+Figures, tables and every number above: \texttt{.venv/bin/python scripts/paper3\_figures.py}, then \texttt{tectonic -X compile paper3\_results.tex}. No model is run and no file named \texttt{test\_locked} is read. PKG = \path{FINAL_MODEL_EVIDENCE_PACKAGE}.
+
+\begin{table*}[!t]
+\caption{Sources: path and last commit touching it (\texttt{git log}); ``git-ignored, on disk'' files exist only in the working tree (the CSVs fall under the repository's \texttt{*.csv} rule).}
+\label{tab:repro}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_repro}
+\end{table*}
+
+\section*{Compliance with Ethical Standards}
+This retrospective study used only publicly released, de-identified datasets under their licences (Ostrava/RIDIRP, ROP-VL, Shenzhen, Multi-View ROP, CC BY-NC); no new data were collected and no ethical approval was required. RETFound-Green's weights are used under their non-commercial licence. The system is research software and not a medical device. No funding was received; the authors declare no conflicts of interest.
+
+\section*{Acknowledgments}
+We thank the releasing institutions and Kaggle for the free GPU time on which every model was trained. \FILL{venue-specific AI disclosure, e.g.: Claude (Anthropic) was used to draft and edit code and text in all sections under the authors' direction; the authors verified every number against the committed result files and take full responsibility for the content.}
+
+\begin{thebibliography}{99}
+\bibitem{icrop3} M.~F.~Chiang, G.~E.~Quinn, A.~R.~Fielder, \emph{et al.}, ``International classification of retinopathy of prematurity, third edition,'' \emph{Ophthalmology}, vol.~128, no.~10, pp.~e51--e68, 2021.
+\bibitem{engelmann2025} J.~Engelmann, \emph{et al.}, ``RETFound-Green: a green retinal foundation model,'' \emph{Nat. Commun.}, 2025. \FILL{confirm title, volume, article number}
+\bibitem{oquab2024} M.~Oquab, T.~Darcet, T.~Moutakanni, \emph{et al.}, ``DINOv2: learning robust visual features without supervision,'' \emph{Trans. Mach. Learn. Res.}, 2024.
+\bibitem{tan2021} M.~Tan and Q.~V.~Le, ``EfficientNetV2: smaller models and faster training,'' in \emph{Proc. ICML}, 2021, pp.~10096--10106.
+\bibitem{nagpure2026} P.~Nagpure, R.~Bait, P.~Rangnekar, Y.~Shengale, and A.~Kumar, ``What the label unit hides: an audited multi-hospital benchmark for ICROP retinopathy of prematurity staging,'' \FILL{preprint venue, DOI, 2026}.
+\bibitem{cui2019} Y.~Cui, M.~Jia, T.-Y.~Lin, Y.~Song, and S.~Belongie, ``Class-balanced loss based on effective number of samples,'' in \emph{Proc. IEEE/CVF CVPR}, 2019, pp.~9268--9277.
+\bibitem{french2018} G.~French, M.~Mackiewicz, and M.~Fisher, ``Self-ensembling for visual domain adaptation,'' in \emph{Proc. ICLR}, 2018.
+\bibitem{timkovic2024} J.~Timkovi\v{c}, \emph{et al.}, ``Retinal image dataset of infants and retinopathy of prematurity,'' \emph{Sci. Data}, vol.~11, art.~814, 2024.
+\end{thebibliography}
+\end{document}

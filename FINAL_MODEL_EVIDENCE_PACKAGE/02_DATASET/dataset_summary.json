@@ -1,0 +1,23 @@
+{
+  "unique_train_images": 3112,
+  "unique_train_patients": 1528,
+  "oof_val_images": 6700,
+  "oof_val_patients": 1528,
+  "train_class_counts": {
+    "normal": 1109,
+    "stage_1": 515,
+    "stage_2": 696,
+    "stage_3": 535,
+    "stage_4_5": 89,
+    "arop": 168
+  },
+  "imbalance_ratio": 12.46,
+  "external_dev": {
+    "images": 663,
+    "patients": 116
+  },
+  "external_locked": {
+    "images": 661,
+    "patients": 116
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "runs": [
+    "fold0",
+    "fold1",
+    "fold2",
+    "fold3",
+    "fold4",
+    "foldsite"
+  ],
+  "epochs_per_run": 20,
+  "validation_loss_recorded": false,
+  "learning_rate_recorded": false,
+  "lr_curve_is_reconstructed_not_measured": true,
+  "stability": [
+    {
+      "run": "fold0",
+      "last5_sd": 0.017494656327004532,
+      "mean_abs_epoch_delta": 0.058473684210526324,
+      "max_abs_epoch_delta": 0.2583,
+      "final": 0.5527000000000001,
+      "best": 0.5964,
+      "best_minus_final": 0.04369999999999996,
+      "best_epoch": 14
+    },
+    {
+      "run": "fold1",
+      "last5_sd": 0.02131025574694025,
+      "mean_abs_epoch_delta": 0.05132631578947367,
+      "max_abs_epoch_delta": 0.20070000000000005,
+      "final": 0.7573000000000001,
+      "best": 0.7659999999999999,
+      "best_minus_final": 0.008699999999999819,
+      "best_epoch": 15
+    },
+    {
+      "run": "fold2",
+      "last5_sd": 0.01493402156152182,
+      "mean_abs_epoch_delta": 0.06529999999999998,
+      "max_abs_epoch_delta": 0.2552,
+      "final": 0.6712,
+      "best": 0.6835,
+      "best_minus_final": 0.012299999999999978,
+      "best_epoch": 19
+    },
+    {
+      "run": "fold3",
+      "last5_sd": 0.01714919823198738,
+      "mean_abs_epoch_delta": 0.06466315789473681,
+      "max_abs_epoch_delta": 0.30779999999999996,
+      "final": 0.7184,
+      "best": 0.7463,
+      "best_minus_final": 0.027899999999999925,
+      "best_epoch": 15
+    },
+    {
+      "run": "fold4",
+      "last5_sd": 0.006952481571352748,
+      "mean_abs_epoch_delta": 0.04977368421052628,
+      "max_abs_epoch_delta": 0.2759,
+      "final": 0.7615999999999999,
+      "best": 0.7615999999999999,
+      "best_minus_final": 0.0,
+      "best_epoch": 20
+    },
+    {
+      "run": "foldsite",
+      "last5_sd": 0.05582054281355562,
+      "mean_abs_epoch_delta": 0.03981052631578947,
+      "max_abs_epoch_delta": 0.30619999999999997,
+      "final": 0.5454,
+      "best": 0.6652,
+      "best_minus_final": 0.11980000000000002,
+      "best_epoch": 15
+    }
+  ]
+}

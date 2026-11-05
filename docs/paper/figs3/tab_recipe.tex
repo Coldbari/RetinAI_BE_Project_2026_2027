@@ -1,0 +1,15 @@
+\begin{tabular}{@{}llcllcccc>{\raggedright\arraybackslash}p{6.2cm}cc@{}}
+\toprule
+Arm & Backbone & px & Norm. & Pool & Peak lr & LLRD & LS & Ep. & Differences from B's recipe & min/fold & img/s\\
+\midrule
+A & \texttt{retfound\_green} & 392 & half & v3 & 2e-4 & 0.8 & 0.05 & 20 & RETFound-Green weights & 32.1 & 38.6 \\
+\textbf{B} & \texttt{dinov2\_s} & 392 & imagenet & v3 & 1e-4 & 0.8 & 0.05 & 20 & reference recipe & 33.3 & 31.9 \\
+C & \texttt{effnetv2s} & 384 & imagenet & v3 & 3e-4 & -- & 0.05 & 20 & v2 flat softmax, natural sampler; saved predictions re-scored & -- & -- \\
+D & \texttt{dinov2\_s} & 392 & imagenet & v3 & 1e-4 & 0.8 & 0.05 & 20 & LSE bag loss on Ostrava sessions, $K{=}8$, $\tau{=}1$ & 32.5 & 29.0 \\
+E & -- & -- & -- & v3 & -- & -- & -- & -- & mean of A, B, C probabilities, matched by seed; no training & -- & -- \\
+F$^\dagger$ & \texttt{dinov2\_s} & 392 & imagenet & v3 & 1e-4 & 0.8 & 0.05 & 20 & self-ensembling on unlabelled dev photos, EMA 0.99, conf.\ $\ge$0.9 & 61.7 & 14.2 \\
+G & \texttt{dinov2\_s} & 518 & imagenet & v3 & 1e-4 & 0.8 & 0.05 & 20 & 518 px & 58.1 & 19.2 \\
+H & \texttt{dinov2\_s} & 392 & imagenet & v4 & 1e-4 & 0.8 & 0.05 & 20 & v4 pool (per-device quality filter) & 34.1 & 31.2 \\
+I & \texttt{dinov2\_s} & 392 & imagenet & v4 & 1e-4 & 0.8 & 0.1 & 20 & EMA weights 0.999; 1 head-only epoch; label smoothing 0.1; rot.\ $\pm$180$^\circ$, crop $\ge$0.85, gamma, noise, Fourier swap $p\,0.5$ & 34.8 & 32.1 \\
+\bottomrule
+\end{tabular}
