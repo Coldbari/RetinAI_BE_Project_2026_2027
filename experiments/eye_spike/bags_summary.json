@@ -1,0 +1,189 @@
+{
+  "pool": {
+    "ostrava": {
+      "n_bags": 342,
+      "n_images": 4285,
+      "single_image_bags": 0,
+      "median": 11.5,
+      "p90": 19.900000000000034,
+      "max": 58,
+      "bags_gt16": 60,
+      "mixed_label_bags": 0,
+      "per_fold": {
+        "0": 82,
+        "1": 68,
+        "2": 68,
+        "3": 63,
+        "4": 61
+      },
+      "label_counts": {
+        "normal": 278,
+        "stage_1": 16,
+        "stage_2": 28,
+        "stage_3": 4,
+        "arop": 16
+      },
+      "median_size_by_label": {
+        "normal": 11.0,
+        "stage_1": 16.0,
+        "stage_2": 14.0,
+        "stage_3": 27.5,
+        "arop": 24.5
+      }
+    },
+    "ropvl": {
+      "n_bags": 1557,
+      "n_images": 1675,
+      "single_image_bags": 1443,
+      "median": 1.0,
+      "p90": 1.0,
+      "max": 3,
+      "bags_gt16": 0,
+      "mixed_label_bags": 107,
+      "per_fold": {
+        "0": 284,
+        "1": 314,
+        "2": 273,
+        "3": 329,
+        "4": 357
+      },
+      "label_counts": {
+        "normal": 612,
+        "stage_1": 192,
+        "stage_2": 297,
+        "stage_3": 227,
+        "stage_4_5": 81,
+        "arop": 148
+      },
+      "median_size_by_label": {
+        "normal": 1.0,
+        "stage_1": 1.0,
+        "stage_2": 1.0,
+        "stage_3": 1.0,
+        "stage_4_5": 1.0,
+        "arop": 1.0
+      }
+    },
+    "shenzhen": {
+      "n_bags": 613,
+      "n_images": 740,
+      "single_image_bags": 509,
+      "median": 1.0,
+      "p90": 2.0,
+      "max": 6,
+      "bags_gt16": 0,
+      "mixed_label_bags": 40,
+      "per_fold": {
+        "0": 131,
+        "1": 97,
+        "2": 107,
+        "3": 144,
+        "4": 134
+      },
+      "label_counts": {
+        "normal": 204,
+        "stage_1": 66,
+        "stage_2": 121,
+        "stage_3": 222
+      },
+      "median_size_by_label": {
+        "normal": 1.0,
+        "stage_1": 1.0,
+        "stage_2": 1.0,
+        "stage_3": 1.0
+      }
+    },
+    "ALL": {
+      "n_bags": 2512,
+      "n_images": 6700,
+      "single_image_bags": 1952,
+      "median": 1.0,
+      "p90": 8.0,
+      "max": 58,
+      "bags_gt16": 60,
+      "mixed_label_bags": 147,
+      "per_fold": {
+        "0": 497,
+        "1": 479,
+        "2": 448,
+        "3": 536,
+        "4": 552
+      },
+      "label_counts": {
+        "normal": 1094,
+        "stage_1": 274,
+        "stage_2": 446,
+        "stage_3": 453,
+        "stage_4_5": 81,
+        "arop": 164
+      },
+      "label_by_fold": {
+        "0": {
+          "normal": 221,
+          "stage_1": 44,
+          "stage_2": 81,
+          "stage_3": 111,
+          "stage_4_5": 18,
+          "arop": 22
+        },
+        "1": {
+          "normal": 216,
+          "stage_1": 52,
+          "stage_2": 96,
+          "stage_3": 71,
+          "stage_4_5": 14,
+          "arop": 30
+        },
+        "2": {
+          "normal": 223,
+          "stage_1": 58,
+          "stage_2": 82,
+          "stage_3": 33,
+          "stage_4_5": 16,
+          "arop": 36
+        },
+        "3": {
+          "normal": 214,
+          "stage_1": 58,
+          "stage_2": 91,
+          "stage_3": 115,
+          "stage_4_5": 17,
+          "arop": 41
+        },
+        "4": {
+          "normal": 220,
+          "stage_1": 62,
+          "stage_2": 96,
+          "stage_3": 123,
+          "stage_4_5": 16,
+          "arop": 35
+        }
+      },
+      "multi_image_diseased_bags": 263
+    }
+  },
+  "dev": {
+    "n_bags": 230,
+    "n_images": 663,
+    "single_image_bags": 7,
+    "median": 3.0,
+    "p90": 3.0,
+    "max": 4,
+    "bags_gt16": 0,
+    "mixed_label_bags": 13,
+    "label_counts": {
+      "normal": 50,
+      "stage_1": 68,
+      "stage_2": 46,
+      "stage_3": 59,
+      "stage_4_5": 5,
+      "arop": 2
+    }
+  },
+  "checks": {
+    "bags_span_folds": 0,
+    "bags_span_patients": 0,
+    "patients_span_folds": 0,
+    "dev_patients_in_pool": 0
+  }
+}

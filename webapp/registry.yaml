@@ -22,8 +22,20 @@
 # images. The threshold lives in results/rop/screening_rebase.json and is chosen by a stated
 # rule (scripts/rop_rebase_screening.py), never hardcoded.
 #
-# The entry below is KEPT deliberately. It anchors the routing table, feeds the dashboard,
-# and is the fallback if the re-basing artifact is ever absent — but it no longer decides.
+# STAGING + SCREENING MODEL REPLACED, 2026-11-01. Both the 6-class stage and the binary ROP
+# verdict now come from the DINOv2 ViT-S/14 ensemble (five CV-fold checkpoints of seed 42, arm B
+# of docs/paper/PROTOCOL_V2.md) declared under `staging:` below; the verdict is 1 - p(Normal)
+# against arm B's pre-registered CV operating point (results/rop/v3/v3_scores.json). The
+# EfficientNetV2-S structured model and its screening_rebase.json threshold are retired from
+# serving; set RETINAI_LEGACY_STAGING=1 to load that model beside the ensemble for comparison
+# (registry.legacy_staging; never served).
+#
+# The entry below is KEPT deliberately. It anchors the routing table and the gradability
+# gate's ImageNet transform, and is the fallback if the ensemble's weights or operating point
+# are ever absent — but it no longer decides.
+staging:
+  config: configs/rop_staging_deploy.yaml
+
 models:
   - disease: ROP
     config: configs/rop.yaml

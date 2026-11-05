@@ -1,8 +1,9 @@
 """Flask web app — AI-assisted ROP screening (Retinopathy of Prematurity).
 
 Pages: Dashboard (/), Screening tool (/screen), Explainability gallery (/gallery),
-History (/history), About (/about). This deployment is ROP-ONLY: it serves the binary ROP
-screening model, plus a clearly-labelled 6-class ICROP staging research preview. Patient
+History (/history), About (/about). This deployment is ROP-ONLY: one model, the DINOv2
+ViT-S/14 5-fold ensemble (configs/rop_staging_deploy.yaml), produces both the binary ROP
+screening verdict and a clearly-labelled 6-class ICROP staging research output. Patient
 context is mandatory and routed (see webapp/registry.yaml for why), with Grad-CAM, a
 downloadable clinical PDF, and an in-memory recent-screening history.
 
@@ -10,6 +11,7 @@ downloadable clinical PDF, and an in-memory recent-screening history.
 """
 import base64
 import io
+import json
 import math
 import os
 import sys
@@ -23,7 +25,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root on path
 
-from webapp.inference import Registry
+from webapp.inference import EyeNotGradable, Registry, StagingUnavailable
 from reports.report_generator import generate_pdf
 
 MAX_UPLOAD = 10 * 1024 * 1024
@@ -39,7 +41,22 @@ HISTORY = deque(maxlen=0 if PUBLIC_DEPLOY else 24)   # in-memory recent screenin
 GALLERY_CACHE = {}                  # disease -> [examples] (computed once)
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD
+# The cap covers the WHOLE multipart body, so the eye route needs room for 16 photographs.
+# The per-file limit stays in _read_image; other routes keep the single-upload cap below.
+MAX_EYE_PHOTOS = 16
+app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD * MAX_EYE_PHOTOS
+
+
+@app.before_request
+def _single_upload_cap():
+    if request.path != "/predict_eye" and (request.content_length or 0) > MAX_UPLOAD + 65536:
+        return jsonify({"error": "upload too large"}), 413
+
+
+@app.errorhandler(413)
+def _too_large(_e):
+    return jsonify({"error": "Upload too large: the request exceeds the size limit "
+                             "(10 MB per photograph, 16 photographs)"}), 413
 app.jinja_env.globals.update(sin=math.sin, pi=math.pi)  # for the hero flip-text stagger
 
 
@@ -47,9 +64,9 @@ MAX_PIXELS = 60_000_000        # decompression-bomb guard (~60 MP)
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
 
-def _read_image(req):
+def _read_image(req, field="image", storage=None):
     """Decode an upload defensively. Raises on anything that is not a sane image."""
-    raw = req.files["image"].read()
+    raw = (storage if storage is not None else req.files[field]).read()
     if not raw:
         raise ValueError("empty upload")
     if len(raw) > MAX_UPLOAD:
@@ -109,9 +126,10 @@ DISEASES = [
                     "vitreoretinopathy / Norrie disease).",
         "signs": "Found on screening, not from symptoms. Graded by stage (1–5, from a demarcation "
                  "line to full retinal detachment), zone, and 'plus disease' (dilated, tortuous vessels).",
-        "detect": "Our model screens a neonatal fundus image for signs of ROP (No ROP vs ROP) at high "
-                  "sensitivity, acting as a second reader for NICU screening. A 6-class ICROP staging "
-                  "model (Normal, Stage 1-3, Stage 4/5, AP-ROP) is included as a research preview.",
+        "detect": "One model (an ensemble of five DINOv2 ViT-S/14 networks) grades a neonatal fundus "
+                  "image into 6 ICROP classes (Normal, Stage 1-3, Stage 4/5, AP-ROP) and screens it for "
+                  "any ROP from the same output, acting as a second reader for NICU screening. The "
+                  "stage is a research output, not a clinical grade.",
     },
 ]
 
@@ -142,7 +160,8 @@ def history():
 
 @app.route("/about")
 def about():
-    return render_template("about.html", summary=REGISTRY.summary(), page="about")
+    return render_template("about.html", summary=REGISTRY.summary(),
+                           card=REGISTRY.staging.card, page="about")
 
 
 @app.route("/gallery")
@@ -215,6 +234,33 @@ def predict():
     return jsonify(result)
 
 
+@app.route("/predict_eye", methods=["POST"])
+def predict_eye():
+    """All photographs of ONE eye in, ONE eye-level stage out (worst-view rule)."""
+    eye = (request.form.get("eye") or "").strip()
+    if eye not in ("OD", "OS"):
+        return jsonify({"error": "eye must be 'OD' or 'OS'"}), 400
+    files = request.files.getlist("images")
+    if not 1 <= len(files) <= MAX_EYE_PHOTOS:
+        return jsonify({"error": f"send 1 to {MAX_EYE_PHOTOS} photographs as 'images'"}), 400
+    ctx, err = _require_context(request)
+    if err:
+        return err
+    images = []
+    for i, f in enumerate(files):
+        try:
+            images.append(_read_image(request, storage=f))
+        except Exception:
+            return jsonify({"error": f"Invalid image: photo {i + 1} could not be read"}), 400
+    try:
+        return jsonify(REGISTRY.analyze_eye(images, eye, ctx))
+    except StagingUnavailable as e:
+        return jsonify({"error": "Eye-level staging is unavailable", "detail": str(e)}), e.status
+    except EyeNotGradable as e:
+        return jsonify({"error": "No photograph of this eye is gradable — no eye-level "
+                                 "result can be issued", "detail": str(e)}), 422
+
+
 @app.route("/report", methods=["POST"])
 def report():
     if "image" not in request.files:
@@ -241,9 +287,19 @@ def report():
     gradcam_img = None
     if result["heatmap"]:
         gradcam_img = Image.open(io.BytesIO(base64.b64decode(result["heatmap"])))
+    eye_summary = None
+    if request.form.get("eye_summary"):
+        try:
+            eye_summary = json.loads(request.form["eye_summary"])
+            e = eye_summary["eye"]
+            assert isinstance(e["driving_photo"], int) and not isinstance(e["driving_photo"], bool)
+            assert isinstance(e["stage_index"], int) and 0 <= e["stage_index"] <= 5
+            assert isinstance(e["stage"], str) and isinstance(eye_summary["laterality"], str)
+        except Exception:
+            return jsonify({"error": "Invalid eye_summary"}), 400
     out = (Path("results/reports") / f"report_{patient.get('id') or 'anon'}.pdf").resolve()
     generate_pdf(out, patient, findings, original_image=image, gradcam_image=gradcam_img,
-                 staging=result.get("staging"),
+                 staging=result.get("staging"), eye_summary=eye_summary,
                  cam_evidence=(result["heatmaps"][0].get("evidence")
                                if result.get("heatmaps") else None))
     return send_file(out, as_attachment=True, download_name=out.name)

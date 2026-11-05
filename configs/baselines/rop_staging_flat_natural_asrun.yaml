@@ -1,0 +1,58 @@
+# PARITY REFERENCE, not a config to train from.
+# Copied from the saved as-run config of arm C (EfficientNetV2-S flat-natural), at
+# kaggle_cache/nat_a/code/results/experiment_001_staging_effnetv2s_fold0_s42_natural/config.yaml.
+# configs/rop_staging.yaml is NOT what C ran with: the Kaggle kernel overrode epochs=20,
+# weighted_sampler=false and model.arch=effnetv2s at launch. tests/test_v3_parity.py diffs the
+# ViT arm configs against THIS file. Edits: data.manifest set to the repo fold path, _source dropped.
+disease: rop_staging
+seed: 42
+data:
+  num_classes: 6
+  class_names:
+  - Normal
+  - Stage 1
+  - Stage 2
+  - Stage 3
+  - Stage 4/5
+  - AP-ROP
+  manifest: results/prepared/rop_staging/fold_0.csv
+  presplit: true
+  group_col: patient_id
+preprocess:
+  image_size: 384
+  circle_crop: true
+  letterbox: true
+  ben_graham: false
+  clahe: true
+model:
+  arch: effnetv2s
+  pretrained: true
+  head: classification
+  dropout: 0.3
+train:
+  epochs: 20
+  batch_size: 16
+  lr: 0.0003
+  weight_decay: 0.05
+  label_smoothing: 0.05
+  amp: true
+  strong_aug: true
+  site_randomization: true
+  loss: ce
+  class_balanced: true
+  class_balanced_beta: 0.999
+  weighted_sampler: false
+  num_workers: 4
+eval:
+  early_stopping: false
+  primary_metric: macro_f1
+  qwk_classes:
+  - Normal
+  - Stage 1
+  - Stage 2
+  - Stage 3
+  - Stage 4/5
+  report_per_class_recall: true
+  unvalidated_classes:
+  - Stage 4/5
+  - AP-ROP

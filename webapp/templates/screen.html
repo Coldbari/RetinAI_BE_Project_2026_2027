@@ -39,12 +39,25 @@
       <img id="preview" hidden>
     </div>
     <button id="analyze" class="btn-pop" disabled><span>Analyze image</span></button>
+
+    <h2><span class="step-num">+</span> Whole eye <span class="opt">all photographs of one eye</span></h2>
+    <p class="ctx-why">Upload every photograph of ONE eye (1&ndash;16) and get ONE answer: the
+       eye is staged by its most severe view. The acquisition view is not detected, so make
+       sure the temporal periphery was photographed. Uses the patient context chosen above.</p>
+    <div class="ctx-group">
+      <label class="ctx-opt"><input type="radio" name="laterality" value="OD"><span class="ctx-label">OD (right)</span></label>
+      <label class="ctx-opt"><input type="radio" name="laterality" value="OS"><span class="ctx-label">OS (left)</span></label>
+    </div>
+    <input id="eyefiles" type="file" accept="image/*" multiple>
+    <button id="analyze-eye" class="btn-pop" disabled><span>Analyse this eye</span></button>
   </section>
 
   <section class="panel results-panel reveal" id="results" hidden>
     <h2><span class="step-num">4</span> Results</h2>
     <p id="qualitybanner" class="quality-banner" hidden></p>
     <p id="ctxbanner" class="ctx-banner" hidden></p>
+    <div id="eyecard" hidden></div>
+    <div id="eyephotos" hidden></div>
     <div class="result-layout">
       <div id="cards"></div>
       <div id="stagingcard" hidden></div>

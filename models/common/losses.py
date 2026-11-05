@@ -17,12 +17,25 @@ import torch.nn.functional as F
 
 
 def class_balanced_weights(class_counts, beta: float = 0.9999) -> torch.Tensor:
-    """Cui et al. (2019) class-balanced weights from per-class counts."""
+    """Cui et al. (2019) class-balanced weights from per-class counts.
+
+    A class with no training rows gets weight 0.0, and the present classes are normalised among
+    themselves exactly as before (to sum to their number), so with every class present the weights
+    are unchanged. Clamping an absent class's count to 1 made it the LARGEST weight, and
+    ``CrossEntropyLoss(weight=w, label_smoothing=eps)`` applies ``w`` to the smoothing term of every
+    sample, so on a fold with an absent class (``fold_loso_ropvl``: no stage 4/5 training row) the
+    loss rewarded predicting that class for every true class (PROTOCOL_V2, Amendment 5 pre-run note).
+    """
     counts = np.asarray(class_counts, dtype=np.float64)
-    counts = np.maximum(counts, 1.0)
-    eff = 1.0 - np.power(beta, counts)
-    w = (1.0 - beta) / eff
-    w = w / w.sum() * len(counts)
+    present = counts > 0
+    if not present.any():
+        raise ValueError(f"class_balanced_weights: no class has a training row ({class_counts!r})")
+    c = np.maximum(counts[present], 1.0)
+    eff = 1.0 - np.power(beta, c)
+    w_present = (1.0 - beta) / eff
+    w_present = w_present / w_present.sum() * len(c)
+    w = np.zeros_like(counts)
+    w[present] = w_present
     return torch.tensor(w, dtype=torch.float32)
 
 

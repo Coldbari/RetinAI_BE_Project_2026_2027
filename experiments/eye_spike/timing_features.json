@@ -1,0 +1,25 @@
+{
+  "n_images": 7363,
+  "wall_s_total_incl_decode": 2595.8,
+  "gpu_forward_s": {
+    "rfg": 537.1,
+    "rfg_clahe": 475.0,
+    "dino": 995.1,
+    "effnet": 445.8
+  },
+  "imgs_per_s_forward": {
+    "rfg": 13.7,
+    "rfg_clahe": 15.5,
+    "dino": 7.4,
+    "effnet": 16.5
+  },
+  "device": "mps",
+  "precision": "fp16 autocast",
+  "min_cos_fp16_vs_fp32_batch0": {
+    "rfg": 1.0,
+    "rfg_clahe": 1.0,
+    "dino": 0.99999,
+    "effnet": 0.99999
+  },
+  "torch": "2.12.0"
+}

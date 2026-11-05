@@ -51,7 +51,8 @@ def _to_reader(image):
 
 def generate_pdf(out_path, patient: dict, findings: list[dict],
                  original_image=None, gradcam_image=None, staging: dict | None = None,
-                 cam_evidence: dict | None = None) -> str:
+                 cam_evidence: dict | None = None,
+                 eye_summary: dict | None = None) -> str:
     """findings: [{"disease","prediction","score","grade"}, ...].
 
     `staging` is the optional 6-class ICROP research preview. It is rendered under its own
@@ -204,6 +205,24 @@ def generate_pdf(out_path, patient: dict, findings: list[dict],
     for line in _wrap(DISCLAIMER, 110):
         text.textLine(line)
     c.drawText(text)
+
+    # Eye-level summary (worst-view rule over all photographs of one eye)
+    if eye_summary:
+        c.showPage()          # own page: page 1 has no spare room under the staging block
+        ey = eye_summary["eye"]
+        c.setFillColorRGB(0, 0, 0)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(18 * mm, 270 * mm, f"Eye summary — {eye_summary.get('laterality', '')}"
+                     " (research preview)")
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(18 * mm, 263 * mm, f"Eye stage (worst view): {ey['stage']}   ·   "
+                     f"driving photo: {int(ey['driving_photo']) + 1}")
+        c.setFont("Helvetica", 8)
+        y = 256 * mm
+        for w in (eye_summary.get("warnings") or [])[:5]:
+            for line in _wrap("- " + str(w), 120)[:2]:
+                c.drawString(18 * mm, y, line)
+                y -= 3.6 * mm
 
     c.showPage()
     c.save()

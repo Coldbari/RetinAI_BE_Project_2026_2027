@@ -8,16 +8,21 @@ matrix, ROC, PR) per the project's plotting standard.
 from __future__ import annotations
 
 import math
+import time
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
+from . import uda as uda_mod
+from .bag_loss import bag_loader, bag_settings, pool_bags
 from .datasets import FundusDataset, class_counts
+from .fourier_aug import fourier_swap_batch
 from .losses import build_loss, probabilities
 from .metrics import compute_metrics
-from .preprocessing import build_transforms
+from .optim import build_optimizer_and_scheduler, format_group_lrs, head_param_names
+from .preprocessing import aug_v4_settings, build_transforms, cache_root_from_cfg
 
 
 # ── data ─────────────────────────────────────────────────────────────────────
@@ -33,11 +38,25 @@ def build_dataloaders(cfg, manifest):
     n = int(cfg.data.num_classes)
     bs = int(cfg.train.batch_size)
     nw = int(cfg.train.get("num_workers", 4))
+    # None unless preprocess.cached. The transforms below then leave the fundus stage out, so
+    # every Dataset MUST read from the cache; a miss raises rather than yielding a blank image.
+    cache_root = cache_root_from_cfg(cfg)
 
-    train_ds = FundusDataset(manifest, "train", build_transforms(cfg, "train"), size)
-    val_ds = FundusDataset(manifest, "val", build_transforms(cfg, "val"), size)
+    train_ds = FundusDataset(manifest, "train", build_transforms(cfg, "train"), size,
+                             cache_root=cache_root)
+    val_ds = FundusDataset(manifest, "val", build_transforms(cfg, "val"), size,
+                           cache_root=cache_root)
 
-    if bool(cfg.train.get("weighted_sampler", False)):
+    bag = bag_settings(cfg)              # None unless train.bag_loss.enabled (arm D)
+    uda = uda_mod.uda_settings(cfg)      # None unless train.uda.enabled (arm F)
+    if uda is not None and bag is not None:
+        raise ValueError("train.uda and train.bag_loss cannot be combined")
+    if bag is not None:
+        if bool(cfg.train.get("weighted_sampler", False)):
+            raise ValueError("train.bag_loss and train.weighted_sampler cannot be combined")
+        train_loader = bag_loader(train_ds, bs, bag, seed=int(cfg.get("seed", 0)), num_workers=nw,
+                                  pin_memory=torch.cuda.is_available())
+    elif bool(cfg.train.get("weighted_sampler", False)):
         train_loader = DataLoader(train_ds, batch_size=bs, num_workers=nw,
                                   sampler=make_weighted_sampler(train_ds.targets, n),
                                   pin_memory=torch.cuda.is_available())
@@ -49,9 +68,13 @@ def build_dataloaders(cfg, manifest):
 
     loaders = {"train": train_loader, "val": val_loader,
                "counts": class_counts(train_ds.targets, n)}
+    if uda is not None:                  # arm F: unlabelled target photos, image paths only
+        loaders["target"] = uda_mod.target_loader(cfg, uda, num_workers=nw,
+                                                  pin_memory=torch.cuda.is_available())
 
     # Optional held-out test split (ROP / Glaucoma carry one).
-    test_ds = FundusDataset(manifest, "test", build_transforms(cfg, "val"), size)
+    test_ds = FundusDataset(manifest, "test", build_transforms(cfg, "val"), size,
+                            cache_root=cache_root)
     if len(test_ds):
         loaders["test"] = DataLoader(test_ds, batch_size=bs, shuffle=False,
                                      num_workers=nw, pin_memory=torch.cuda.is_available())
@@ -108,12 +131,8 @@ def train_model(cfg, model, loaders, logger, device):
         patience = epochs + 1          # never trips
     keep_last = not early_stop         # save every epoch, so the file ends up at the last one
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=float(cfg.train.lr),
-                                  weight_decay=float(cfg.train.get("weight_decay", 1e-4)))
     steps_per_epoch = math.ceil(len(loaders["train"]) / grad_accum)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer, max_lr=float(cfg.train.lr), steps_per_epoch=steps_per_epoch,
-        epochs=epochs, pct_start=0.1, anneal_strategy="cos")
+    optimizer, scheduler = build_optimizer_and_scheduler(cfg, model, steps_per_epoch)
 
     use_amp = bool(cfg.train.get("amp", True)) and device.type == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
@@ -121,6 +140,43 @@ def train_model(cfg, model, loaders, logger, device):
     # on small datasets like ROP. Enabled via train.mixup_alpha > 0.
     mixup_alpha = float(cfg.train.get("mixup_alpha", 0.0))
     use_mixup = mixup_alpha > 0 and head == "classification"
+    # Arm D: the train loader yields (images, labels, groups); bag batches pool each group's
+    # logits by LSE before the loss, image batches (every row its own group) are left as they are.
+    bag = bag_settings(cfg)
+    if bag is not None and use_mixup:
+        raise ValueError("train.bag_loss and mixup cannot be combined")
+    # v4 recipe (Amendment 5b), each off by default (arm B): EMA weights, validated and saved as arm
+    # F's teacher is; epochs 1..warmup train the head only; the batch-level Fourier amplitude swap.
+    ema_decay = float(cfg.train.get("ema_decay", 0.0))
+    warmup = int(cfg.train.get("head_warmup_epochs", 0))
+    v4 = aug_v4_settings(cfg)
+    fourier_p = v4["fourier_p"] if v4 is not None else 0.0
+    if not 0.0 <= ema_decay < 1.0 or warmup < 0:
+        raise ValueError("train.ema_decay must lie in [0, 1) and train.head_warmup_epochs be >= 0, "
+                         f"got {ema_decay} and {warmup}")
+    if bag is not None and (warmup > 0 or v4 is not None):
+        raise ValueError("train.bag_loss cannot be combined with train.head_warmup_epochs or train.aug_v4")
+    if warmup > 0:
+        head_names = head_param_names(model)
+        if not head_names:
+            raise ValueError("train.head_warmup_epochs: the model has no head parameters "
+                             "(optim.head_param_names is empty)")
+        own_grad = {n: p.requires_grad for n, p in model.named_parameters()}
+    # Arm F: self-ensembling. The teacher is a copy of the student made here, after the model and
+    # its head are built; it is validated and saved in place of the student (see below).
+    uda = uda_mod.uda_settings(cfg)
+    if uda is not None:
+        if bag is not None or use_mixup:
+            raise ValueError("train.uda cannot be combined with train.bag_loss or mixup")
+        if ema_decay > 0 or v4 is not None:
+            raise ValueError("train.uda cannot be combined with train.ema_decay or train.aug_v4")
+        if "target" not in loaders:
+            raise ValueError("train.uda is on but loaders has no 'target' (use build_dataloaders)")
+        teacher = uda_mod.EMATeacher(model, uda["ema_decay"])
+        target_batches = uda_mod.cycle(loaders["target"])
+        ramp_steps = uda["ramp_epochs"] * len(loaders["train"])
+    ema = uda_mod.EMATeacher(model, ema_decay) if ema_decay > 0 else None
+    eval_model = teacher.model if uda is not None else ema.model if ema is not None else model
 
     history = {k: [] for k in ["train_loss", "lr", "val_accuracy", "val_macro_f1",
                                "val_macro_precision", "val_macro_recall", "val_primary"]}
@@ -129,11 +185,21 @@ def train_model(cfg, model, loaders, logger, device):
 
     for epoch in range(1, epochs + 1):
         model.train()
+        if warmup > 0:  # epochs 1..warmup: the head only; after them every parameter's own flag
+            for n, p in model.named_parameters():
+                p.requires_grad_(own_grad[n] and (epoch > warmup or n in head_names))
         running = 0.0
         optimizer.zero_grad()
         n_batches = len(loaders["train"])
-        for i, (imgs, labels) in enumerate(loaders["train"]):
+        t0, imgs_seen = time.time(), 0
+        tally = {"img": [0, 0.0], "bag": [0, 0.0], "bags": 0, "frames": 0}
+        u_tally = {"n": 0, "loss": 0.0, "mask": 0.0, "src": 0.0, "w": 0.0, "tmax": 0.0}
+        for i, batch in enumerate(loaders["train"]):
+            imgs, labels = batch[0], batch[1]
+            imgs_seen += imgs.size(0)
             imgs = imgs.to(device)
+            if fourier_p > 0:  # on the normalised batch, on the device; the run's seeded torch RNG
+                imgs = fourier_swap_batch(imgs, v4["fourier_block"], fourier_p)
             labels = labels.to(device)
             with torch.amp.autocast("cuda", enabled=use_amp):
                 if use_mixup:
@@ -143,10 +209,36 @@ def train_model(cfg, model, loaders, logger, device):
                     out = model(imgs)
                     loss = (lam * loss_fn(out, labels)
                             + (1 - lam) * loss_fn(out, labels[perm])) / grad_accum
+                elif uda is not None:
+                    weak, strong = (t.to(device) for t in next(target_batches))
+                    with torch.no_grad():
+                        t_logits = teacher.model(weak)
+                    both = model(torch.cat([imgs, strong]))   # one student pass, source + target
+                    out, s_logits = both[:imgs.size(0)], both[imgs.size(0):]
+                    src_loss = loss_fn(out, labels)
+                    tgt_loss, mask_rate = uda_mod.consistency_loss(s_logits, t_logits,
+                                                                   uda["conf_threshold"])
+                    w = uda_mod.ramp_weight((epoch - 1) * n_batches + i, ramp_steps, uda["weight"])
+                    loss = (src_loss + w * tgt_loss) / grad_accum
+                    u_tally["n"] += 1
+                    u_tally["loss"] += tgt_loss.item()
+                    u_tally["mask"] += mask_rate.item()
+                    u_tally["src"] += src_loss.item()
+                    u_tally["w"] = w
+                    u_tally["tmax"] += torch.softmax(t_logits.float(), 1).max(1).values.mean().item()
                 else:
                     out = model(imgs)
+                    if bag is not None:
+                        out, labels = pool_bags(out, labels, batch[2].to(device), bag["tau"])
                     loss = loss_fn(out, labels) / grad_accum
             scaler.scale(loss).backward()
+            if bag is not None:
+                kind = "bag" if out.size(0) < imgs.size(0) else "img"
+                tally[kind][0] += 1
+                tally[kind][1] += loss.item() * grad_accum
+                if kind == "bag":
+                    tally["bags"] += out.size(0)
+                    tally["frames"] += imgs.size(0)
 
             if (i + 1) % grad_accum == 0 or (i + 1) == n_batches:
                 scaler.unscale_(optimizer)
@@ -155,10 +247,40 @@ def train_model(cfg, model, loaders, logger, device):
                 scaler.update()
                 optimizer.zero_grad()
                 scheduler.step()
+                if uda is not None:
+                    teacher.update(model)
+                if ema is not None:
+                    ema.update(model)
+                if epoch == 1 and i + 1 == grad_accum:
+                    print(format_group_lrs(optimizer))
+            if epoch == 1 and i + 1 == 50:
+                if device.type == "cuda":
+                    torch.cuda.synchronize()
+                print(f"[throughput] {imgs_seen / (time.time() - t0):.1f} img/s")
+                print(format_group_lrs(optimizer))
             running += loss.item() * grad_accum
 
-        # validate
-        yt, yp, pr = evaluate(model, loaders["val"], decode_fn, num_classes, device, head)
+        if device.type == "cuda":
+            print(f"[memory] epoch {epoch}: peak allocated "
+                  f"{torch.cuda.max_memory_allocated(device) / 2**30:.2f} GiB of "
+                  f"{torch.cuda.get_device_properties(device).total_memory / 2**30:.2f} GiB", flush=True)
+        if bag is not None:
+            (ni, li), (nb, lb) = tally["img"], tally["bag"]
+            print(f"[bag] epoch {epoch}: {ni} image batches (loss {li / max(1, ni):.4f}), "
+                  f"{nb} bag batches = {tally['bags']} sessions / {tally['frames']} frames "
+                  f"(loss {lb / max(1, nb):.4f})", flush=True)
+        if uda is not None:
+            nu = max(1, u_tally["n"])
+            print(f"[uda] epoch {epoch}: mask_rate={u_tally['mask'] / nu:.3f} "
+                  f"target_loss={u_tally['loss'] / nu:.5f} weight={u_tally['w']:.3f} "
+                  f"source_loss={u_tally['src'] / nu:.4f} "
+                  f"teacher_maxprob_mean={u_tally['tmax'] / nu:.3f}", flush=True)
+        if ema is not None or warmup > 0 or fourier_p > 0:
+            print(f"[v4] epoch {epoch}: warmup={epoch <= warmup} ema_decay={ema_decay} "
+                  f"fourier_p={fourier_p}", flush=True)
+
+        # validate (arm F: the teacher; v4 ema_decay: the EMA)
+        yt, yp, pr = evaluate(eval_model, loaders["val"], decode_fn, num_classes, device, head)
         vm = compute_metrics(yt, yp, pr, num_classes, class_names)
         val_primary = select_metric(vm, primary)
 
@@ -176,7 +298,10 @@ def train_model(cfg, model, loaders, logger, device):
         else:
             no_improve += 1
         if improved or keep_last:
-            logger.save_weights(model.state_dict())
+            # Arm F: the TEACHER's weights go into weights.pth, so train.py's final val pass
+            # (val_predictions.npz) and the kernel's dev scoring (dev_predictions.npz) are the teacher.
+            # The same holds for the v4 EMA.
+            logger.save_weights(eval_model.state_dict())
         flag = "  ✓ saved" if (improved or keep_last) else ""
 
         print(f"Epoch {epoch:2d}/{epochs}  loss {history['train_loss'][-1]:.4f}  "
@@ -185,7 +310,9 @@ def train_model(cfg, model, loaders, logger, device):
 
         # resume-safe checkpoint
         torch.save({"epoch": epoch, "model": model.state_dict(),
-                    "optimizer": optimizer.state_dict(), "best": best},
+                    "optimizer": optimizer.state_dict(), "best": best}
+                   | ({"teacher": teacher.model.state_dict()} if uda is not None else {})
+                   | ({"ema": ema.model.state_dict()} if ema is not None else {}),
                    logger.dir / "last_checkpoint.pth")
 
         if no_improve >= patience:

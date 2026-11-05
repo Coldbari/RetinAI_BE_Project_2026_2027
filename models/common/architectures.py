@@ -7,6 +7,9 @@ ordinal/regression head).
 """
 from __future__ import annotations
 
+import os
+
+import torch
 import torch.nn as nn
 from torchvision import models
 
@@ -52,6 +55,46 @@ STAGING_BENCHMARK = {
     # which with 89 images in the rarest class is a live hypothesis, not a formality.
     "effnetb0": "efficientnet_b0",
 }
+
+
+# The v3 ViT-S/14 pair: the SAME timm architecture (392px, 4 registers), differing only in what
+# it was pretrained on. EXCEPTION to the "no non-commercial checkpoint" note above: RETFound-Green's
+# weights are released under a NON-COMMERCIAL licence, so they are for research / paper use only.
+# DINOv2 is Apache-2.0.
+VIT_ARMS = {
+    "retfound_green": "vit_small_patch14_reg4_dinov2",
+    "dinov2_s": "vit_small_patch14_reg4_dinov2.lvd142m",
+}
+
+
+def load_rfg_backbone(model: nn.Module, weights_path: str) -> dict:
+    """Load RETFound-Green's backbone state dict; raise if any non-head key does not match."""
+    sd = torch.load(weights_path, map_location="cpu", weights_only=True)
+    res = model.load_state_dict(sd, strict=False)  # strict=False only to be able to report
+    rep = {"missing": [k for k in res.missing_keys if not k.startswith("head.")],
+           "unexpected": [k for k in res.unexpected_keys if not k.startswith("head.")]}
+    if rep["missing"] or rep["unexpected"]:
+        raise RuntimeError(f"RETFound-Green state dict does not match the backbone: "
+                           f"missing={rep['missing']} unexpected={rep['unexpected']}")
+    return rep
+
+
+def build_vit_arm(arch: str, num_classes: int, img_size: int, dropout: float,
+                  drop_path: float, weights_path: str | None, pretrained: bool) -> nn.Module:
+    """One of the two ViT-S/14 arms with a fresh 6-way head and average pooling."""
+    import timm
+    if arch not in VIT_ARMS:
+        raise ValueError(f"'{arch}' is not a ViT arm; choose from {sorted(VIT_ARMS)}")
+    if pretrained and arch == "retfound_green" and not weights_path:
+        raise ValueError("retfound_green with pretrained=True needs model.weights_path "
+                         "(or env RETINAI_RFG_WEIGHTS); refusing to fall back to random init")
+    model = timm.create_model(VIT_ARMS[arch], pretrained=(pretrained and arch == "dinov2_s"),
+                              img_size=(img_size, img_size), num_classes=num_classes,
+                              drop_rate=dropout, drop_path_rate=drop_path, global_pool="avg",
+                              fc_norm=False)  # keep the pretrained `norm` ahead of pooling
+    if pretrained and arch == "retfound_green":
+        load_rfg_backbone(model, weights_path)
+    return model
 
 
 def _is_timm(name: str) -> bool:
@@ -136,14 +179,20 @@ def build_from_cfg(cfg, num_classes: int | None = None,
     # When loading trained weights for inference, pass pretrained=False to skip the
     # ImageNet download (the weights get overwritten by load_state_dict anyway).
     pt = pretrained if pretrained is not None else bool(cfg.model.get("pretrained", True))
+    if cfg.model.arch in VIT_ARMS:
+        return build_vit_arm(
+            cfg.model.arch, n, int(cfg.preprocess.image_size),
+            float(cfg.model.get("dropout", 0.3)), float(cfg.model.get("drop_path", 0.1)),
+            cfg.model.get("weights_path") or os.environ.get("RETINAI_RFG_WEIGHTS"), pt)
     return build_model(cfg.model.arch, n, pretrained=pt,
                        dropout=float(cfg.model.get("dropout", 0.3)))
 
 
 def get_target_layer(model: nn.Module, arch: str) -> nn.Module:
     """Last conv layer for Grad-CAM, per architecture."""
-    arch = STAGING_BENCHMARK.get(arch.lower(), arch.lower())
-    if _is_timm(arch):
+    arch = arch.lower()
+    arch = VIT_ARMS.get(arch, STAGING_BENCHMARK.get(arch, arch))
+    if _is_timm(arch) or arch in VIT_ARMS.values():
         # timm models have no single shared layout, so resolve by structure rather than by
         # name. ConvNeXt/CAFormer expose .stages; ViT-family models expose .blocks — note a
         # ViT target gives token-grid attention maps, which need reshaping before they look

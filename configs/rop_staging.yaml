@@ -1,0 +1,97 @@
+# Retinopathy of Prematurity — 6-class ICROP STAGING
+#
+# This is NOT the deployed binary screener (configs/rop.yaml). That model answers "is anything
+# wrong with this eye"; this one answers "which ICROP stage". They are separate models with
+# separate data contracts, and this config must never overwrite the binary one's artefacts.
+#
+# DATA CONTRACT — built by, and only by:
+#   scripts/build_rop_staging_manifest.py   -> manifest.csv   (class-grouped, 4 sources)
+#   scripts/build_rop_splits.py             -> splits.csv     (folds, caps, held-out site)
+#   scripts/make_staging_folds.py           -> fold_*.csv     (what this config reads)
+#
+# Multi-View is the HELD-OUT HOSPITAL and appears in no fold. Its dev half is for shortcut
+# audits; its locked half is opened once. Do not point `manifest` at test_locked.csv to
+# "just check" — that is the one irreversible mistake in this pipeline.
+disease: rop_staging
+seed: 42
+
+data:
+  num_classes: 6
+  # order matches results/prepared/rop_staging/class_index.json
+  class_names: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5", "AP-ROP"]
+  # swap fold_0 -> fold_1..4 for the other CV folds, or fold_site for the cross-site check.
+  manifest: results/prepared/rop_staging/fold_0.csv
+  # Splits are PRE-ASSIGNED in the manifest (patient-grouped, caps already applied to train
+  # only). There is nothing for the loader to re-split, and it must not try.
+  presplit: true
+  group_col: patient_id
+
+preprocess:
+  image_size: 384
+  circle_crop: true
+  # LETTERBOX — the load-bearing anti-shortcut step. Without it, Resize((384,384)) squashes
+  # each site by a different amount (train aspect 1.16-1.21 vs held-out site 1.333), making
+  # "how distorted the vessels look" a site cue. Note circle_crop alone makes this WORSE: it
+  # crops ROP-VL and Shenzhen to ~1.21 while leaving Ostrava at 1.00 and Multi-View at 1.333.
+  letterbox: true
+  ben_graham: false     # settled for ROP: the signal is vascular/peripheral, not microaneurysms
+  clahe: true
+
+model:
+  arch: convnext_tiny           # torchvision baseline; the timm in12k checkpoint is preferred
+                                # (convnext_tiny.in12k_ft_in1k_384) — see kaggle kernel
+  pretrained: true
+  head: classification
+  dropout: 0.3
+
+train:
+  epochs: 30
+  batch_size: 16
+  lr: 0.0003
+  weight_decay: 0.05            # ConvNeXt/AdamW convention, higher than the CNN default
+  # The trainer hardcodes AdamW + OneCycleLR(pct_start=0.1, cosine anneal); there is no
+  # `scheduler` or `warmup_epochs` key to set, so at 30 epochs warmup is the first ~3.
+  label_smoothing: 0.05
+  amp: true
+  strong_aug: true
+  # SITE RANDOMISATION — hue/saturation jitter, RandomGrayscale, resolution jitter and
+  # RandomResizedCrop. Attacks the colour and sharpness channels that carry hospital identity.
+  # Post-CLAHE mean blue is 53.6/73.3/74.5 across training sites vs 87.6 at the held-out site;
+  # the default brightness/contrast jitter is luminance-only and leaves that R/B gap intact.
+  site_randomization: true
+
+  # IMBALANCE. After per-infant caps the pool is 3,112 images at 12.5:1 (normal 1,109 vs
+  # stage_4_5 89). It is NOT balanced further by undersampling: the floor on `normal` is set by
+  # its 646 infants, and cutting below that trades patient diversity for a cosmetic ratio while
+  # raising the false-positive rate on healthy babies. The residual is corrected here instead.
+  loss: ce
+  # Cui et al. (2019) effective-number reweighting, already implemented in
+  # models/common/losses.py::class_balanced_weights. It damps inverse frequency (beta=0.9999)
+  # rather than applying it raw, which is what we want: full inverse frequency would give the
+  # 89 stage_4_5 images ~12x the weight of normal and make the loss hostage to that one class.
+  class_balanced: true
+  # 0.999, not the 0.9999 default: at our sample sizes 0.9999 is indistinguishable from raw
+  # inverse frequency (weight ratio 11.85 vs 12.5), which would let the 89 stage_4_5 images
+  # dominate the gradient. 0.999 gives ratio ~7.9 — real damping, still rare-class-favouring.
+  # NOTE this stacks with weighted_sampler below; the sampler already oversamples rare classes,
+  # so the loss weighting is deliberately the gentler of the two levers.
+  class_balanced_beta: 0.999
+  weighted_sampler: true
+
+eval:
+  # NO EARLY STOPPING. The val fold cannot support it — stage_4_5 is 16-19 images per fold and
+  # its epoch-to-epoch swing exceeds any real signal. Model selection reads POOLED out-of-fold
+  # metrics across fold_0..4; the final model retrains on everything for a fixed epoch budget.
+  # This flag disables two things at once in train_utils.train_model: the patience counter,
+  # AND the save-on-improvement rule — the last epoch's weights are kept instead of the
+  # argmax epoch's, so the reported metric is not a maximum over 30 noisy evaluations.
+  early_stopping: false
+  primary_metric: macro_f1
+  # QWK is computed over the 5 ORDINAL classes only. AP-ROP is not a point on the stage scale,
+  # so including it makes the kappa weights arbitrary — and with 18 test images it would have
+  # outsized leverage on the pooled number.
+  qwk_classes: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5"]
+  report_per_class_recall: true
+  # Classes we refuse to headline at the held-out hospital: locked half has 4 stage_4_5 images
+  # and 12 AP-ROP. Report these from out-of-fold CV, labelled "not externally validated".
+  unvalidated_classes: ["Stage 4/5", "AP-ROP"]

@@ -35,10 +35,15 @@
       <span class="badge {{ 'on' if m.loaded else 'off' }}">{{ 'live' if m.loaded else 'training' }}</span>
     </div>
     <p class="muted">{{ m.arch }} · {{ m.classes|length }}-class</p>
-    {% if m.metrics and m.metrics.auc %}
+    {% if m.metrics and (m.metrics.auc or m.metrics.qwk_5class) %}
     <div class="metrics">
       <div><span>{{ '%.1f'|format(m.metrics.accuracy*100) }}%</span><label>Accuracy</label></div>
+      {% if m.metrics.qwk_5class %}
+      {# the served staging ensemble: eye level, at a hospital it never trained on #}
+      <div><span>{{ '%.3f'|format(m.metrics.qwk_5class) }}</span><label>QWK (eye)</label></div>
+      {% else %}
       <div><span>{{ '%.3f'|format(m.metrics.auc) }}</span><label>AUC</label></div>
+      {% endif %}
       <div><span>{{ '%.1f'|format(m.metrics.macro_f1*100) }}%</span><label>Macro F1</label></div>
     </div>
     {# A number without the conditions it was measured under is not a result. #}
@@ -311,8 +316,9 @@
               <div class="ibook-srow muted"><label>EfficientNet-B0</label><span class="track"><i style="width:78%"></i></span></div>
             </div>
             <p class="ibook-note">ResNet-50 won the short sweep. At full training the gap nearly
-               vanished (0.927 vs 0.920) and a significance test said the difference could be
-               chance — so we kept it, but stopped claiming it was the better architecture.</p>
+               vanished (0.927 vs 0.920 pooled; 0.881 with the capture device held constant)
+               and a significance test said the difference could be chance — so we kept it, but
+               stopped claiming it was the better architecture. It has since been retired.</p>
           </div>
         </div>
       </div>

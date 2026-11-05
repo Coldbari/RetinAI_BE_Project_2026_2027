@@ -6,15 +6,21 @@ from __future__ import annotations
 from torch.utils.data import DataLoader
 
 from models.common.datasets import FundusDataset
-from models.common.preprocessing import build_transforms
+from models.common.preprocessing import build_transforms, cache_root_from_cfg
 
 
 def build_eval_loader(cfg, manifest, split="test", batch_size=None):
     """A plain (no-shuffle, no-sampler) loader for one split, using the val/test
-    transform — identical fundus preprocessing to training."""
+    transform — identical fundus preprocessing to training.
+
+    Under ``preprocess.cached`` the transform omits the fundus stage, so the Dataset reads the
+    cache (and raises on a miss): an external set is never in it, which is a loud failure
+    rather than un-preprocessed images scored as if they were preprocessed.
+    """
     size = int(cfg.preprocess.image_size)
     bs = int(batch_size or cfg.train.batch_size)
-    ds = FundusDataset(manifest, split, build_transforms(cfg, "val"), size)
+    ds = FundusDataset(manifest, split, build_transforms(cfg, "val"), size,
+                       cache_root=cache_root_from_cfg(cfg))
     if len(ds) == 0:
         raise RuntimeError(f"External '{split}' split is empty — check the data config.")
     loader = DataLoader(ds, batch_size=bs, shuffle=False,

@@ -17,6 +17,12 @@ for w in results/rop/weights.pth results/rop_staging/weights.pth; do
   fi
 done
 
+if ! ls results/rop_staging_v3/dinov2_s42_fold*.pth >/dev/null 2>&1; then
+  echo "!! the five DINOv2 checkpoints (results/rop_staging_v3/) are not here."
+  echo "   The app will fall back to the retired ResNet50, which flagged 663 of 663 images"
+  echo "   at a new hospital. Its verdicts are not the project's results."
+fi
+
 lsof -ti:"$PORT" | xargs kill 2>/dev/null || true
 sleep 1
 

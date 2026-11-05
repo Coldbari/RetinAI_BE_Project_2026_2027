@@ -1,0 +1,14 @@
+# Architecture comparison sweep for ROP (W6). Runs cheaper than the final model.
+base: configs/rop.yaml
+architectures:
+  - efficientnet_b0
+  - efficientnet_v2_s
+  - mobilenet_v3_large
+  - resnet50
+  - densenet121
+overrides:
+  preprocess.image_size: 320
+  train.epochs: 12
+  train.patience: 4
+  train.mixup_alpha: 0.2
+  eval.primary_metric: auc

@@ -5,15 +5,20 @@ inference through the SAME shared preprocessing as training (so train/serve matc
 produces a Grad-CAM taken from whichever model produced the verdict. Degrades gracefully
 when a checkpoint is missing, so the app still boots and says so.
 
-Since 19 Aug 2026 the binary ROP decision comes from the STRUCTURED model's P(any ROP)
-rather than the ResNet50 head: an external audit measured that head flagging every image
-at a hospital it never trained on. See ``StagingPreview.screening_finding``.
+Since 1 Nov 2026 the ROP stage AND the binary ROP decision come from ``StagingEnsemble``:
+DINOv2 ViT-S/14, the probability-averaged ensemble of the five CV-fold checkpoints of seed 42
+(arm B of docs/paper/PROTOCOL_V2.md, configs/rop_staging_deploy.yaml). It replaced the
+EfficientNetV2-S structured model (``StagingPreview``, kept loadable for comparison behind
+``RETINAI_LEGACY_STAGING=1``), which had itself replaced the ResNet50 head on 19 Aug 2026
+after an external audit measured that head flagging every image at a hospital it never
+trained on. Serving device: CUDA, else MPS, else CPU.
 """
 from __future__ import annotations
 
 import base64
 import io
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -200,10 +205,6 @@ def _gradcam_core(model, target, tfm, device, image: Image.Image, objective):
     (frame-reading, not disease-reading) and how CONCENTRATED it is (a diffuse map has
     localised nothing). Both are reported next to the picture.
     """
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
     tensor = tfm(image).unsqueeze(0).to(device)
     grads, acts = [], []
     bw = target.register_full_backward_hook(lambda m, gi, go: grads.append(go[0].detach().cpu()))
@@ -214,23 +215,44 @@ def _gradcam_core(model, target, tfm, device, image: Image.Image, objective):
 
     w = grads[0].mean(dim=[2, 3], keepdim=True)
     cam = torch.relu((w * acts[0]).sum(1)).squeeze().numpy().astype(np.float32)
+    return _cam_render(cam, tfm, image)
+
+
+def _cam_upsample(cam_small: np.ndarray) -> np.ndarray:
     # Upsample in float with a cubic kernel. Quantising the 12x12 map to uint8 and letting
     # PIL resize it banded the low end of the ramp into flat plateaus — visible as hard
     # steps in the blue background of the overlay.
-    cam = np.clip(_resize_f32(cam, DISPLAY), 0.0, None)
+    return np.clip(_resize_f32(cam_small.astype(np.float32), DISPLAY), 0.0, None)
 
-    frame = _model_frame(tfm, image)
-    mask = retina_mask(frame)
-    evidence = _cam_evidence(cam, mask, _padding_mask(tfm, image))
 
-    # Colour ONLY the retina. Attention on the surround is real and is reported as a number
-    # alongside; painting it keeps the eye on a region where the model has, by
-    # construction, nothing clinical to see.
+def _retina_only(cam: np.ndarray, mask: np.ndarray | None) -> np.ndarray:
+    """The map as PAINTED: zero outside the retina, scaled to [0, 1] inside it.
+
+    Attention on the surround is real and is reported as a number alongside; painting it
+    keeps the eye on a region where the model has, by construction, nothing clinical to see.
+    """
     shown = cam.copy()
     if mask is not None:
         shown[~mask] = 0.0
     rng = float(shown.max())
-    shown = shown / rng if rng > 0 else shown
+    return shown / rng if rng > 0 else shown
+
+
+def _cam_render(cam_small: np.ndarray, tfm, image: Image.Image):
+    """``(overlay_b64, evidence)`` for a raw low-resolution CAM on the model's frame.
+
+    Shared by the CNN path above and the ViT ensemble's token-grid CAM, so the overlay, the
+    retina-only colouring and the evidence numbers are computed one way for every model.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    cam = _cam_upsample(cam_small)
+    frame = _model_frame(tfm, image)
+    mask = retina_mask(frame)
+    evidence = _cam_evidence(cam, mask, _padding_mask(tfm, image))
+    shown = _retina_only(cam, mask)
 
     heat = (plt.get_cmap("jet")(shown)[:, :, :3] * 255).astype(np.uint8)
     overlay = (0.55 * heat + 0.45 * frame).astype(np.uint8)
@@ -348,8 +370,27 @@ def _cam_evidence(cam: np.ndarray, mask: np.ndarray | None,
     return ev
 
 
+def assert_not_cached_cfg(cfg, where):
+    """Refuse to SERVE a cached-preprocessing config.
+
+    ``preprocess.cached: true`` drops the fundus steps from the transforms on the promise
+    that the files were already pre-processed. Uploads never are, so serving such a config
+    would feed the model un-preprocessed images without any error.
+    """
+    from models.common.preprocessing import cache_root_from_cfg
+    if cache_root_from_cfg(cfg) is not None:
+        raise RuntimeError(f"{where}: preprocess.cached is true; a cached-preprocessing "
+                           f"config cannot be served (uploads are not pre-processed)")
+
+
 class StagingPreview:
-    """6-class ICROP staging — RESEARCH PREVIEW, not a clinical output.
+    """LEGACY (not served since 1 Nov 2026): the EfficientNetV2-S structured staging model.
+
+    Replaced as THE staging + screening model by ``StagingEnsemble`` (DINOv2 ViT-S/14). Kept
+    loadable for side-by-side comparison only — ``Registry`` builds it when the environment sets
+    ``RETINAI_LEGACY_STAGING=1`` and stores it as ``registry.legacy_staging``; no route reads it.
+
+    6-class ICROP staging — RESEARCH PREVIEW, not a clinical output.
 
     Serves the clinically-structured staging model (ordinal CORN stages + AP-ROP branch;
     the site-adversary branch is training-time machinery and is inert here). The checkpoint
@@ -376,6 +417,7 @@ class StagingPreview:
         try:
             from models.common.structured import StructuredROPModel, decode_6class
             cfg = load_config(str(cfg_path))
+            assert_not_cached_cfg(cfg, str(cfg_path))
             self.cfg = cfg
             self.tfm = build_transforms(cfg, "val")
             state = torch.load(weights, map_location=device)
@@ -497,6 +539,268 @@ class StagingPreview:
             self.device, image,
             lambda out: torch.log(self.decode(out, arop_threshold=self.thr)[1][0, 1:].sum()
                                   + 1e-9))
+
+
+DEPLOY_CFG = "configs/rop_staging_deploy.yaml"
+
+
+def _dotted(d, key: str):
+    for part in key.split("."):
+        d = d[part]
+    return d
+
+
+class StagingEnsemble:
+    """THE served ROP model: the 6-class ICROP stage AND the binary screening verdict.
+
+    Arm B of docs/paper/PROTOCOL_V2.md, DINOv2 ViT-S/14 with registers (392 px, ImageNet
+    statistics, circle crop + letterbox + CLAHE, 6-way head), served as the per-image MEAN of
+    the softmax vectors of the five cross-validation-fold checkpoints of seed 42
+    (configs/rop_staging_deploy.yaml). The configuration is fixed by the protocol; the new
+    hospital's development half selected nothing and its numbers are descriptive.
+
+    Screening: any-ROP score = 1 - p(Normal) of the ensemble, flagged when it REACHES the
+    pre-registered CV operating point of arm B seed 42 (results/rop/v3/v3_scores.json; the rule
+    that produced it flags `score >= t`). The re-basing threshold in screening_rebase.json is NOT
+    reused: it was chosen for the EfficientNet model's scores, and on this ensemble it flags
+    every one of the new hospital's 150 normal development images.
+
+    Fails soft like the model it replaces: a missing config, checkpoint or operating point
+    leaves `loaded` (or `screening`) unset and the app still boots and says so.
+    """
+
+    CLASSES = StagingPreview.CLASSES
+    NOTE = ("Stage breakdown of the SAME five-model ensemble that produced the screening result "
+            "above — not a second opinion. The stage label is a research output, not a "
+            "clinical grade: at a hospital the models never trained on it agreed with the "
+            "reference eye stage 64% of the time (QWK 0.752, 230 eyes).")
+
+    def __init__(self, device, cfg_path: str = DEPLOY_CFG):
+        self.loaded = False
+        self.screening = None
+        self.card = None
+        self.load_seconds = None
+        cfg_path = Path(cfg_path)
+        if not cfg_path.exists():
+            return
+        try:
+            import time
+            t0 = time.perf_counter()
+            cfg = load_config(str(cfg_path))
+            assert_not_cached_cfg(cfg, str(cfg_path))
+            dep = cfg.deploy
+            files = [Path(p) for p in dep.weights]
+            missing = [str(p) for p in files if not p.exists()]
+            if missing:
+                print(f"[webapp] staging ensemble unavailable: missing {missing} "
+                      f"(run scripts/deploy_rop_v3_weights.py)")
+                return
+            self.cfg, self.device, self.arch = cfg, device, cfg.model.arch
+            self.tfm = build_transforms(cfg, "val")
+            self.base_tfm = self.tfm             # for the shared Grad-CAM helpers
+            self.members = []
+            for f in files:
+                m = build_from_cfg(cfg, pretrained=False)
+                m.load_state_dict(torch.load(f, map_location="cpu", weights_only=True),
+                                  strict=True)
+                self.members.append(m.to(device).eval())
+            self.calibration = self._calibration(dep.scores)
+            self.screening = self._operating_point(dep)
+            self.card = self._card(dep)
+            # One forward + backward per member, so the first upload does not pay for the
+            # backend's kernel compilation (about 1.5 s on MPS). Counted in load_seconds.
+            self._token_cam(torch.zeros(1, 3, *self._size(), device=device))
+            self.load_seconds = round(time.perf_counter() - t0, 2)
+            self.loaded = True
+            print(f"[webapp] staging ensemble loaded: {self.card['name']} on {device} in "
+                  f"{self.load_seconds}s"
+                  + (f" | screening line {self.screening['threshold']:.4f} (CV operating point)"
+                     if self.screening else " | no operating point: staging only"))
+        except Exception as e:                       # pragma: no cover - defensive boot
+            print(f"[webapp] staging ensemble unavailable: {e}")
+
+    def _size(self):
+        s = int(self.cfg.preprocess.image_size)
+        return s, s
+
+    @staticmethod
+    def _calibration(scores) -> dict:
+        ece = float(scores.ece_eye)
+        return {"status": "measured-miscalibrated" if ece >= DiseaseModel.MATERIAL_ECE
+                else "verified-uncalibrated",
+                "applied": False, "temperature": None, "ece": ece,
+                "note": "No temperature is applied to the ensemble. ECE measured on the eye's "
+                        "driving-photo probabilities at the new hospital (development half).",
+                "warning": f"Measured ECE {ece:.3f} at a hospital the models never trained on. "
+                           f"Read the percentages as relative scores, not probabilities."}
+
+    def _operating_point(self, dep):
+        op = dep.operating_point
+        p = Path(op.source)
+        if not p.exists():
+            print(f"[webapp] {op.source} missing: no screening verdict from the ensemble")
+            return None
+        scores = json.loads(p.read_text())
+        block = _dotted(scores, op.key.rsplit(".", 2)[0])      # ...operating_point
+        return {"threshold": float(_dotted(scores, op.key)), "rule": block["rule"],
+                "source": op.source, "key": op.key,
+                "cv_any_rop": _dotted(scores, op.key.rsplit(".", 1)[0])["any_rop"],
+                "external": dep.scores.to_dict()}
+
+    def _card(self, dep) -> dict:
+        s = dep.scores.to_dict()
+        lo, hi = s["single_checkpoint_qwk_5class"]
+        return {
+            "name": dep.model_name, "arm": dep.arm, "seed": int(dep.seed),
+            "ensemble": dep.ensemble, "n_members": len(self.members),
+            "architecture": "DINOv2 ViT-S/14 with 4 register tokens, 392 px input, 6-way head",
+            "preprocessing": "circle crop, letterbox to square, CLAHE, resize 392, ImageNet "
+                             "normalisation",
+            "selection": " ".join(str(dep.selection).split()),
+            "scores": s,
+            "caveat": (f"Eye level at a hospital the models never trained on "
+                       f"({s['n_eyes']} eyes, development half): QWK {s['qwk_5class']:.3f}, "
+                       f"accuracy {s['accuracy'] * 100:.1f}%, macro-F1 {s['macro_f1']:.3f}; "
+                       f"single checkpoints {lo:.3f}–{hi:.3f}. The locked half is unopened."),
+            "threshold": self.screening["threshold"] if self.screening else None,
+            "status": "Research prototype, not a medical device.",
+        }
+
+    @torch.no_grad()
+    def member_probs(self, image: Image.Image) -> np.ndarray:
+        """(n_members, 6) softmax vectors, one row per fold checkpoint."""
+        x = self.tfm(image).unsqueeze(0).to(self.device)
+        return torch.cat([m(x).float().softmax(1) for m in self.members]).cpu().numpy()
+
+    def probs(self, image: Image.Image):
+        """The ensemble's 6-class vector (mean over members) and its argmax."""
+        p = self.member_probs(image).mean(0)
+        return p, int(p.argmax())
+
+    def predict(self, image: Image.Image, probs=None, idx=None):
+        if not self.loaded:
+            return None
+        if probs is None:
+            probs, idx = self.probs(image)
+        return {
+            "prediction": self.CLASSES[idx],
+            "scores": {c: round(float(probs[i]) * 100, 1)
+                       for i, c in enumerate(self.CLASSES)},
+            "arop_probability": round(float(probs[5]) * 100, 1),
+            "any_rop_probability": round(float(1.0 - probs[0]) * 100, 1),
+            "model": self.card["name"],
+            "preview": True,
+            "note": self.NOTE,
+        }
+
+    def screening_finding(self, probs) -> dict | None:
+        """The binary ROP verdict: 1 - p(Normal) against the CV operating point."""
+        if not self.screening:
+            return None
+        s = self.screening
+        thr = float(s["threshold"])
+        any_rop = float(1.0 - probs[0])
+        positive = any_rop >= thr
+        risk, rec = recommendation("ROP", 1 if positive else 0)
+        cv, ext = s["cv_any_rop"], s["external"]
+        out = {
+            "disease": "ROP", "available": True, "status": "ok",
+            "prediction": "ROP Detected" if positive else "No ROP",
+            "grade": 1 if positive else 0,
+            "score": round(any_rop * 100, 1),
+            "scores": {"No ROP": round((1 - any_rop) * 100, 1),
+                       "ROP Detected": round(any_rop * 100, 1)},
+            "risk": risk, "recommendation": rec,
+            "calibration": self.calibration,
+            "decision": {
+                # 3 dp: this line sits at ~98.94%, so 1 dp would print a score just under it
+                # as "98.9% vs 98.9%".
+                "score": round(any_rop * 100, 3),
+                "threshold": round(thr * 100, 3),
+                "positive": positive,
+                "positive_class": "ROP Detected",
+                "note": "Screened positive when the score reaches the decision line.",
+                "model": f"{self.card['name']} · staging ensemble · 1 − P(Normal)",
+                "rule": s["rule"],
+                "measured": {
+                    "unit": "infant eye per session, cross-validation out-of-fold, "
+                            "single checkpoints",
+                    "sensitivity": round(cv["sensitivity"] * 100, 1),
+                    "specificity": round(cv["specificity"] * 100, 1),
+                    "false_alarm": round((1 - cv["specificity"]) * 100, 1),
+                    "n": cv["n_pos"] + cv["n_neg"],
+                },
+                "external": {
+                    "unit": "eye (max over its photographs)",
+                    "n": ext["n_eyes"],
+                    "site": ext["site"],
+                    "sensitivity": round(ext["any_rop_sensitivity"] * 100, 1),
+                    "specificity": round(ext["any_rop_specificity"] * 100, 1),
+                    "false_alarm": round((1 - ext["any_rop_specificity"]) * 100, 1),
+                    "severe_sensitivity": round(ext["severe_sensitivity"] * 100, 1),
+                    "single_photo_sensitivity": round(ext["any_rop_sensitivity_image"] * 100, 1),
+                    "selection_caveat": False,
+                },
+            },
+            "uncertain": False,
+        }
+        # The line was set for >= 90% sensitivity with almost no false alarms on CV; at the
+        # new hospital it caught 66% of ROP eyes. A photo whose most likely stage is a disease
+        # stage but whose score stays under the line is exactly that gap: say so.
+        idx = int(np.argmax(probs))
+        if not positive and idx > 0:
+            out["uncertain"] = True
+            out["uncertain_reason"] = (
+                f"The most likely stage is {self.CLASSES[idx]} ({probs[idx] * 100:.1f}%), but "
+                f"the any-ROP score {any_rop * 100:.1f}% is under the screening line "
+                f"{thr * 100:.2f}%. That line missed about a third of ROP eyes at a hospital "
+                f"the models never trained on. Needs human review.")
+        return out
+
+    def _token_cam(self, x: torch.Tensor) -> np.ndarray:
+        """Grad-CAM of log P(any ROP) of the ENSEMBLE on the last block's patch tokens.
+
+        Each member's `blocks[-1]` output (1, prefix + 28*28, 384) is hooked; the CLS and register
+        tokens are dropped (the avg-pool head never reads them). Treating the five members' token
+        features as one layer: channel weights = gradient averaged over the patch tokens,
+        cam = ReLU(sum over members and channels of weight * activation), reshaped to the
+        28x28 patch grid.
+        """
+        acts = []
+        hooks = [m.blocks[-1].register_forward_hook(lambda mod, i, o: acts.append(o))
+                 for m in self.members]
+        try:
+            with torch.enable_grad():
+                p_normal = torch.stack([m(x).float().softmax(1)[0, 0]
+                                        for m in self.members]).mean()
+                grads = torch.autograd.grad(torch.log(1.0 - p_normal + 1e-9), acts)
+        finally:
+            for h in hooks:
+                h.remove()
+        cam = 0.0
+        for m, a, g in zip(self.members, acts, grads):
+            k = m.num_prefix_tokens
+            a, g = a[0, k:].detach().float(), g[0, k:].float()     # (784, 384) patch tokens
+            cam = cam + a @ g.mean(0)
+        gh, gw = self.members[0].patch_embed.grid_size
+        return torch.relu(cam).reshape(gh, gw).cpu().numpy().astype(np.float32)
+
+    def cam_map(self, image: Image.Image) -> np.ndarray:
+        """The painted map: DISPLAY x DISPLAY on the model's frame, [0, 1], 0 off the retina."""
+        x = self.tfm(image).unsqueeze(0).to(self.device)
+        return _retina_only(_cam_upsample(self._token_cam(x)),
+                            retina_mask(_model_frame(self.tfm, image)))
+
+    def gradcam(self, image: Image.Image, class_idx: int | None = None):
+        """Grad-CAM of the ensemble on the quantity the verdict turns on.
+
+        The target is log P(any ROP) = log(1 - mean p(Normal)), not one stage logit, so
+        `class_idx` is accepted for interface parity and ignored (as the model it replaces did).
+        """
+        if not self.loaded:
+            return None, None
+        x = self.tfm(image).unsqueeze(0).to(self.device)
+        return _cam_render(self._token_cam(x), self.tfm, image)
 
 
 class DiseaseModel:
@@ -764,6 +1068,55 @@ class EmbeddingGate:
                             "threshold": round(self.threshold, 4)}}
 
 
+class EyeNotGradable(ValueError):
+    """Every photograph of the eye was rejected by the gate (or carried no stage)."""
+
+
+class StagingUnavailable(RuntimeError):
+    """The eye route cannot run at all: no stage is produced for this context / build.
+
+    `status` is the HTTP code the route should answer with: 400 when the patient context
+    does not run ROP (caller error), 503 when the staging model is not loaded (server).
+    """
+    def __init__(self, message, status):
+        super().__init__(message)
+        self.status = status
+
+
+EYE_LIMITATION = ("acquisition view is not detected — make sure the temporal periphery "
+                  "was photographed")
+
+
+def eye_from_photos(per_photo, laterality):
+    """The worst-view rule: ICROP grades an eye by its most severe finding.
+
+    Eye stage = max predicted 6-class index over the photographs that passed the gate. The
+    driving photo is the first of the max-stage photos by upload order after preferring the
+    highest probability for that class; prob6 is its vector. Rejected photos are excluded
+    and named in `warnings`.
+    """
+    classes = StagingPreview.CLASSES
+    warnings, cands = [], []
+    for i, p in enumerate(per_photo):
+        st = p.get("staging") if p.get("gradable", True) else None
+        if st is None:
+            why = (p.get("quality") or {}).get("reason") or "no stage prediction"
+            warnings.append(f"photo {i + 1} not gradable: {why}")
+            continue
+        idx = classes.index(st["prediction"])
+        prob6 = [float(st["scores"][c]) / 100.0 for c in classes]
+        cands.append((idx, prob6[idx], i, prob6))
+    if not cands:
+        raise EyeNotGradable("no photograph of this eye could be graded: "
+                             + "; ".join(warnings))
+    top = max(c[0] for c in cands)
+    idx, _, drv, prob6 = max((c for c in cands if c[0] == top), key=lambda c: (c[1], -c[2]))
+    warnings.append(EYE_LIMITATION)
+    return {"eye": {"stage_index": idx, "stage": classes[idx], "driving_photo": drv,
+                    "prob6": prob6},
+            "laterality": laterality, "warnings": warnings}
+
+
 class RegistryConfigError(RuntimeError):
     """Raised at boot when the routing table is missing or inconsistent.
 
@@ -779,12 +1132,21 @@ class Registry:
         self.models = []
         for m in spec["models"]:
             cfg = load_config(m["config"])
+            assert_not_cached_cfg(cfg, m["config"])
             dm = DiseaseModel(m["disease"], cfg, m["weights"], self.device)
             dm.applies_to = list(m.get("applies_to") or [])
             self.models.append(dm)
         self.contexts = self._validate_contexts(spec, registry_path)
-        self.staging = StagingPreview(self.device)
+        # THE staging + screening model (see StagingEnsemble). The EfficientNet structured model
+        # it replaced stays loadable for comparison only, never served.
+        self.staging = StagingEnsemble(self.device,
+                                       (spec.get("staging") or {}).get("config", DEPLOY_CFG))
+        self.legacy_staging = (StagingPreview(self.device)
+                               if os.environ.get("RETINAI_LEGACY_STAGING") == "1" else None)
         rop = next((m for m in self.models if m.disease == "ROP"), self.models[0])
+        # NOTE: the gate is an ImageNet ResNet-50 and must keep ImageNet normalisation. If a
+        # ViT with `preprocess.normalize: half` is ever served, do NOT hand the gate that
+        # model's transform: build it with ImageNet mean/std, as the gate bank was.
         self.embedding_gate = EmbeddingGate(self.device, rop.base_tfm)
         loaded = [m.disease for m in self.models if m.loaded]
         print(f"[webapp] device {self.device} | loaded: {loaded or 'none yet'} "
@@ -829,12 +1191,31 @@ class Registry:
         return [(k, v.get("label", k), v.get("hint", ""), bool(v.get("advisory")))
                 for k, v in self.contexts.items()]
 
-    def analyze(self, image: Image.Image, context: str):
+    def _source(self, dm):
+        """The model that DECIDES `dm`'s disease: the staging ensemble for ROP when its
+        operating point is available, else `dm` itself."""
+        if dm.disease == "ROP" and self.staging.loaded and self.staging.screening is not None:
+            return self.staging
+        return dm
+
+    def _heatmaps(self, image, findings):
+        """One Grad-CAM per positive disease, from the model that produced its verdict."""
+        by = {dm.disease: dm for dm in self.models}
+        out = []
+        for f in findings:
+            if f.get("available") and f.get("grade", 0) > 0 and f["disease"] in by:
+                cam, evidence = self._source(by[f["disease"]]).gradcam(image, f["grade"])
+                if cam:
+                    out.append({"disease": f["disease"], "image": cam, "evidence": evidence})
+        return out
+
+    def analyze(self, image: Image.Image, context: str, cams: bool = True):
         """Run only the models this patient context is routed to.
 
         Routed-out models still appear in `findings` with available=False and
         status='not_applicable', so the UI and the PDF can say "not assessed" rather than
-        silently omitting them (an omission reads as "nothing found").
+        silently omitting them (an omission reads as "nothing found"). `cams=False` skips the
+        Grad-CAMs (the eye route computes one, for its driving photo, afterwards).
         """
         if context not in self.contexts:
             raise ValueError(f"unknown patient context '{context}'; "
@@ -869,7 +1250,7 @@ class Registry:
                 "heatmaps": [], "heatmap": None, "heatmap_disease": None,
             }
 
-        findings, heatmaps = [], []
+        findings = []
         # pre-bound: a routed-out ROP model skips the loop body, and the staging block
         # below reads these
         rebased, probs6, idx6 = False, None, None
@@ -881,31 +1262,23 @@ class Registry:
                             f"(trained for: {', '.join(dm.applies_to)}).",
                 })
                 continue
-            # ROP is decided by the STRUCTURED model when a vetted threshold exists for it.
-            # The ResNet50 head it replaces was audited at the held-out hospital and found
+            # ROP is decided by the staging ENSEMBLE when its operating point is available.
+            # The ResNet50 head below was audited at the held-out hospital and found
             # degenerate there — every one of 663 images flagged, healthy included, because
             # the whole site's score distribution sits above its 0.1933 cut-off (external
             # AUC 0.691 vs 0.821). One forward pass serves the verdict, the stage card and
             # the Grad-CAM, so the page cannot show three views of two different models.
-            rebased = (dm.disease == "ROP" and self.staging.loaded
-                       and self.staging.screening is not None)
+            rebased = self._source(dm) is self.staging
             if rebased:
                 probs6, idx6 = self.staging.probs(image)
                 res = self.staging.screening_finding(probs6)
-                source = self.staging
             else:
                 res = dm.predict(image)
-                source = dm
             res.setdefault("status", "ok" if res.get("available") else "not_loaded")
             if advisory:
                 res["advisory"] = True
             findings.append(res)
-            # one Grad-CAM per positive disease, not one for the whole image
-            if res.get("available") and res.get("grade", 0) > 0:
-                cam, evidence = source.gradcam(image, res["grade"])
-                if cam:
-                    heatmaps.append({"disease": dm.disease, "image": cam,
-                                     "evidence": evidence})
+        heatmaps = self._heatmaps(image, findings) if cams else []
 
         # The stage breakdown — the same forward pass as the verdict when re-based, so the
         # two cards report one model. Shown only when the product model actually ran; a
@@ -932,13 +1305,35 @@ class Registry:
             "heatmap_disease": heatmaps[0]["disease"] if heatmaps else None,
         }
 
+    def analyze_eye(self, images, eye: str, context: str = "infant"):
+        """One eye, many photographs, one answer (see eye_from_photos)."""
+        if eye not in ("OD", "OS"):
+            raise ValueError(f"eye must be 'OD' or 'OS', got {eye!r}")
+        if context not in self.contexts:
+            raise ValueError(f"unknown patient context '{context}'")
+        if "ROP" not in self.contexts[context].get("runs", []):
+            raise StagingUnavailable(f"patient context '{context}' does not run the ROP "
+                                     f"model, so no eye-level stage exists for it", 400)
+        if not self.staging.loaded:
+            raise StagingUnavailable("the staging model is not loaded on this server", 503)
+        per_photo = [{**self.analyze(im, context, cams=False), "index": i}
+                     for i, im in enumerate(images)]
+        out = eye_from_photos(per_photo, eye)
+        # Grad-CAM for the DRIVING photo only: it is the one the page shows, and a five-model
+        # Grad-CAM per positive photo would put a 16-photo severe eye far past the 10 s budget.
+        d = out["eye"]["driving_photo"]
+        hm = self._heatmaps(images[d], per_photo[d]["findings"])
+        per_photo[d].update(heatmaps=hm, heatmap=hm[0]["image"] if hm else None,
+                            heatmap_disease=hm[0]["disease"] if hm else None)
+        return {"per_photo": per_photo, **out}
+
     def summary(self):
         """Per-disease status + headline test metrics for the dashboard."""
         dirmap = {"DR": "dr", "ROP": "rop", "Glaucoma": "glaucoma"}
         out = []
         for dm in self.models:
             key = dirmap.get(dm.disease, dm.disease.lower())
-            out.append({
+            entry = {
                 "disease": dm.disease, "loaded": dm.loaded, "arch": dm.arch,
                 "classes": dm.class_names,
                 "metrics": _load_metrics(key),
@@ -949,5 +1344,17 @@ class Registry:
                 "calibration": dm.calibration,
                 "contexts": [c for c, spec in self.contexts.items()
                              if dm.disease in spec.get("runs", [])],
-            })
+            }
+            # The card shows the model that DECIDES. Since the ensemble took over, the ROP
+            # entry above only anchors routing; its ResNet50 numbers are not the product's.
+            if dm.disease == "ROP" and self.staging.loaded and self.staging.screening:
+                c, s = self.staging.card, self.staging.card["scores"]
+                entry.update({
+                    "loaded": True, "arch": c["name"], "classes": list(self.staging.CLASSES),
+                    "metrics": {"qwk_5class": s["qwk_5class"], "accuracy": s["accuracy"],
+                                "macro_f1": s["macro_f1"], "n_eyes": s["n_eyes"]},
+                    "caveat": c["caveat"], "calibration": self.staging.calibration,
+                    "model_card": c,
+                })
+            out.append(entry)
         return out

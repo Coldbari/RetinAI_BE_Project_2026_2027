@@ -40,6 +40,7 @@ function syncAnalyze() {
 
 function setFile(f) {
   if (!f || !f.type.startsWith("image/")) return;
+  eyeSummary = null;
   file = f;
   preview.src = URL.createObjectURL(f);
   preview.hidden = false; dropmsg.hidden = true;
@@ -55,12 +56,13 @@ $("analyze").onclick = async () => {
   document.body.style.overflow = "hidden";
   $("results").hidden = true;
 
+  eyeSummary = null; $("eyecard").hidden = true; $("eyephotos").hidden = true;
   const fd = new FormData(); fd.append("image", file); fd.append("context", context);
   const started = Date.now();
   let res;
   try {
     const r = await fetch("/predict", { method: "POST", body: fd });
-    res = await r.json();
+    res = await readJson(r);
     if (!r.ok) throw new Error(res.detail || res.error || "Analysis failed");
   } catch (e) {
     overlay.classList.remove("show"); document.body.style.overflow = "";
@@ -299,6 +301,7 @@ $("download").onclick = async () => {
   const fd = new FormData(); fd.append("image", file); fd.append("context", context);
   ["name", "age", "gender"].forEach(k => fd.append(k, ($(k) || {}).value || ""));
   fd.append("id", ($("pid") || {}).value || "");
+  if (eyeSummary) fd.append("eye_summary", JSON.stringify(eyeSummary));
   const r = await fetch("/report", { method: "POST", body: fd });
   if (!r.ok) { alert("Report failed."); return; }
   const blob = await r.blob();
@@ -311,8 +314,75 @@ $("again").onclick = () => {
   file = null; preview.hidden = true; dropmsg.hidden = false;
   $("results").hidden = true; fileInput.value = "";
   $("download").disabled = false;
+  eyeSummary = null; $("eyecard").hidden = true; $("eyephotos").hidden = true;
   const q = $("qualitybanner"); if (q) q.hidden = true;
   syncAnalyze();          // keeps the chosen context, re-blocks on the missing image
 };
+
+// ── whole-eye mode: many photographs of ONE eye, one worst-view answer ──────────────
+let eyeFiles = [], eyeSummary = null;
+const lat = () => (document.querySelector('input[name="laterality"]:checked') || {}).value;
+function syncEye() {
+  const b = $("analyze-eye"); if (!b) return;
+  b.disabled = !(eyeFiles.length && eyeFiles.length <= 16 && lat() && context);
+  b.title = b.disabled ? "Choose a context, OD/OS and 1-16 photographs" : "";
+}
+if ($("eyefiles")) {
+  $("eyefiles").onchange = (e) => { eyeFiles = [...e.target.files]; eyeSummary = null; syncEye(); };
+  document.querySelectorAll('input[name="laterality"]').forEach(r => r.onchange = syncEye);
+  document.addEventListener("change", e => { if (e.target.name === "context") syncEye(); });
+}
+const esc = (t) => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function renderEye(res) {
+  eyeSummary = { eye: res.eye, laterality: res.laterality, warnings: res.warnings };
+  const e = res.eye;
+  $("eyecard").innerHTML = `<div class="card staging eye-card">
+    <h3>Eye summary (${esc(res.laterality)}): ${esc(e.stage)}</h3>
+    <div class="rec">Worst view across ${res.per_photo.length} photograph(s) &mdash; driven by
+      <b>photo ${e.driving_photo + 1}</b>. Research preview, not a clinical grade.</div>
+    ${res.warnings.map(w => `<p class="muted small">&#9888; ${esc(w)}</p>`).join("")}</div>`;
+  $("eyecard").hidden = false;
+  $("eyephotos").innerHTML = res.per_photo.map((p, i) => {
+    const st = p.staging ? esc(p.staging.prediction) : "not graded";
+    const drv = i === e.driving_photo;
+    return `<div class="card${drv ? " staging driving" : ""}"${drv ? ' style="outline:2px solid var(--amber)"' : ""}>
+      <h3>Photo ${i + 1}${drv ? " &mdash; drives the eye stage" : ""}: ${st}</h3></div>`;
+  }).join("");
+  $("eyephotos").hidden = false;
+  // the page's single-image machinery shows the driving photo's own result and heatmaps
+  file = eyeFiles[e.driving_photo];
+  preview.src = URL.createObjectURL(file);
+  render(res.per_photo[e.driving_photo]);
+}
+
+if ($("analyze-eye")) $("analyze-eye").onclick = async () => {
+  const overlay = $("loader-overlay");
+  overlay.classList.add("show"); document.body.style.overflow = "hidden";
+  $("results").hidden = true;
+  const fd = new FormData();
+  eyeFiles.forEach(f => fd.append("images", f));
+  fd.append("eye", lat()); fd.append("context", context);
+  let res;
+  try {
+    const r = await fetch("/predict_eye", { method: "POST", body: fd });
+    res = await readJson(r);
+    if (!r.ok) throw new Error(res.detail || res.error || "Analysis failed");
+  } catch (e) {
+    overlay.classList.remove("show"); document.body.style.overflow = "";
+    alert(e.message || "Analysis failed."); return;
+  }
+  renderEye(res);
+  overlay.classList.remove("show"); document.body.style.overflow = "";
+  $("results").hidden = false;
+  $("results").scrollIntoView({ behavior: "smooth" });
+};
+
+// Non-JSON bodies (a proxy's HTML 413, say) must surface as a message, not a parse error.
+async function readJson(r) {
+  const t = await r.text();
+  try { return JSON.parse(t); }
+  catch { return { error: r.ok ? "Unexpected server response" : `Server error ${r.status}` }; }
+}
 
 const wait = (ms) => new Promise(r => setTimeout(r, ms));

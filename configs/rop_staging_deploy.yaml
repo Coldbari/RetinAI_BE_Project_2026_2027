@@ -1,0 +1,105 @@
+# SERVED ROP staging + screening model (webapp/inference.py: StagingEnsemble).
+#
+# Arm B of docs/paper/PROTOCOL_V2.md, unchanged: every key outside `deploy:` is identical to
+# configs/rop_staging_dinov2.yaml (tests/test_webapp_staging_ensemble.py enforces it), so the app
+# preprocesses exactly as the checkpoints were trained (circle crop -> letterbox -> CLAHE,
+# 392 px, ImageNet statistics). `cached: false` is required to serve: uploads are never
+# pre-processed (webapp/inference.py: assert_not_cached_cfg).
+#
+# The deployed configuration is fixed by the protocol, not chosen on the new hospital: the
+# probability-averaged ensemble of the five CV-fold checkpoints of seed 42 (the primary seed).
+# The v4 rule (Amendment 5c) kept B over arms H and I.
+disease: rop_staging
+seed: 42
+
+data:
+  num_classes: 6
+  class_names: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5", "AP-ROP"]
+  manifest: results/prepared/rop_staging/fold_0.csv
+  presplit: true
+  group_col: patient_id
+
+preprocess:
+  image_size: 392
+  circle_crop: true
+  letterbox: true
+  ben_graham: false
+  clahe: true
+  normalize: imagenet
+  cached: false
+  cache_root: null
+
+model:
+  arch: dinov2_s
+  weights_path: null    # unset: the five fold checkpoints are listed under deploy.weights
+  pretrained: true
+  head: classification
+  dropout: 0.3
+  drop_path: 0.1
+
+train:
+  epochs: 20
+  batch_size: 16
+  lr: 1.0e-4
+  layer_decay: 0.8
+  weight_decay: 0.05
+  label_smoothing: 0.05
+  amp: true
+  strong_aug: true
+  site_randomization: true
+  loss: ce
+  class_balanced: true
+  class_balanced_beta: 0.999
+  weighted_sampler: false
+  num_workers: 4
+
+eval:
+  early_stopping: false
+  primary_metric: macro_f1
+  qwk_classes: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5"]
+  report_per_class_recall: true
+  unvalidated_classes: ["Stage 4/5", "AP-ROP"]
+
+deploy:
+  arm: B
+  protocol: docs/paper/PROTOCOL_V2.md
+  training_config: configs/rop_staging_dinov2.yaml
+  model_name: "DINOv2 ViT-S/14, 5-fold ensemble, seed 42"
+  seed: 42
+  ensemble: mean_prob          # per-image mean of the five softmax vectors; no weights fitted
+  # Copied from kaggle_cache/v3/rop-v3-dinov2-s-s42-lr1e-4/ by scripts/deploy_rop_v3_weights.py
+  # (gitignored; results/rop_staging_v3/MANIFEST.json records the sha256 of each).
+  weights:
+    - results/rop_staging_v3/dinov2_s42_fold0.pth
+    - results/rop_staging_v3/dinov2_s42_fold1.pth
+    - results/rop_staging_v3/dinov2_s42_fold2.pth
+    - results/rop_staging_v3/dinov2_s42_fold3.pth
+    - results/rop_staging_v3/dinov2_s42_fold4.pth
+  # Screening verdict: any-ROP score = 1 - p(Normal) of the ensemble, compared with the
+  # pre-registered CV operating point of arm B, seed 42 (largest threshold with CV out-of-fold
+  # unit-level any-ROP sensitivity >= 0.90). Read at boot from this file and key path.
+  operating_point:
+    source: results/rop/v3/v3_scores.json
+    key: arms.B.seeds.42.operating_point.cv.threshold
+  # New hospital (Multi-View), development half, eye level, this exact ensemble. Computed from
+  # the committed dev predictions of the five checkpoints. Descriptive: dev selected nothing.
+  scores:
+    site: "new hospital (development half)"
+    unit: eye
+    n_eyes: 230
+    n_images: 663
+    qwk_5class: 0.752
+    accuracy: 0.639
+    macro_f1: 0.568
+    single_checkpoint_qwk_5class: [0.745, 0.774]
+    # at the CV operating point above (ensemble, eye = max over photos of 1 - p(Normal))
+    any_rop_sensitivity: 0.656
+    any_rop_specificity: 1.0
+    severe_sensitivity: 0.924
+    any_rop_sensitivity_image: 0.314
+    # expected calibration error of the eye's driving-photo probability vector (no temperature)
+    ece_eye: 0.144
+  selection: >-
+    Arm B (DINOv2 ViT-S/14, B's v3 recipe) was the v3 primary arm and stayed after the v4
+    pre-registered rule (Amendment 5c) found neither the v4-data arm H nor the v4-recipe arm I
+    ahead by the required +0.010 cross-validated QWK.

@@ -1,0 +1,64 @@
+# Arm F (PROTOCOL_V2 Amendment 4b): arm B (configs/rop_staging_dinov2.yaml) plus self-ensembling
+# (French et al., ICLR 2018) on the UNLABELLED Multi-View dev photos. Every key equals B's except
+# the train.uda block; tests/test_v3_parity.py enforces it. The comments below are B's (differences
+# from arm C). Training reads only the image_path column of the target manifest, never a label;
+# F's dev numbers are therefore transductive (images seen, labels unseen).
+disease: rop_staging
+seed: 42
+
+data:
+  num_classes: 6
+  class_names: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5", "AP-ROP"]
+  manifest: results/prepared/rop_staging/fold_0.csv
+  presplit: true
+  group_col: patient_id
+
+preprocess:
+  image_size: 392       # CHANGED: 28x14 patch grid for ViT-S/14 (384 is not a multiple of 14)
+  circle_crop: true
+  letterbox: true
+  ben_graham: false
+  clahe: true
+  normalize: imagenet   # CHANGED: ImageNet statistics for the DINOv2 control
+  cached: false         # CHANGED (new key): no pre-cached preprocessing by default
+  cache_root: null
+
+model:
+  arch: dinov2_s  # CHANGED: the ViT arm under test
+  weights_path: null    # CHANGED: DINOv2 weights come from the hub, no local file
+  pretrained: true
+  head: classification
+  dropout: 0.3
+  drop_path: 0.1        # CHANGED (new key): stochastic depth, standard for ViT fine-tuning
+
+train:
+  epochs: 20
+  batch_size: 16
+  lr: 1.0e-4            # CHANGED: ViT fine-tuning lr (peak lr of the top layer under layer decay)
+  layer_decay: 0.8      # CHANGED (new key): layer-wise lr decay, standard for ViT fine-tuning
+  weight_decay: 0.05
+  label_smoothing: 0.05
+  amp: true
+  strong_aug: true
+  site_randomization: true
+  loss: ce
+  class_balanced: true
+  class_balanced_beta: 0.999
+  weighted_sampler: false
+  num_workers: 4
+  uda:                  # ARM F (new block): models/common/uda.py; no value here is tuned
+    enabled: true
+    method: self_ensembling
+    ema_decay: 0.99     # teacher = EMA of the student, updated after every optimizer step
+    conf_threshold: 0.90  # a target photo counts only where the teacher's max probability >= this
+    weight: 1.0         # total = source loss + w(t) * target loss
+    ramp_epochs: 2      # w(t) rises linearly from 0 to weight over the first 2 epochs, by step
+    target_manifest: results/prepared/rop_staging/test_dev.csv   # image_path column only
+    target_batch: 16    # unlabelled dev photos added to every 16-photo source batch
+
+eval:
+  early_stopping: false
+  primary_metric: macro_f1
+  qwk_classes: ["Normal", "Stage 1", "Stage 2", "Stage 3", "Stage 4/5"]
+  report_per_class_recall: true
+  unvalidated_classes: ["Stage 4/5", "AP-ROP"]
