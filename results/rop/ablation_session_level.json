@@ -1,0 +1,90 @@
+{
+  "protocol": "max AP-ROP probability over each session's frames, threshold 0.5 fixed a priori; fold-0 val only \u2014 direction meaningful, precision not. Ostrava keyed by device+serie; other sources fall back to patient.",
+  "decomposition_note": "image_recall -> reweight_only_recall -> session_recall separates the two effects that the raw image->session jump conflates. reweighting_effect is what you get from weighting each unit equally (one Ostrava infant supplies 76% of AP-ROP images); aggregation_effect is what max-over-frames adds on top. Report both \u2014 the pooled 5-fold split is +0.348 reweighting vs +0.147 aggregation, i.e. ~70% of the headline jump is population, not unit.",
+  "arms": {
+    "full": {
+      "image_recall": 0.212,
+      "reweight_only_recall": 0.335,
+      "session_recall": 0.857,
+      "sessions_detected": "18/21",
+      "session_ci95": [
+        0.637,
+        0.97
+      ],
+      "aggregation_effect": 0.523,
+      "reweighting_effect": 0.122,
+      "normal_session_fp": 0.012,
+      "n_normal_sessions": 333
+    },
+    "natural": {
+      "image_recall": 0.237,
+      "reweight_only_recall": 0.387,
+      "session_recall": 0.952,
+      "sessions_detected": "20/21",
+      "session_ci95": [
+        0.762,
+        0.999
+      ],
+      "aggregation_effect": 0.565,
+      "reweighting_effect": 0.15,
+      "normal_session_fp": 0.006,
+      "n_normal_sessions": 333
+    },
+    "nobranch": {
+      "image_recall": 0.195,
+      "reweight_only_recall": 0.33,
+      "session_recall": 0.81,
+      "sessions_detected": "17/21",
+      "session_ci95": [
+        0.581,
+        0.946
+      ],
+      "aggregation_effect": 0.48,
+      "reweighting_effect": 0.134,
+      "normal_session_fp": 0.012,
+      "n_normal_sessions": 333
+    },
+    "noordinal": {
+      "image_recall": 0.181,
+      "reweight_only_recall": 0.299,
+      "session_recall": 0.714,
+      "sessions_detected": "15/21",
+      "session_ci95": [
+        0.478,
+        0.887
+      ],
+      "aggregation_effect": 0.415,
+      "reweighting_effect": 0.118,
+      "normal_session_fp": 0.0,
+      "n_normal_sessions": 333
+    },
+    "sampler": {
+      "image_recall": 0.141,
+      "reweight_only_recall": 0.293,
+      "session_recall": 0.905,
+      "sessions_detected": "19/21",
+      "session_ci95": [
+        0.696,
+        0.988
+      ],
+      "aggregation_effect": 0.612,
+      "reweighting_effect": 0.152,
+      "normal_session_fp": 0.003,
+      "n_normal_sessions": 333
+    },
+    "wsite0": {
+      "image_recall": 0.265,
+      "reweight_only_recall": 0.384,
+      "session_recall": 0.857,
+      "sessions_detected": "18/21",
+      "session_ci95": [
+        0.637,
+        0.97
+      ],
+      "aggregation_effect": 0.473,
+      "reweighting_effect": 0.12,
+      "normal_session_fp": 0.006,
+      "n_normal_sessions": 333
+    }
+  }
+}

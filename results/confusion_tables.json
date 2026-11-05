@@ -1,0 +1,83 @@
+{
+  "DR": {
+    "tp": 20,
+    "fn": 0,
+    "fp": 0,
+    "tn": 20,
+    "n": 40,
+    "sensitivity": 1.0,
+    "sensitivity_ci": [
+      0.8315665290169146,
+      1.0
+    ],
+    "specificity": 1.0,
+    "specificity_ci": [
+      0.8315665290169146,
+      1.0
+    ],
+    "accuracy": 1.0,
+    "f1": 1.0,
+    "ppv_testset": 1.0,
+    "npv_testset": 1.0,
+    "screening_prevalence": 0.2,
+    "ppv_screening": 1.0,
+    "npv_screening": 1.0,
+    "positives_from": "dr",
+    "negatives_from": "normal",
+    "gate_refusals": 0
+  },
+  "ROP": {
+    "tp": 14,
+    "fn": 0,
+    "fp": 14,
+    "tn": 5,
+    "n": 33,
+    "sensitivity": 1.0,
+    "sensitivity_ci": [
+      0.7683642383498834,
+      1.0
+    ],
+    "specificity": 0.2631578947368421,
+    "specificity_ci": [
+      0.09146578490766653,
+      0.5120293453458726
+    ],
+    "accuracy": 0.5757575757575758,
+    "f1": 0.6666666666666666,
+    "ppv_testset": 0.5,
+    "npv_testset": 1.0,
+    "screening_prevalence": 0.1,
+    "ppv_screening": 0.1310344827586207,
+    "npv_screening": 1.0,
+    "positives_from": "rop",
+    "negatives_from": "normal_infant",
+    "gate_refusals": 1
+  },
+  "Glaucoma": {
+    "tp": 18,
+    "fn": 1,
+    "fp": 0,
+    "tn": 18,
+    "n": 37,
+    "sensitivity": 0.9473684210526315,
+    "sensitivity_ci": [
+      0.7397193458047858,
+      0.9986683711958205
+    ],
+    "specificity": 1.0,
+    "specificity_ci": [
+      0.8146980318621477,
+      1.0
+    ],
+    "accuracy": 0.972972972972973,
+    "f1": 0.972972972972973,
+    "ppv_testset": 1.0,
+    "npv_testset": 0.9473684210526315,
+    "screening_prevalence": 0.03,
+    "ppv_screening": 1.0,
+    "npv_screening": 0.9983748645720477,
+    "positives_from": "glaucoma",
+    "negatives_from": "glaucoma_negative",
+    "gate_refusals": 0
+  }
+}

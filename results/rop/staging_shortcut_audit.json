@@ -1,0 +1,45 @@
+{
+  "G1_patient_leakage": {
+    "pass": true
+  },
+  "G2_duplicate_leakage": {
+    "pass": true,
+    "exact_md5": 0,
+    "near_dupes": 0,
+    "closest_distance": 15
+  },
+  "G3_site_decodability": {
+    "balanced_accuracy": 0.9973,
+    "chance": 0.3333,
+    "n_sources": 3,
+    "single_source_classes": {
+      "stage_4_5": "ropvl"
+    }
+  },
+  "G4_metadata_baseline": {
+    "learners": {
+      "linear": {
+        "cv_macro_f1": 0.1874,
+        "cv_balanced_accuracy": 0.2089,
+        "dev_macro_f1": 0.0615,
+        "dev_balanced_accuracy": 0.1667,
+        "dev_distinct_predictions": 1
+      },
+      "tree": {
+        "cv_macro_f1": 0.1623,
+        "cv_balanced_accuracy": 0.1781,
+        "dev_macro_f1": 0.0615,
+        "dev_balanced_accuracy": 0.1667,
+        "dev_distinct_predictions": 1
+      }
+    },
+    "bar_cv_macro_f1": 0.1874,
+    "bar_dev_macro_f1": 0.0615,
+    "note": "the trained image model must EXCEED these to have learned anything from pixels"
+  },
+  "G5_site_probe": {
+    "pass": null,
+    "reason": "no checkpoint supplied"
+  },
+  "overall_pass": true
+}

@@ -1,0 +1,254 @@
+{
+  "arch": "dinov2_s",
+  "seed": 1337,
+  "lr": "1e-4",
+  "epochs": 20,
+  "folds": {
+    "fold0": {
+      "macro_f1": 0.5243742237198573,
+      "accuracy": 0.6363098758131284,
+      "balanced_accuracy": 0.6583995366190561,
+      "qwk": 0.5516246463872327,
+      "auc": 0.8813059345067705,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9359795134443022,
+          "recall": 0.9530638852672751,
+          "f1": 0.9444444444444444,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.20300751879699247,
+          "recall": 0.5912408759124088,
+          "f1": 0.30223880597014924,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.3617021276595745,
+          "recall": 0.5214723926380368,
+          "f1": 0.4271356783919598,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.6162790697674418,
+          "recall": 0.8217054263565892,
+          "f1": 0.7043189368770764,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.4,
+          "recall": 0.9473684210526315,
+          "f1": 0.5625,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9322033898305084,
+          "recall": 0.11554621848739496,
+          "f1": 0.205607476635514,
+          "support": 476
+        }
+      },
+      "dir": "results/experiment_001_v3_dinov2_s_uda_fold0_s1337",
+      "dev_scored": true,
+      "kernel": "rop-v3-dinov2-s-uda-s1337-lr1e-4-a",
+      "gpu": "Tesla T4"
+    },
+    "fold1": {
+      "macro_f1": 0.7620577454816387,
+      "accuracy": 0.8330670926517572,
+      "balanced_accuracy": 0.7626083578707595,
+      "qwk": 0.8942764308922769,
+      "auc": 0.9417050578225422,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9031476997578692,
+          "recall": 0.9867724867724867,
+          "f1": 0.943109987357775,
+          "support": 756
+        },
+        "Stage 1": {
+          "precision": 0.45985401459854014,
+          "recall": 0.5526315789473685,
+          "f1": 0.50199203187251,
+          "support": 114
+        },
+        "Stage 2": {
+          "precision": 0.7777777777777778,
+          "recall": 0.509090909090909,
+          "f1": 0.6153846153846154,
+          "support": 220
+        },
+        "Stage 3": {
+          "precision": 0.8333333333333334,
+          "recall": 0.6896551724137931,
+          "f1": 0.7547169811320755,
+          "support": 116
+        },
+        "Stage 4/5": {
+          "precision": 0.7894736842105263,
+          "recall": 0.9375,
+          "f1": 0.8571428571428571,
+          "support": 16
+        },
+        "AP-ROP": {
+          "precision": 0.9,
+          "recall": 0.9,
+          "f1": 0.9,
+          "support": 30
+        }
+      },
+      "dir": "results/experiment_002_v3_dinov2_s_uda_fold1_s1337",
+      "dev_scored": true,
+      "kernel": "rop-v3-dinov2-s-uda-s1337-lr1e-4-a",
+      "gpu": "Tesla T4"
+    },
+    "fold2": {
+      "macro_f1": 0.6247058004993863,
+      "accuracy": 0.755591054313099,
+      "balanced_accuracy": 0.6766881077509158,
+      "qwk": 0.8687935073446218,
+      "auc": 0.9125527375427583,
+      "per_class": {
+        "Normal": {
+          "precision": 0.98989898989899,
+          "recall": 0.8886010362694301,
+          "f1": 0.936518771331058,
+          "support": 772
+        },
+        "Stage 1": {
+          "precision": 0.33004926108374383,
+          "recall": 0.5447154471544715,
+          "f1": 0.4110429447852761,
+          "support": 123
+        },
+        "Stage 2": {
+          "precision": 0.49586776859504134,
+          "recall": 0.6217616580310881,
+          "f1": 0.5517241379310345,
+          "support": 193
+        },
+        "Stage 3": {
+          "precision": 0.6578947368421053,
+          "recall": 0.22727272727272727,
+          "f1": 0.33783783783783783,
+          "support": 110
+        },
+        "Stage 4/5": {
+          "precision": 0.7272727272727273,
+          "recall": 0.8888888888888888,
+          "f1": 0.8,
+          "support": 18
+        },
+        "AP-ROP": {
+          "precision": 0.5925925925925926,
+          "recall": 0.8888888888888888,
+          "f1": 0.7111111111111111,
+          "support": 36
+        }
+      },
+      "dir": "results/experiment_003_v3_dinov2_s_uda_fold2_s1337",
+      "dev_scored": true,
+      "kernel": "rop-v3-dinov2-s-uda-s1337-lr1e-4-a",
+      "gpu": "Tesla T4"
+    },
+    "fold3": {
+      "macro_f1": 0.7557230375124511,
+      "accuracy": 0.7843450479233227,
+      "balanced_accuracy": 0.7761340152484159,
+      "qwk": 0.9110723272992938,
+      "auc": 0.9477283572136334,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9904912836767037,
+          "recall": 0.8159268929503917,
+          "f1": 0.8947745168217609,
+          "support": 766
+        },
+        "Stage 1": {
+          "precision": 0.25101214574898784,
+          "recall": 0.5585585585585585,
+          "f1": 0.3463687150837989,
+          "support": 111
+        },
+        "Stage 2": {
+          "precision": 0.6939890710382514,
+          "recall": 0.6978021978021978,
+          "f1": 0.6958904109589041,
+          "support": 182
+        },
+        "Stage 3": {
+          "precision": 0.8931297709923665,
+          "recall": 0.8731343283582089,
+          "f1": 0.8830188679245283,
+          "support": 134
+        },
+        "Stage 4/5": {
+          "precision": 0.8823529411764706,
+          "recall": 0.8333333333333334,
+          "f1": 0.8571428571428571,
+          "support": 18
+        },
+        "AP-ROP": {
+          "precision": 0.8372093023255814,
+          "recall": 0.8780487804878049,
+          "f1": 0.8571428571428571,
+          "support": 41
+        }
+      },
+      "dir": "results/experiment_001_v3_dinov2_s_uda_fold3_s1337",
+      "dev_scored": true,
+      "kernel": "rop-v3-dinov2-s-uda-s1337-lr1e-4-b",
+      "gpu": "Tesla T4"
+    },
+    "fold4": {
+      "macro_f1": 0.7436701240061573,
+      "accuracy": 0.8324022346368715,
+      "balanced_accuracy": 0.782008884673926,
+      "qwk": 0.900480782183383,
+      "auc": 0.9433425065928795,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9794238683127572,
+          "recall": 0.9201030927835051,
+          "f1": 0.9488372093023256,
+          "support": 776
+        },
+        "Stage 1": {
+          "precision": 0.3473053892215569,
+          "recall": 0.6304347826086957,
+          "f1": 0.44787644787644787,
+          "support": 92
+        },
+        "Stage 2": {
+          "precision": 0.7602739726027398,
+          "recall": 0.5522388059701493,
+          "f1": 0.6397694524495677,
+          "support": 201
+        },
+        "Stage 3": {
+          "precision": 0.7702702702702703,
+          "recall": 0.8702290076335878,
+          "f1": 0.8172043010752689,
+          "support": 131
+        },
+        "Stage 4/5": {
+          "precision": 0.8333333333333334,
+          "recall": 0.8333333333333334,
+          "f1": 0.8333333333333334,
+          "support": 18
+        },
+        "AP-ROP": {
+          "precision": 0.6888888888888889,
+          "recall": 0.8857142857142857,
+          "f1": 0.775,
+          "support": 35
+        }
+      },
+      "dir": "results/experiment_002_v3_dinov2_s_uda_fold4_s1337",
+      "dev_scored": true,
+      "kernel": "rop-v3-dinov2-s-uda-s1337-lr1e-4-b",
+      "gpu": "Tesla T4"
+    }
+  },
+  "variant": "uda"
+}

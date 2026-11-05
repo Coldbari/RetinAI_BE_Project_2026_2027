@@ -1,0 +1,43 @@
+{
+ "protocol": "max AP-ROP probability per session, threshold 0.5 fixed a priori; Ostrava sessions keyed by device+serie from the filename, non-Ostrava AP-ROP grouped per patient (no session structure exists there). Same 119 units both seeds.",
+ "fp_note": "normal-session FP here uses ALL normal units incl. patient-fallback ones (19/1639 = 1.16%). The earlier committed 0.25% used Ostrava-keyed normal sessions only. PIN ONE DEFINITION IN THE PAPER and state it; both are honest, they are different denominators.",
+ "seed_42": {
+  "session_recall": 0.84,
+  "detected": "100/119",
+  "ci95": [
+   0.76,
+   0.9
+  ]
+ },
+ "seed_1337": {
+  "session_recall": 0.832,
+  "detected": "99/119",
+  "ci95": [
+   0.75,
+   0.89
+  ]
+ },
+ "frames_without_the_appearance": {
+  "what": "Fraction of AP-ROP-LABELLED frames the model scores p_arop<0.1 \u2014 'the label is carried, the appearance is absent'. Pooled out-of-fold over the 5 structured folds (seed 42).",
+  "ostrava_session_labelled": {
+   "frames": 470,
+   "sessions": 16,
+   "frac_below_0.1": 0.7043,
+   "median_per_session": 0.7458,
+   "median_frames_per_session": 24
+  },
+  "non_ostrava_frame_labelled": {
+   "frames": 148,
+   "units": 103,
+   "frac_below_0.1": 0.1014
+  },
+  "all": {
+   "frames": 618,
+   "units": 119,
+   "frac_below_0.1": 0.5599
+  },
+  "reading": "This is the finding's internal control. Ostrava stamps one diagnosis code on every frame of an examination session, and 70% of its AP-ROP frames score below 0.1. The other sources label 1-2 frames per infant, and only 10% do. Same model, same class, 7x the rate exactly where the labelling is per-session - so the frames are not mysteriously hard, they are mislabelled by inheritance.",
+  "supersedes": "session_level_arop.json's median_frac_frames_below_p0.1_in_arop_sessions = 0.4706, which was computed on an EARLIER prediction set (its fold-0 image recall is 0.311 vs the canonical 0.212) and on fold 0 alone. Do not quote the 47%.",
+  "recomputed": "2026-08-17 on results/rop/staging_runs/structured_5fold/*.npz"
+ }
+}

@@ -1,0 +1,60 @@
+disease: rop_staging
+seed: 42
+data:
+  num_classes: 6
+  class_names:
+  - Normal
+  - Stage 1
+  - Stage 2
+  - Stage 3
+  - Stage 4/5
+  - AP-ROP
+  manifest: results/prepared/rop_staging/_v3_foldloso_ostrava.csv
+  presplit: true
+  group_col: patient_id
+preprocess:
+  image_size: 392
+  circle_crop: true
+  letterbox: true
+  ben_graham: false
+  clahe: true
+  normalize: imagenet
+  cached: true
+  cache_root: /tmp/_cache768
+model:
+  arch: dinov2_s
+  weights_path: null
+  pretrained: true
+  head: classification
+  dropout: 0.3
+  drop_path: 0.1
+train:
+  arm_tag: v4data
+  epochs: 20
+  batch_size: 16
+  lr: 0.0001
+  layer_decay: 0.8
+  weight_decay: 0.05
+  label_smoothing: 0.05
+  amp: true
+  strong_aug: true
+  site_randomization: true
+  loss: ce
+  class_balanced: true
+  class_balanced_beta: 0.999
+  weighted_sampler: false
+  num_workers: 4
+eval:
+  early_stopping: false
+  primary_metric: macro_f1
+  qwk_classes:
+  - Normal
+  - Stage 1
+  - Stage 2
+  - Stage 3
+  - Stage 4/5
+  report_per_class_recall: true
+  unvalidated_classes:
+  - Stage 4/5
+  - AP-ROP
+_source: configs/rop_staging_dinov2_v4data.yaml

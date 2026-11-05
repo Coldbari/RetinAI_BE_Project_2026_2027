@@ -1,0 +1,52 @@
+{
+  "device_rows": {
+    "1": {
+      "images": 2578,
+      "img_pos": 1925,
+      "img_prev": 0.7467028704422033,
+      "patients": 81,
+      "pat_pos": 39,
+      "pat_prev": 0.48148148148148145
+    },
+    "2": {
+      "images": 2452,
+      "img_pos": 741,
+      "img_prev": 0.30220228384991843,
+      "patients": 61,
+      "pat_pos": 13,
+      "pat_prev": 0.21311475409836064
+    },
+    "3": {
+      "images": 974,
+      "img_pos": 358,
+      "img_prev": 0.3675564681724846,
+      "patients": 46,
+      "pat_pos": 8,
+      "pat_prev": 0.17391304347826086
+    }
+  },
+  "prevalence_spread": 0.3075684380032206,
+  "within_device_auc": 0.8808372783438978,
+  "overall_auc": 0.9270663287223988,
+  "measurable_devices": 1,
+  "positive_devices": [
+    "1"
+  ],
+  "split_by_device": {
+    "1": {
+      "test": 0.6292,
+      "train": 0.3626,
+      "val": 0.3631
+    },
+    "2": {
+      "test": 0.3209,
+      "train": 0.4024,
+      "val": 0.5733
+    },
+    "3": {
+      "test": 0.0499,
+      "train": 0.235,
+      "val": 0.0636
+    }
+  }
+}

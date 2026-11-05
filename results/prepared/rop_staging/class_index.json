@@ -1,0 +1,19 @@
+{
+  "classes": [
+    "normal",
+    "stage_1",
+    "stage_2",
+    "stage_3",
+    "stage_4_5",
+    "arop"
+  ],
+  "index": {
+    "normal": 0,
+    "stage_1": 1,
+    "stage_2": 2,
+    "stage_3": 3,
+    "stage_4_5": 4,
+    "arop": 5
+  },
+  "note": "stage_4 and stage_5 merged into stage_4_5; stage_0 and treated out of scope"
+}

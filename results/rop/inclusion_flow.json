@@ -1,0 +1,94 @@
+{
+  "what": "CONSORT-style inclusion/exclusion cascade for the ROP staging corpus. Every layer recomputed from committed artifacts; the script refuses to emit a flow whose exclusion reasons do not sum to the observed drop.",
+  "layer_0_acquired": {
+    "images": 13037,
+    "sources": 11,
+    "note": "public research datasets plus one private hospital corpus (Ostrava). Excludes the _redundant quarantine (re-uploads and mirrors of sources already counted)."
+  },
+  "layer_1_stage_labelled_sources": {
+    "kept": {
+      "images": 10427,
+      "infants": 2015,
+      "sources": [
+        "multiview",
+        "ostrava",
+        "ropvl",
+        "shenzhen"
+      ]
+    },
+    "excluded": {
+      "total": 2610,
+      "by_reason": {
+        "farfum_rop": 1533,
+        "hvdropdb": 485,
+        "shantou_od": 129,
+        "shantou_bv": 101,
+        "orvs_seg": 251,
+        "ropstages_sample": 91,
+        "coph100_annotations": 0,
+        "shenzhen_duplicates_of_ropvl": 20
+      }
+    },
+    "reasons": {
+      "farfum_rop": "plus/pre-plus grades only \u2014 no ICROP stage",
+      "hvdropdb": "ridge segmentation masks \u2014 no stage label",
+      "shantou_od": "optic-disc segmentation only",
+      "shantou_bv": "vessel segmentation only",
+      "orvs_seg": "vessel segmentation supplement",
+      "ropstages_sample": "sample too small to fold (91 images) and provenance unverified",
+      "coph100_annotations": "annotations only \u2014 adds no photographs",
+      "shenzhen_duplicates_of_ropvl": "perceptual-hash duplicates: the same photographs re-encoded at lower resolution; the ROP-VL copy is kept"
+    }
+  },
+  "layer_2_six_class_eligible": {
+    "kept": {
+      "images": 8024,
+      "infants": 1760
+    },
+    "excluded": {
+      "total": 2403,
+      "by_reason": {
+        "other_pathology": 1295,
+        "treated": 1063,
+        "stage_0": 45
+      }
+    },
+    "reasons": {
+      "other_pathology": "not ROP \u2014 hemorrhage, toxoplasma, hamartoma, optic-nerve hypoplasia; these are the 43% of the binary corpus's 'ROP-positive' that is not ROP",
+      "treated": "st.p. ROP (status post \u2014 treated or regressed). Post-treatment appearance is not an ICROP stage; including it would teach the model to call treated eyes diseased at whatever stage they once were",
+      "stage_0": "ICROP stage 0 is immature retina WITHOUT ROP \u2014 it belongs with normal or nowhere, and at 45 images cannot support its own class"
+    }
+  },
+  "layer_3_analysis_sets": {
+    "sets": {
+      "multiview_dev": {
+        "images": 663,
+        "infants": 116
+      },
+      "multiview_locked": {
+        "images": 661,
+        "infants": 116
+      },
+      "train_cv": {
+        "images": 6700,
+        "infants": 1528
+      }
+    },
+    "note": "multiview_locked has never been opened. multiview_dev is the only held-out set inspected during development; the CV pool is split patient-grouped into 5 folds plus a leave-Shenzhen-out site fold."
+  },
+  "layer_4_frame_caps_in_cv_pool": {
+    "pool_images": 6700,
+    "trained_on": 3112,
+    "capped_out": 3588,
+    "rule": "at most 20 frames per infant per class, and at most 2 normal frames per infant. Ostrava images every infant repeatedly in one session, so without a cap a handful of infants would supply most of the gradient.",
+    "capped_by_class": {
+      "normal": 2728,
+      "arop": 450,
+      "stage_2": 263,
+      "stage_3": 85,
+      "stage_1": 62
+    },
+    "note": "Capped frames are excluded from TRAINING only. Validation scores every eligible image in the fold, which is why AP-ROP validation is dominated by one heavily-imaged infant even though training is not."
+  },
+  "headline": "13037 images acquired -> 10427 with ICROP stage labels -> 8024 eligible for the 6-class task (1760 infants) -> 3112 used for training after per-infant frame caps."
+}

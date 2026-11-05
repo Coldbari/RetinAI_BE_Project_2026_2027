@@ -1,0 +1,153 @@
+{
+  "arch": "effnetv2s",
+  "seed": 1337,
+  "epochs": 20,
+  "folds_requested": 3,
+  "folds_completed": 3,
+  "folds": {
+    "fold_0": {
+      "macro_f1": 0.5767168996631038,
+      "accuracy": 0.6848018923713779,
+      "balanced_accuracy": 0.6744350424774743,
+      "qwk": 0.6024775364215301,
+      "auc": 0.9143127919560522,
+      "per_class": {
+        "Normal": {
+          "precision": 0.832779623477298,
+          "recall": 0.9804432855280313,
+          "f1": 0.9005988023952096,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.32160804020100503,
+          "recall": 0.46715328467153283,
+          "f1": 0.38095238095238093,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.32116788321167883,
+          "recall": 0.5398773006134969,
+          "f1": 0.40274599542334094,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.7956204379562044,
+          "recall": 0.8449612403100775,
+          "f1": 0.8195488721804511,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.375,
+          "recall": 0.9473684210526315,
+          "f1": 0.5373134328358209,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9769230769230769,
+          "recall": 0.2668067226890756,
+          "f1": 0.41914191419141916,
+          "support": 476
+        }
+      },
+      "dir": "results/experiment_001_staging_effnetv2s_fold0_s1337_natural"
+    },
+    "fold_1": {
+      "macro_f1": 0.7538526368689841,
+      "accuracy": 0.8178913738019169,
+      "balanced_accuracy": 0.7699513645369663,
+      "qwk": 0.8684317039142089,
+      "auc": 0.921435977027519,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8975308641975308,
+          "recall": 0.9616402116402116,
+          "f1": 0.9284802043422733,
+          "support": 756
+        },
+        "Stage 1": {
+          "precision": 0.4076923076923077,
+          "recall": 0.4649122807017544,
+          "f1": 0.4344262295081967,
+          "support": 114
+        },
+        "Stage 2": {
+          "precision": 0.7361963190184049,
+          "recall": 0.5454545454545454,
+          "f1": 0.6266318537859008,
+          "support": 220
+        },
+        "Stage 3": {
+          "precision": 0.8404255319148937,
+          "recall": 0.6810344827586207,
+          "f1": 0.7523809523809524,
+          "support": 116
+        },
+        "Stage 4/5": {
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8888888888888888,
+          "support": 16
+        },
+        "AP-ROP": {
+          "precision": 0.8285714285714286,
+          "recall": 0.9666666666666667,
+          "f1": 0.8923076923076924,
+          "support": 30
+        }
+      },
+      "dir": "results/experiment_002_staging_effnetv2s_fold1_s1337_natural"
+    },
+    "fold_2": {
+      "macro_f1": 0.5593717866532503,
+      "accuracy": 0.7452076677316294,
+      "balanced_accuracy": 0.6195858815630078,
+      "qwk": 0.8151032724606881,
+      "auc": 0.8295760786280805,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9819193324061196,
+          "recall": 0.9145077720207254,
+          "f1": 0.9470154258886653,
+          "support": 772
+        },
+        "Stage 1": {
+          "precision": 0.33774834437086093,
+          "recall": 0.4146341463414634,
+          "f1": 0.3722627737226277,
+          "support": 123
+        },
+        "Stage 2": {
+          "precision": 0.48214285714285715,
+          "recall": 0.5595854922279793,
+          "f1": 0.5179856115107914,
+          "support": 193
+        },
+        "Stage 3": {
+          "precision": 0.5192307692307693,
+          "recall": 0.24545454545454545,
+          "f1": 0.3333333333333333,
+          "support": 110
+        },
+        "Stage 4/5": {
+          "precision": 0.6666666666666666,
+          "recall": 0.8888888888888888,
+          "f1": 0.7619047619047619,
+          "support": 18
+        },
+        "AP-ROP": {
+          "precision": 0.3048780487804878,
+          "recall": 0.6944444444444444,
+          "f1": 0.423728813559322,
+          "support": 36
+        }
+      },
+      "dir": "results/experiment_003_staging_effnetv2s_fold2_s1337_natural"
+    }
+  },
+  "cv_macro_f1_mean": 0.63,
+  "cv_macro_f1_sd": 0.1076,
+  "cv_balanced_accuracy_mean": 0.688,
+  "cv_balanced_accuracy_sd": 0.0761,
+  "cv_qwk_mean": 0.762,
+  "cv_qwk_sd": 0.1407
+}

@@ -1,0 +1,159 @@
+{
+  "manifest": "manifest.csv",
+  "images": 6004,
+  "unmatched": 0,
+  "join_key": "infant ID + serie number + device",
+  "by_label": {
+    "0": {
+      "name": "No ROP",
+      "images": 2980,
+      "distinct_dg_codes": 1,
+      "codes": [
+        {
+          "dg": "0",
+          "meaning": "physiological",
+          "images": 2980,
+          "infants": 135
+        }
+      ]
+    },
+    "1": {
+      "name": "ROP Detected",
+      "images": 3024,
+      "distinct_dg_codes": 10,
+      "codes": [
+        {
+          "dg": "11",
+          "meaning": "hemorrhage",
+          "images": 1061,
+          "infants": 35
+        },
+        {
+          "dg": "8",
+          "meaning": "AP-ROP",
+          "images": 470,
+          "infants": 1
+        },
+        {
+          "dg": "3",
+          "meaning": "ROP stage 2",
+          "images": 458,
+          "infants": 11
+        },
+        {
+          "dg": "9",
+          "meaning": "st.p. ROP (status post \u2014 treated/regressed)",
+          "images": 379,
+          "infants": 13
+        },
+        {
+          "dg": "2",
+          "meaning": "ROP stage 1",
+          "images": 252,
+          "infants": 12
+        },
+        {
+          "dg": "4",
+          "meaning": "ROP stage 3",
+          "images": 125,
+          "infants": 2
+        },
+        {
+          "dg": "13",
+          "meaning": "toxoplasma",
+          "images": 114,
+          "infants": 1
+        },
+        {
+          "dg": "10",
+          "meaning": "hamartoms",
+          "images": 72,
+          "infants": 2
+        },
+        {
+          "dg": "12",
+          "meaning": "hypoplasia n.II",
+          "images": 48,
+          "infants": 2
+        },
+        {
+          "dg": "1",
+          "meaning": "ROP stage 0",
+          "images": 45,
+          "infants": 4
+        }
+      ]
+    }
+  },
+  "composition": {
+    "healthy": {
+      "images": 2980,
+      "infants": 135
+    },
+    "true_rop_codes_1_9": {
+      "images": 1729,
+      "infants": 20
+    },
+    "not_rop_codes_10_13": {
+      "images": 1295,
+      "infants": 40
+    },
+    "not_rop_share_of_positive": 0.4282
+  },
+  "icrop_stages": {
+    "ROP stage 0": {
+      "images": 45,
+      "infants": 4
+    },
+    "ROP stage 1": {
+      "images": 252,
+      "infants": 12
+    },
+    "ROP stage 2": {
+      "images": 458,
+      "infants": 11
+    },
+    "ROP stage 3": {
+      "images": 125,
+      "infants": 2
+    },
+    "ROP stage 4a": {
+      "images": 0,
+      "infants": 0
+    },
+    "ROP stage 4b": {
+      "images": 0,
+      "infants": 0
+    },
+    "ROP stage 5": {
+      "images": 0,
+      "infants": 0
+    },
+    "AP-ROP": {
+      "images": 470,
+      "infants": 1
+    },
+    "st.p. ROP (status post \u2014 treated/regressed)": {
+      "images": 379,
+      "infants": 13
+    }
+  },
+  "positive_concentration": {
+    "positive_images": 3024,
+    "positive_infants": 60,
+    "median_images_per_infant": 31,
+    "largest_infant_images": 470,
+    "largest_infant_share": 0.1554,
+    "top8_share": 0.4567
+  },
+  "plus_disease": {
+    "normal": {
+      "images": 5375,
+      "infants": 187
+    },
+    "plus": {
+      "images": 629,
+      "infants": 3
+    }
+  }
+}

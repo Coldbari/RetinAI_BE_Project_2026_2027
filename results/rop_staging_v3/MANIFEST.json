@@ -1,0 +1,69 @@
+{
+  "arm": "B",
+  "protocol": "docs/paper/PROTOCOL_V2.md",
+  "model": "DINOv2 ViT-S/14, 5-fold ensemble, seed 42",
+  "arch": "dinov2_s (timm vit_small_patch14_reg4_dinov2.lvd142m, 392 px, 6-class head)",
+  "seed": 42,
+  "ensemble": "mean_prob",
+  "config": "configs/rop_staging_deploy.yaml",
+  "training_config": "configs/rop_staging_dinov2.yaml",
+  "commit": "3f7b79f",
+  "folds": [
+    {
+      "fold": 0,
+      "file": "results/rop_staging_v3/dinov2_s42_fold0.pth",
+      "source_experiment": "kaggle_cache/v3/rop-v3-dinov2-s-s42-lr1e-4/code/results/experiment_001_v3_dinov2_s_fold0_s42",
+      "sha256": "d6daf695408992f1f301e4402b4631a1e555b5f7cf844d78481a90f184c3be97",
+      "bytes": 87406109
+    },
+    {
+      "fold": 1,
+      "file": "results/rop_staging_v3/dinov2_s42_fold1.pth",
+      "source_experiment": "kaggle_cache/v3/rop-v3-dinov2-s-s42-lr1e-4/code/results/experiment_002_v3_dinov2_s_fold1_s42",
+      "sha256": "ccc4fd77c98ce355f8da85d75e6e7e7be4da34c40ad4f5c407ddbf9aff4d419a",
+      "bytes": 87406109
+    },
+    {
+      "fold": 2,
+      "file": "results/rop_staging_v3/dinov2_s42_fold2.pth",
+      "source_experiment": "kaggle_cache/v3/rop-v3-dinov2-s-s42-lr1e-4/code/results/experiment_003_v3_dinov2_s_fold2_s42",
+      "sha256": "c04263fdbfa7f49185c0ff2f23d4e0721350c7ae8d92e3561d2302a0afd2fe07",
+      "bytes": 87406109
+    },
+    {
+      "fold": 3,
+      "file": "results/rop_staging_v3/dinov2_s42_fold3.pth",
+      "source_experiment": "kaggle_cache/v3/rop-v3-dinov2-s-s42-lr1e-4/code/results/experiment_004_v3_dinov2_s_fold3_s42",
+      "sha256": "dd59e58540269329ae338f7b160530fc6ac8a47f2358bc9f9932386782f38cc5",
+      "bytes": 87406109
+    },
+    {
+      "fold": 4,
+      "file": "results/rop_staging_v3/dinov2_s42_fold4.pth",
+      "source_experiment": "kaggle_cache/v3/rop-v3-dinov2-s-s42-lr1e-4/code/results/experiment_005_v3_dinov2_s_fold4_s42",
+      "sha256": "f8d0bd727b830a1ff43996f926e696b6d7299d33097f15b1f5d3ae3e89b81fa2",
+      "bytes": 87406109
+    }
+  ],
+  "deployed_configuration_scores": {
+    "site": "new hospital (development half)",
+    "unit": "eye",
+    "n_eyes": 230,
+    "n_images": 663,
+    "qwk_5class": 0.752,
+    "accuracy": 0.639,
+    "macro_f1": 0.568,
+    "single_checkpoint_qwk_5class": [
+      0.745,
+      0.774
+    ],
+    "any_rop_sensitivity": 0.656,
+    "any_rop_specificity": 1.0,
+    "severe_sensitivity": 0.924,
+    "any_rop_sensitivity_image": 0.314
+  },
+  "operating_point": {
+    "source": "results/rop/v3/v3_scores.json",
+    "key": "arms.B.seeds.42.operating_point.cv.threshold"
+  }
+}

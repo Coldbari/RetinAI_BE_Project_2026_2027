@@ -1,0 +1,30 @@
+{
+  "seed": 42,
+  "n_folds": 5,
+  "test_site": "multiview",
+  "site_val": "shenzhen",
+  "caps": {
+    "normal": 2,
+    "_default": 20
+  },
+  "train_pool": {
+    "normal": 1109,
+    "stage_1": 515,
+    "stage_2": 696,
+    "stage_3": 535,
+    "stage_4_5": 89,
+    "arop": 168
+  },
+  "train_infants": 1528,
+  "imbalance_ratio": 12.46,
+  "test": {
+    "multiview_dev": {
+      "images": 663,
+      "infants": 116
+    },
+    "multiview_locked": {
+      "images": 661,
+      "infants": 116
+    }
+  }
+}

@@ -1,0 +1,1644 @@
+{
+  "what": "CPU-only statistics for the ROP preprint, re-scored from saved predictions. No inference; test_locked's saved arrays are re-scored, never re-opened.",
+  "reproduction_check": {
+    "headline": {
+      "structured_s42_image_qwk": {
+        "expected": 0.523,
+        "reproduced": 0.5232,
+        "match_3dp": true
+      },
+      "structured_s42_eye_qwk": {
+        "expected": 0.801,
+        "reproduced": 0.8012,
+        "match_3dp": true
+      }
+    },
+    "locked_table_fields_checked": 52,
+    "dev_table_fields_checked": 44,
+    "mismatches": [],
+    "passed": true,
+    "note": "includes the committed image-level clustered QWK and macro-F1 CIs: same draws as rop_locked_eval.cluster_ci, so they must agree exactly."
+  },
+  "A_locked_clustered_bootstrap": {
+    "set": "test_locked (661 images, 116 infants, 230 eyes) - saved predictions only",
+    "cells": {
+      "structured_s42": {
+        "point_5ckpt": {
+          "image": {
+            "qwk": {
+              "mean": 0.5232,
+              "sd": 0.0179
+            },
+            "accuracy": {
+              "mean": 0.5204,
+              "sd": 0.015
+            },
+            "macro_f1_present": {
+              "mean": 0.4116,
+              "sd": 0.0492
+            },
+            "macro_f1_6label": {
+              "mean": 0.4116,
+              "sd": 0.0492
+            },
+            "macro_f1_classes_ge30": {
+              "mean": 0.4313,
+              "sd": 0.0201
+            },
+            "kappa_unweighted": {
+              "mean": 0.3196,
+              "sd": 0.0205
+            },
+            "stage123_images_called_normal": {
+              "mean": 0.4886,
+              "sd": 0.01
+            }
+          },
+          "eye": {
+            "qwk": {
+              "mean": 0.8012,
+              "sd": 0.0277
+            },
+            "accuracy": {
+              "mean": 0.6461,
+              "sd": 0.0244
+            },
+            "macro_f1_present": {
+              "mean": 0.5619,
+              "sd": 0.0548
+            },
+            "stage123_eyes_called_normal": {
+              "mean": 0.1783,
+              "sd": 0.0089
+            },
+            "kappa_unweighted": {
+              "mean": 0.5267,
+              "sd": 0.031
+            }
+          },
+          "eye_minus_image_qwk": {
+            "mean": 0.2781,
+            "sd": 0.0338
+          },
+          "n_images": 661,
+          "n_infants": 116,
+          "n_eyes": 230,
+          "n_stage123_eyes": 147,
+          "n_stage123_images": 413
+        },
+        "ci95_clustered": {
+          "image_qwk": {
+            "ci95": [
+              0.433,
+              0.5944
+            ]
+          },
+          "image_accuracy": {
+            "ci95": [
+              0.4457,
+              0.59
+            ]
+          },
+          "image_macro_f1_present": {
+            "ci95": [
+              0.3431,
+              0.479
+            ]
+          },
+          "image_kappa_unweighted": {
+            "ci95": [
+              0.2549,
+              0.3815
+            ]
+          },
+          "image_stage123_called_normal": {
+            "ci95": [
+              0.4257,
+              0.5499
+            ]
+          },
+          "eye_qwk": {
+            "ci95": [
+              0.7304,
+              0.8568
+            ]
+          },
+          "eye_accuracy": {
+            "ci95": [
+              0.5775,
+              0.7117
+            ]
+          },
+          "eye_macro_f1_present": {
+            "ci95": [
+              0.4814,
+              0.6511
+            ]
+          },
+          "eye_kappa_unweighted": {
+            "ci95": [
+              0.4443,
+              0.6055
+            ]
+          },
+          "eye_stage123_called_normal": {
+            "ci95": [
+              0.118,
+              0.2514
+            ]
+          },
+          "eye_minus_image_qwk": {
+            "ci95": [
+              0.2194,
+              0.3396
+            ],
+            "replicates_with_diff_le_0": 0
+          }
+        }
+      },
+      "structured_s1337": {
+        "point_5ckpt": {
+          "image": {
+            "qwk": {
+              "mean": 0.5085,
+              "sd": 0.0158
+            },
+            "accuracy": {
+              "mean": 0.5125,
+              "sd": 0.0139
+            },
+            "macro_f1_present": {
+              "mean": 0.3925,
+              "sd": 0.0243
+            },
+            "macro_f1_6label": {
+              "mean": 0.3925,
+              "sd": 0.0243
+            },
+            "macro_f1_classes_ge30": {
+              "mean": 0.4209,
+              "sd": 0.0234
+            },
+            "kappa_unweighted": {
+              "mean": 0.3066,
+              "sd": 0.0216
+            },
+            "stage123_images_called_normal": {
+              "mean": 0.5085,
+              "sd": 0.024
+            }
+          },
+          "eye": {
+            "qwk": {
+              "mean": 0.7907,
+              "sd": 0.013
+            },
+            "accuracy": {
+              "mean": 0.6269,
+              "sd": 0.0158
+            },
+            "macro_f1_present": {
+              "mean": 0.5297,
+              "sd": 0.0467
+            },
+            "stage123_eyes_called_normal": {
+              "mean": 0.2,
+              "sd": 0.0184
+            },
+            "kappa_unweighted": {
+              "mean": 0.5006,
+              "sd": 0.0211
+            }
+          },
+          "eye_minus_image_qwk": {
+            "mean": 0.2822,
+            "sd": 0.0223
+          },
+          "n_images": 661,
+          "n_infants": 116,
+          "n_eyes": 230,
+          "n_stage123_eyes": 147,
+          "n_stage123_images": 413
+        },
+        "ci95_clustered": {
+          "image_qwk": {
+            "ci95": [
+              0.417,
+              0.5806
+            ]
+          },
+          "image_accuracy": {
+            "ci95": [
+              0.4356,
+              0.5849
+            ]
+          },
+          "image_macro_f1_present": {
+            "ci95": [
+              0.3124,
+              0.4678
+            ]
+          },
+          "image_kappa_unweighted": {
+            "ci95": [
+              0.2414,
+              0.3695
+            ]
+          },
+          "image_stage123_called_normal": {
+            "ci95": [
+              0.4419,
+              0.5722
+            ]
+          },
+          "eye_qwk": {
+            "ci95": [
+              0.7142,
+              0.8452
+            ]
+          },
+          "eye_accuracy": {
+            "ci95": [
+              0.5524,
+              0.6952
+            ]
+          },
+          "eye_macro_f1_present": {
+            "ci95": [
+              0.4217,
+              0.6307
+            ]
+          },
+          "eye_kappa_unweighted": {
+            "ci95": [
+              0.412,
+              0.5843
+            ]
+          },
+          "eye_stage123_called_normal": {
+            "ci95": [
+              0.1376,
+              0.2732
+            ]
+          },
+          "eye_minus_image_qwk": {
+            "ci95": [
+              0.2228,
+              0.3434
+            ],
+            "replicates_with_diff_le_0": 0
+          }
+        }
+      },
+      "flat_s42": {
+        "point_5ckpt": {
+          "image": {
+            "qwk": {
+              "mean": 0.5606,
+              "sd": 0.0225
+            },
+            "accuracy": {
+              "mean": 0.5241,
+              "sd": 0.0166
+            },
+            "macro_f1_present": {
+              "mean": 0.4502,
+              "sd": 0.0313
+            },
+            "macro_f1_6label": {
+              "mean": 0.4502,
+              "sd": 0.0313
+            },
+            "macro_f1_classes_ge30": {
+              "mean": 0.4334,
+              "sd": 0.0266
+            },
+            "kappa_unweighted": {
+              "mean": 0.3292,
+              "sd": 0.0234
+            },
+            "stage123_images_called_normal": {
+              "mean": 0.476,
+              "sd": 0.0186
+            }
+          },
+          "eye": {
+            "qwk": {
+              "mean": 0.7948,
+              "sd": 0.0065
+            },
+            "accuracy": {
+              "mean": 0.6348,
+              "sd": 0.0313
+            },
+            "macro_f1_present": {
+              "mean": 0.5709,
+              "sd": 0.0346
+            },
+            "stage123_eyes_called_normal": {
+              "mean": 0.1715,
+              "sd": 0.0212
+            },
+            "kappa_unweighted": {
+              "mean": 0.5149,
+              "sd": 0.0408
+            }
+          },
+          "eye_minus_image_qwk": {
+            "mean": 0.2342,
+            "sd": 0.021
+          },
+          "n_images": 661,
+          "n_infants": 116,
+          "n_eyes": 230,
+          "n_stage123_eyes": 147,
+          "n_stage123_images": 413
+        },
+        "ci95_clustered": {
+          "image_qwk": {
+            "ci95": [
+              0.4639,
+              0.6352
+            ]
+          },
+          "image_accuracy": {
+            "ci95": [
+              0.4499,
+              0.596
+            ]
+          },
+          "image_macro_f1_present": {
+            "ci95": [
+              0.3783,
+              0.5153
+            ]
+          },
+          "image_kappa_unweighted": {
+            "ci95": [
+              0.2649,
+              0.3926
+            ]
+          },
+          "image_stage123_called_normal": {
+            "ci95": [
+              0.4122,
+              0.5383
+            ]
+          },
+          "eye_qwk": {
+            "ci95": [
+              0.7245,
+              0.8501
+            ]
+          },
+          "eye_accuracy": {
+            "ci95": [
+              0.5669,
+              0.6991
+            ]
+          },
+          "eye_macro_f1_present": {
+            "ci95": [
+              0.4941,
+              0.6523
+            ]
+          },
+          "eye_kappa_unweighted": {
+            "ci95": [
+              0.4324,
+              0.5921
+            ]
+          },
+          "eye_stage123_called_normal": {
+            "ci95": [
+              0.1127,
+              0.2411
+            ]
+          },
+          "eye_minus_image_qwk": {
+            "ci95": [
+              0.1801,
+              0.2969
+            ],
+            "replicates_with_diff_le_0": 0
+          }
+        }
+      },
+      "flat_s1337": {
+        "point_5ckpt": {
+          "image": {
+            "qwk": {
+              "mean": 0.5527,
+              "sd": 0.0184
+            },
+            "accuracy": {
+              "mean": 0.5265,
+              "sd": 0.0163
+            },
+            "macro_f1_present": {
+              "mean": 0.4593,
+              "sd": 0.0264
+            },
+            "macro_f1_6label": {
+              "mean": 0.4593,
+              "sd": 0.0264
+            },
+            "macro_f1_classes_ge30": {
+              "mean": 0.435,
+              "sd": 0.0241
+            },
+            "kappa_unweighted": {
+              "mean": 0.3298,
+              "sd": 0.0213
+            },
+            "stage123_images_called_normal": {
+              "mean": 0.4954,
+              "sd": 0.007
+            }
+          },
+          "eye": {
+            "qwk": {
+              "mean": 0.7933,
+              "sd": 0.0213
+            },
+            "accuracy": {
+              "mean": 0.6304,
+              "sd": 0.0254
+            },
+            "macro_f1_present": {
+              "mean": 0.5739,
+              "sd": 0.0365
+            },
+            "stage123_eyes_called_normal": {
+              "mean": 0.1932,
+              "sd": 0.0037
+            },
+            "kappa_unweighted": {
+              "mean": 0.5077,
+              "sd": 0.032
+            }
+          },
+          "eye_minus_image_qwk": {
+            "mean": 0.2406,
+            "sd": 0.0252
+          },
+          "n_images": 661,
+          "n_infants": 116,
+          "n_eyes": 230,
+          "n_stage123_eyes": 147,
+          "n_stage123_images": 413
+        },
+        "ci95_clustered": {
+          "image_qwk": {
+            "ci95": [
+              0.4556,
+              0.6286
+            ]
+          },
+          "image_accuracy": {
+            "ci95": [
+              0.4515,
+              0.5982
+            ]
+          },
+          "image_macro_f1_present": {
+            "ci95": [
+              0.3781,
+              0.5354
+            ]
+          },
+          "image_kappa_unweighted": {
+            "ci95": [
+              0.2624,
+              0.396
+            ]
+          },
+          "image_stage123_called_normal": {
+            "ci95": [
+              0.4292,
+              0.5599
+            ]
+          },
+          "eye_qwk": {
+            "ci95": [
+              0.7215,
+              0.8498
+            ]
+          },
+          "eye_accuracy": {
+            "ci95": [
+              0.5602,
+              0.6969
+            ]
+          },
+          "eye_macro_f1_present": {
+            "ci95": [
+              0.4901,
+              0.667
+            ]
+          },
+          "eye_kappa_unweighted": {
+            "ci95": [
+              0.4246,
+              0.5872
+            ]
+          },
+          "eye_stage123_called_normal": {
+            "ci95": [
+              0.129,
+              0.2705
+            ]
+          },
+          "eye_minus_image_qwk": {
+            "ci95": [
+              0.1848,
+              0.3041
+            ],
+            "replicates_with_diff_le_0": 0
+          }
+        }
+      }
+    },
+    "definitions": {
+      "eye": "(patient_id, Left/Right) from the Multi-View Acquisition View Table; eye label = max view label, eye prediction = max view prediction (hard class index), exactly rop_locked_eval.eye_metrics",
+      "eye_macro_f1_present": "macro-F1 over the classes present in the (resampled) eye labels",
+      "stage123_eyes_called_normal": "share of eyes whose eye label is stage 1-3 and whose eye prediction is Normal",
+      "point_estimates": "mean (sd) over the 5 fold checkpoints of the per-checkpoint metric; image/eye metric means are of 4-dp per-checkpoint values, as in locked_table.json"
+    }
+  },
+  "B_dev_image_vs_eye_qwk": {
+    "available": true,
+    "source": "results/rop/dev_eval/*.npz (saved by rop_locked_eval.py --set dev)",
+    "cells": {
+      "structured_s42": {
+        "image_qwk": {
+          "mean": 0.4049,
+          "sd": 0.0099
+        },
+        "eye_qwk": {
+          "mean": 0.7206,
+          "sd": 0.021
+        },
+        "eye_minus_image_qwk": {
+          "mean": 0.3157,
+          "sd": 0.0234
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1722,
+          "sd": 0.021
+        },
+        "stage123_images_called_normal": {
+          "mean": 0.5335,
+          "sd": 0.0117
+        },
+        "n_images": 663,
+        "n_eyes": 230
+      },
+      "structured_s1337": {
+        "image_qwk": {
+          "mean": 0.3977,
+          "sd": 0.0194
+        },
+        "eye_qwk": {
+          "mean": 0.7215,
+          "sd": 0.0241
+        },
+        "eye_minus_image_qwk": {
+          "mean": 0.3238,
+          "sd": 0.0189
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1826,
+          "sd": 0.0167
+        },
+        "stage123_images_called_normal": {
+          "mean": 0.5489,
+          "sd": 0.0176
+        },
+        "n_images": 663,
+        "n_eyes": 230
+      },
+      "flat_s42": {
+        "image_qwk": {
+          "mean": 0.4368,
+          "sd": 0.0245
+        },
+        "eye_qwk": {
+          "mean": 0.7101,
+          "sd": 0.0331
+        },
+        "eye_minus_image_qwk": {
+          "mean": 0.2733,
+          "sd": 0.0354
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1514,
+          "sd": 0.0063
+        },
+        "stage123_images_called_normal": {
+          "mean": 0.5225,
+          "sd": 0.0226
+        },
+        "n_images": 663,
+        "n_eyes": 230
+      },
+      "flat_s1337": {
+        "image_qwk": {
+          "mean": 0.4388,
+          "sd": 0.0128
+        },
+        "eye_qwk": {
+          "mean": 0.727,
+          "sd": 0.0208
+        },
+        "eye_minus_image_qwk": {
+          "mean": 0.2882,
+          "sd": 0.0258
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1757,
+          "sd": 0.0251
+        },
+        "stage123_images_called_normal": {
+          "mean": 0.5331,
+          "sd": 0.0079
+        },
+        "n_images": 663,
+        "n_eyes": 230
+      }
+    }
+  },
+  "C_unweighted_kappa": {
+    "cv_pooled_from_kappa_unweighted_vs_human_json": {
+      "values": {
+        "seed_42": {
+          "n": 6700,
+          "kappa_unweighted": 0.6549,
+          "kappa_linear": 0.7312,
+          "kappa_quadratic": 0.761
+        },
+        "seed_1337": {
+          "n": 6700,
+          "kappa_unweighted": 0.6806,
+          "kappa_linear": 0.754,
+          "kappa_quadratic": 0.7832
+        },
+        "seed_42_stage_only": {
+          "n": 6058,
+          "kappa_unweighted": 0.7014,
+          "kappa_quadratic": 0.8969
+        }
+      },
+      "definition": "Cohen's kappa between the structured head (natural sampling) and the released labels, pooled out of fold: the 5 CV val folds concatenated (n=6,700 images, per IMAGE). stage_only = images where neither the label nor the prediction is AP-ROP (n=6,058). Definition re-derived here from staging_runs/structured_5fold*/fold_*.npz.",
+      "rederived": {
+        "seed_42": 0.6549,
+        "seed_42_stage_only": 0.7014,
+        "seed_1337": 0.6806
+      },
+      "rederived_match": true,
+      "human_benchmark": {
+        "inter_expert_stage_fleiss_kappa": 0.24,
+        "intra_expert_stage_cohen_kappa": 0.56,
+        "inter_expert_aprop_kappa": 0.35,
+        "stage_disagreement_rate": 0.4,
+        "type1_disease_agreement": ">0.95",
+        "sources": [
+          "Gschliesser et al., Am J Ophthalmol 2015;160(3):553-560 (PMID 26004406)",
+          "Campbell et al., Ophthalmology 2016;123(8):1795-1801 (PMID 27238376)"
+        ]
+      },
+      "not_a_superiority_claim": "Fleiss kappa among 7 mutually-disagreeing experts is a different quantity from Cohen kappa between one model and one institution's coding practice. We report both to show the reference standard is a moving target, never to claim superhuman agreement."
+    },
+    "locked_half_per_image_and_per_eye": {
+      "structured_s42": {
+        "image": {
+          "point_5ckpt": {
+            "mean": 0.3196,
+            "sd": 0.0205
+          },
+          "ci95_clustered": [
+            0.2549,
+            0.3815
+          ]
+        },
+        "eye": {
+          "point_5ckpt": {
+            "mean": 0.5267,
+            "sd": 0.031
+          },
+          "ci95_clustered": [
+            0.4443,
+            0.6055
+          ]
+        }
+      },
+      "structured_s1337": {
+        "image": {
+          "point_5ckpt": {
+            "mean": 0.3066,
+            "sd": 0.0216
+          },
+          "ci95_clustered": [
+            0.2414,
+            0.3695
+          ]
+        },
+        "eye": {
+          "point_5ckpt": {
+            "mean": 0.5006,
+            "sd": 0.0211
+          },
+          "ci95_clustered": [
+            0.412,
+            0.5843
+          ]
+        }
+      },
+      "flat_s42": {
+        "image": {
+          "point_5ckpt": {
+            "mean": 0.3292,
+            "sd": 0.0234
+          },
+          "ci95_clustered": [
+            0.2649,
+            0.3926
+          ]
+        },
+        "eye": {
+          "point_5ckpt": {
+            "mean": 0.5149,
+            "sd": 0.0408
+          },
+          "ci95_clustered": [
+            0.4324,
+            0.5921
+          ]
+        }
+      },
+      "flat_s1337": {
+        "image": {
+          "point_5ckpt": {
+            "mean": 0.3298,
+            "sd": 0.0213
+          },
+          "ci95_clustered": [
+            0.2624,
+            0.396
+          ]
+        },
+        "eye": {
+          "point_5ckpt": {
+            "mean": 0.5077,
+            "sd": 0.032
+          },
+          "ci95_clustered": [
+            0.4246,
+            0.5872
+          ]
+        }
+      }
+    },
+    "locked_note": "computed here from the saved locked arrays (sklearn cohen_kappa_score, unweighted); kappa_unweighted_vs_human.json holds no held-out or per-eye values."
+  },
+  "D_head_equivalence_tost": {
+    "metric": "macro-F1 over all 6 labels (matched_equivalence.fold_metrics, present_only=False); every CV val fold contains all 6 classes, so this equals present-class macro-F1 here. Natural sampling, both heads.",
+    "source": "results/rop/matched_equivalence.json seeds.*.per_fold",
+    "rederived_from_npz_all_match": true,
+    "pairs": [
+      {
+        "seed": 42,
+        "fold": 0,
+        "structured": 0.5527,
+        "flat_natural": 0.5451,
+        "diff_structured_minus_flat": 0.0076
+      },
+      {
+        "seed": 42,
+        "fold": 1,
+        "structured": 0.7573,
+        "flat_natural": 0.7521,
+        "diff_structured_minus_flat": 0.0052
+      },
+      {
+        "seed": 42,
+        "fold": 2,
+        "structured": 0.6712,
+        "flat_natural": 0.6556,
+        "diff_structured_minus_flat": 0.0156
+      },
+      {
+        "seed": 42,
+        "fold": 3,
+        "structured": 0.7184,
+        "flat_natural": 0.7454,
+        "diff_structured_minus_flat": -0.027
+      },
+      {
+        "seed": 42,
+        "fold": 4,
+        "structured": 0.7616,
+        "flat_natural": 0.7904,
+        "diff_structured_minus_flat": -0.0288
+      },
+      {
+        "seed": 1337,
+        "fold": 0,
+        "structured": 0.5464,
+        "flat_natural": 0.5767,
+        "diff_structured_minus_flat": -0.0303
+      },
+      {
+        "seed": 1337,
+        "fold": 1,
+        "structured": 0.7687,
+        "flat_natural": 0.7539,
+        "diff_structured_minus_flat": 0.0148
+      },
+      {
+        "seed": 1337,
+        "fold": 2,
+        "structured": 0.6908,
+        "flat_natural": 0.5594,
+        "diff_structured_minus_flat": 0.1314
+      },
+      {
+        "seed": 1337,
+        "fold": 3,
+        "structured": 0.7554,
+        "flat_natural": 0.7882,
+        "diff_structured_minus_flat": -0.0328
+      },
+      {
+        "seed": 1337,
+        "fold": 4,
+        "structured": 0.7783,
+        "flat_natural": 0.7494,
+        "diff_structured_minus_flat": 0.0289
+      }
+    ],
+    "n_pairs": 10,
+    "mean_diff": 0.0085,
+    "sd_diff": 0.0489,
+    "margin": 0.05,
+    "naive_paired_t": {
+      "variance": "naive: s^2/n, treats the 10 pairs as independent",
+      "se": 0.0155,
+      "df": 9,
+      "ci95_t": [
+        -0.0265,
+        0.0434
+      ],
+      "ci90_t_tost_equivalent": [
+        -0.0199,
+        0.0368
+      ],
+      "p_lower_H0_diff_le_minus_margin": 0.00216,
+      "p_upper_H0_diff_ge_plus_margin": 0.01243,
+      "tost_p": 0.01243,
+      "equivalent_at_alpha_0.05": true
+    },
+    "corrected_resampled_t": {
+      "variance": "Nadeau-Bengio / Bouckaert-Frank corrected repeated-CV variance (1/n + n_test/n_train) s^2 with n_test/n_train = 1/4",
+      "se": 0.0289,
+      "df": 9,
+      "ci95_t": [
+        -0.0569,
+        0.0738
+      ],
+      "ci90_t_tost_equivalent": [
+        -0.0445,
+        0.0614
+      ],
+      "p_lower_H0_diff_le_minus_margin": 0.03691,
+      "p_upper_H0_diff_ge_plus_margin": 0.09227,
+      "tost_p": 0.09227,
+      "equivalent_at_alpha_0.05": false
+    },
+    "caveat": "The 10 differences are not independent: within a seed the 5 training sets overlap by 3/4, and both seeds reuse the same folds. The naive t understates the variance; the corrected test is the conservative reading."
+  },
+  "E_cohort": {
+    "built_from": "committed fold_{0..4}.csv val rows (= CV pool) + test_dev.csv + test_locked.csv; no manifest or splits.csv needed",
+    "sources": {
+      "ostrava": {
+        "images": 4285,
+        "infant_ids": 148,
+        "per_class": {
+          "normal": 2980,
+          "stage_1": 252,
+          "stage_2": 458,
+          "stage_3": 125,
+          "stage_4_5": 0,
+          "arop": 470
+        },
+        "country": "Czechia (Ostrava)",
+        "label_unit": "per session",
+        "cameras": {
+          "phoenix_icon": 1946,
+          "clarity_retcam3": 1428,
+          "retcam_envision": 911
+        },
+        "label_unit_evidence": {
+          "how": "DG code per (ID, device, serie) from docs/infant_retinal_database_info.csv, stamped on every frame of the session",
+          "sessions": {
+            "units": 342,
+            "single_label": 342,
+            "frac_single_label": 1.0
+          }
+        }
+      },
+      "shenzhen": {
+        "images": 740,
+        "infant_ids": 397,
+        "per_class": {
+          "normal": 234,
+          "stage_1": 89,
+          "stage_2": 163,
+          "stage_3": 254,
+          "stage_4_5": 0,
+          "arop": 0
+        },
+        "country": "China (Shenzhen Eye Hospital)",
+        "label_unit": "per image",
+        "cameras": "not stated in the release files (manifest device = 'unknown')",
+        "ids_note": "IDs are the release's patient_id records. They are an upper bound on distinct infants; nothing in the release links records across IDs.",
+        "label_unit_evidence": {
+          "how": "per-image stage folders; eye (OD/OS) from zip information.xlsx",
+          "infant_eye": {
+            "units": 613,
+            "frac_single_label": 0.9347
+          }
+        },
+        "ids_sharing_identical_demographics": {
+          "ids": 397,
+          "distinct_profiles": 380,
+          "ids_sharing_a_profile": 33,
+          "reading": "twins and coincident GA/BW also share a profile, so this is NOT a duplicate count; it only shows the ID count cannot be read as people without further linkage."
+        }
+      },
+      "ropvl": {
+        "images": 1675,
+        "infant_ids": 983,
+        "per_class": {
+          "normal": 623,
+          "stage_1": 236,
+          "stage_2": 338,
+          "stage_3": 241,
+          "stage_4_5": 89,
+          "arop": 148
+        },
+        "country": "China (Shenzhen Eye Hospital; different cohort from 'shenzhen')",
+        "label_unit": "per image",
+        "cameras": "not stated in the release files (manifest device = 'unknown')",
+        "ids_note": "IDs are the release's patient_id records. They are an upper bound on distinct infants; nothing in the release links records across IDs.",
+        "label_unit_evidence": {
+          "how": "per-image class folders + img_info.xlsx; exam date and L/R eye parsed from the filename (counts only - the dates are never written out)",
+          "infant_exam_eye": {
+            "units": 1557,
+            "frac_single_label": 0.9313
+          }
+        },
+        "ids_sharing_identical_demographics": {
+          "ids": 983,
+          "distinct_profiles": 820,
+          "ids_sharing_a_profile": 271,
+          "reading": "twins and coincident GA/BW also share a profile, so this is NOT a duplicate count; it only shows the ID count cannot be read as people without further linkage."
+        }
+      },
+      "multiview_dev": {
+        "images": 663,
+        "infant_ids": 116,
+        "per_class": {
+          "normal": 150,
+          "stage_1": 190,
+          "stage_2": 135,
+          "stage_3": 168,
+          "stage_4_5": 14,
+          "arop": 6
+        },
+        "country": "China (hospital not named in the release)",
+        "label_unit": "per image in the annotation table; de facto per eye",
+        "cameras": "not stated in the release files (manifest device = 'unknown')",
+        "label_unit_evidence": {
+          "how": "eye = (patient_id, Left/Right) from the Acquisition View Table",
+          "eyes": {
+            "units": 230,
+            "single_label": 217,
+            "frac_single_label": 0.9435
+          }
+        }
+      },
+      "multiview_locked": {
+        "images": 661,
+        "infant_ids": 116,
+        "per_class": {
+          "normal": 232,
+          "stage_1": 105,
+          "stage_2": 164,
+          "stage_3": 144,
+          "stage_4_5": 4,
+          "arop": 12
+        },
+        "country": "China (hospital not named in the release)",
+        "label_unit": "per image in the annotation table; de facto per eye",
+        "cameras": "not stated in the release files (manifest device = 'unknown')",
+        "label_unit_evidence": {
+          "how": "eye = (patient_id, Left/Right) from the Acquisition View Table",
+          "eyes": {
+            "units": 230,
+            "single_label": 219,
+            "frac_single_label": 0.9522
+          }
+        }
+      }
+    },
+    "totals": {
+      "eligible_corpus": {
+        "images": 8024,
+        "infant_ids": 1760,
+        "per_class": {
+          "normal": 4219,
+          "stage_1": 872,
+          "stage_2": 1258,
+          "stage_3": 932,
+          "stage_4_5": 107,
+          "arop": 636
+        }
+      },
+      "cv_pool": {
+        "images": 6700,
+        "infant_ids": 1528,
+        "per_class": {
+          "normal": 3837,
+          "stage_1": 577,
+          "stage_2": 959,
+          "stage_3": 620,
+          "stage_4_5": 89,
+          "arop": 618
+        }
+      },
+      "held_out_multiview": {
+        "images": 1324,
+        "infant_ids": 232,
+        "per_class": {
+          "normal": 382,
+          "stage_1": 295,
+          "stage_2": 299,
+          "stage_3": 312,
+          "stage_4_5": 18,
+          "arop": 18
+        }
+      }
+    },
+    "checks": {
+      "total_is_8024": true,
+      "audit_per_class": {
+        "normal": 4219,
+        "stage_1": 872,
+        "stage_2": 1258,
+        "stage_3": 932,
+        "stage_4_5": 107,
+        "arop": 636
+      },
+      "audit_per_class_confirmed": true,
+      "cv_pool_is_6700": true,
+      "stage_4_5_note": "89 of the 107 stage_4_5 images are ROP-VL (the whole CV-pool count); the other 18 are Multi-View stage 4, held out (dev 14, locked 4).",
+      "matches_inclusion_flow": true,
+      "matches_local_splits_csv": true
+    }
+  },
+  "F_arop_internal_control": {
+    "definition": "Fraction of AP-ROP-LABELLED frames the model scores p_arop<0.1 \u2014 'the label is carried, the appearance is absent'. Pooled out-of-fold over the 5 structured folds (seed 42). Ostrava units = imaging sessions (device+serie); other sources have no session structure, so a unit is the infant. CIs resample those units.",
+    "seed_42": {
+      "structured": {
+        "ostrava_session_labelled": {
+          "frames": 470,
+          "sessions": 16,
+          "infants": 1,
+          "frames_below_0.1": 331,
+          "frac_below_0.1": 0.7043,
+          "ci95_clustered_by_sessions": [
+            0.5589,
+            0.8403
+          ],
+          "per_session_frac_quartiles": [
+            0.5469,
+            0.7458,
+            0.8972
+          ],
+          "median_frames_per_session": 24.5
+        },
+        "non_ostrava_frame_labelled": {
+          "frames": 148,
+          "units": 103,
+          "infants": 103,
+          "frames_below_0.1": 15,
+          "frac_below_0.1": 0.1014,
+          "ci95_clustered_by_units": [
+            0.0555,
+            0.1513
+          ],
+          "per_unit_frac_quartiles": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "median_frames_per_unit": 1.0
+        }
+      },
+      "committed_values": {
+        "what": "Fraction of AP-ROP-LABELLED frames the model scores p_arop<0.1 \u2014 'the label is carried, the appearance is absent'. Pooled out-of-fold over the 5 structured folds (seed 42).",
+        "ostrava_session_labelled": {
+          "frames": 470,
+          "sessions": 16,
+          "frac_below_0.1": 0.7043,
+          "median_per_session": 0.7458,
+          "median_frames_per_session": 24
+        },
+        "non_ostrava_frame_labelled": {
+          "frames": 148,
+          "units": 103,
+          "frac_below_0.1": 0.1014
+        },
+        "all": {
+          "frames": 618,
+          "units": 119,
+          "frac_below_0.1": 0.5599
+        },
+        "reading": "This is the finding's internal control. Ostrava stamps one diagnosis code on every frame of an examination session, and 70% of its AP-ROP frames score below 0.1. The other sources label 1-2 frames per infant, and only 10% do. Same model, same class, 7x the rate exactly where the labelling is per-session - so the frames are not mysteriously hard, they are mislabelled by inheritance.",
+        "supersedes": "session_level_arop.json's median_frac_frames_below_p0.1_in_arop_sessions = 0.4706, which was computed on an EARLIER prediction set (its fold-0 image recall is 0.311 vs the canonical 0.212) and on fold 0 alone. Do not quote the 47%.",
+        "recomputed": "2026-08-17 on results/rop/staging_runs/structured_5fold/*.npz"
+      },
+      "rederived_match": true,
+      "note": "committed median_frames_per_session=24 is a truncation: 16 sessions, middle pair 21 and 28, median 24.5",
+      "session_recall": {
+        "session_recall": 0.84,
+        "detected": "100/119",
+        "ci95": [
+          0.76,
+          0.9
+        ]
+      }
+    },
+    "seed_1337": {
+      "structured": {
+        "ostrava_session_labelled": {
+          "frames": 470,
+          "sessions": 16,
+          "infants": 1,
+          "frames_below_0.1": 324,
+          "frac_below_0.1": 0.6894,
+          "ci95_clustered_by_sessions": [
+            0.4947,
+            0.8625
+          ],
+          "per_session_frac_quartiles": [
+            0.5804,
+            0.8286,
+            0.9154
+          ],
+          "median_frames_per_session": 24.5
+        },
+        "non_ostrava_frame_labelled": {
+          "frames": 148,
+          "units": 103,
+          "infants": 103,
+          "frames_below_0.1": 20,
+          "frac_below_0.1": 0.1351,
+          "ci95_clustered_by_units": [
+            0.0828,
+            0.1908
+          ],
+          "per_unit_frac_quartiles": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "median_frames_per_unit": 1.0
+        }
+      },
+      "note": "not in session_level_by_seed.json; derived here from staging_runs/structured_5fold_s1337/fold_*.npz with the same definition",
+      "session_recall": {
+        "session_recall": 0.832,
+        "detected": "99/119",
+        "ci95": [
+          0.75,
+          0.89
+        ]
+      }
+    }
+  },
+  "provenance": {
+    "script": "scripts/rop_preprint_stats.py",
+    "git_head": "d5b5bfe",
+    "generated_at": "2026-10-18T11:03:27",
+    "inference_run": false,
+    "torch_imported": false,
+    "code_reused": [
+      "scripts/rop_locked_eval.py: eye_frame, eye_metrics, metrics",
+      "models/common/metrics.py: quadratic_weighted_kappa",
+      "scripts/rop_matched_equivalence.py: fold_metrics, ARMS, ARMS_S1337",
+      "scripts/rop_session_level_analysis.py: session_key",
+      "scripts/build_rop_staging_manifest.py: DEVICE"
+    ],
+    "bootstrap": {
+      "replicates": 2000,
+      "seed": 42,
+      "unit": "infant",
+      "aggregation": "metric per checkpoint, mean over 5 checkpoints within each replicate; percentile 95% CI"
+    },
+    "versions": {
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.8.0"
+    },
+    "inputs": [
+      {
+        "path": "data/rop/multiview/ROP-DATASET/Dataset Acquisition View Table.xlsx",
+        "git_tracked": false,
+        "sha256_16": "042f6d2e77dc10ab"
+      },
+      {
+        "path": "data/rop/rop_vl/img_info.xlsx",
+        "git_tracked": false,
+        "sha256_16": "e3b353d58c642dcf"
+      },
+      {
+        "path": "data/rop/shenzhen/zip information.xlsx",
+        "git_tracked": false,
+        "sha256_16": "0feb8a092e267053"
+      },
+      {
+        "path": "results/prepared/rop_staging/fold_0.csv",
+        "git_tracked": true,
+        "sha256_16": "48088bafc7b1eee4"
+      },
+      {
+        "path": "results/prepared/rop_staging/fold_1.csv",
+        "git_tracked": true,
+        "sha256_16": "f6777c64aeb3b345"
+      },
+      {
+        "path": "results/prepared/rop_staging/fold_2.csv",
+        "git_tracked": true,
+        "sha256_16": "b33f5a7383e5af62"
+      },
+      {
+        "path": "results/prepared/rop_staging/fold_3.csv",
+        "git_tracked": true,
+        "sha256_16": "04727aca13bc092a"
+      },
+      {
+        "path": "results/prepared/rop_staging/fold_4.csv",
+        "git_tracked": true,
+        "sha256_16": "b351598a01fb2523"
+      },
+      {
+        "path": "results/prepared/rop_staging/splits.csv",
+        "git_tracked": false,
+        "sha256_16": "abb2e8d5d2cd9b9d"
+      },
+      {
+        "path": "results/prepared/rop_staging/test_dev.csv",
+        "git_tracked": true,
+        "sha256_16": "c330e980af7f06fe"
+      },
+      {
+        "path": "results/prepared/rop_staging/test_locked.csv",
+        "git_tracked": true,
+        "sha256_16": "5c548d3e1eba98ab"
+      },
+      {
+        "path": "results/rop/dev_eval/dev_table.json",
+        "git_tracked": true,
+        "sha256_16": "6d2eba978f645d44"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s1337_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "9536ed2ce81479fe"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s1337_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "00565326a84e4876"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s1337_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "7d697985f7be4de5"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s1337_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "94f28c3c2d69aca6"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s1337_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "00881358a7c96e8f"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s42_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "bb6583b8fcb12f3c"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s42_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "6103e6bd895b1bd3"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s42_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "e801f954adea5a10"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s42_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "efaa7e38093a0009"
+      },
+      {
+        "path": "results/rop/dev_eval/flat_s42_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "f5241a270f40fec1"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s1337_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "1accc48829ec4fdb"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s1337_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "df440e22c21e8606"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s1337_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "dca69655f6e8afa5"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s1337_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "b0fae006688cc19f"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s1337_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "6699a27a4636cde5"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s42_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "bdef797691308d66"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s42_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "7054da7d5757a720"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s42_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "c878842f25dc898e"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s42_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "93ef83eda3fa36fe"
+      },
+      {
+        "path": "results/rop/dev_eval/structured_s42_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "3035cbc8ec7fdad8"
+      },
+      {
+        "path": "results/rop/inclusion_flow.json",
+        "git_tracked": true,
+        "sha256_16": "fe684c356e77b549"
+      },
+      {
+        "path": "results/rop/kappa_unweighted_vs_human.json",
+        "git_tracked": true,
+        "sha256_16": "401adba0c3a2962e"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s1337_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "4721bfbb2aae39ab"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s1337_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "be2782c1a2126b4d"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s1337_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "959f0005d2c5b8d9"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s1337_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "f5a9e46f9f13d883"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s1337_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "3a15c0543154c53c"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s42_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "cbc8aea06bf3b624"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s42_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "52e89ed212d4fec5"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s42_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "60fd725ea1b9cccc"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s42_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "4a91ff5b2a438b06"
+      },
+      {
+        "path": "results/rop/locked_eval/flat_s42_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "b9523c4a539cc6a5"
+      },
+      {
+        "path": "results/rop/locked_eval/locked_table.json",
+        "git_tracked": true,
+        "sha256_16": "7b4f98fa12daad60"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s1337_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "cf53f3e767fef075"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s1337_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "3d8fd2f2667a2e12"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s1337_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "1b6d015429f79387"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s1337_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "0f6ed7a8bd9d68f8"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s1337_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "621c030c62b09f2d"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s42_ckpt0.npz",
+        "git_tracked": true,
+        "sha256_16": "7aecbe63ea246108"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s42_ckpt1.npz",
+        "git_tracked": true,
+        "sha256_16": "ea114e9d56d38d73"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s42_ckpt2.npz",
+        "git_tracked": true,
+        "sha256_16": "6bcd5b09e0a1aeb6"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s42_ckpt3.npz",
+        "git_tracked": true,
+        "sha256_16": "b8238817c9cd7c0d"
+      },
+      {
+        "path": "results/rop/locked_eval/structured_s42_ckpt4.npz",
+        "git_tracked": true,
+        "sha256_16": "4472fd3262af0441"
+      },
+      {
+        "path": "results/rop/matched_equivalence.json",
+        "git_tracked": true,
+        "sha256_16": "ecfd9d221e9d1f93"
+      },
+      {
+        "path": "results/rop/session_level_by_seed.json",
+        "git_tracked": true,
+        "sha256_16": "f09d39a5311856f7"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold/fold_0.npz",
+        "git_tracked": true,
+        "sha256_16": "a9a2824cef276bb3"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold/fold_1.npz",
+        "git_tracked": true,
+        "sha256_16": "244636b03ee3fafd"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold/fold_2.npz",
+        "git_tracked": true,
+        "sha256_16": "685647592ba36c27"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold/fold_3.npz",
+        "git_tracked": true,
+        "sha256_16": "a414e3feba04bb53"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold/fold_4.npz",
+        "git_tracked": true,
+        "sha256_16": "c69f71734363436c"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold_s1337/fold_0.npz",
+        "git_tracked": true,
+        "sha256_16": "d03d288e554e42da"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold_s1337/fold_1.npz",
+        "git_tracked": true,
+        "sha256_16": "bbd42e60cf9cb146"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold_s1337/fold_2.npz",
+        "git_tracked": true,
+        "sha256_16": "be8ba28845ef283b"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold_s1337/fold_3.npz",
+        "git_tracked": true,
+        "sha256_16": "0050ec11405052b3"
+      },
+      {
+        "path": "results/rop/staging_runs/flat_natural_5fold_s1337/fold_4.npz",
+        "git_tracked": true,
+        "sha256_16": "fb3ba1380bd56d60"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold/fold_0.npz",
+        "git_tracked": true,
+        "sha256_16": "28acd7b1345b6251"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold/fold_1.npz",
+        "git_tracked": true,
+        "sha256_16": "3d472c815ce2d19a"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold/fold_2.npz",
+        "git_tracked": true,
+        "sha256_16": "b65a44954df6c28f"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold/fold_3.npz",
+        "git_tracked": true,
+        "sha256_16": "6287afb57bde80cd"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold/fold_4.npz",
+        "git_tracked": true,
+        "sha256_16": "963486222b1b8efc"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold_s1337/fold_0.npz",
+        "git_tracked": true,
+        "sha256_16": "601a9d278c9fe841"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold_s1337/fold_1.npz",
+        "git_tracked": true,
+        "sha256_16": "14fae42db367c58e"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold_s1337/fold_2.npz",
+        "git_tracked": true,
+        "sha256_16": "99eec129350eb354"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold_s1337/fold_3.npz",
+        "git_tracked": true,
+        "sha256_16": "348aeb4cde359103"
+      },
+      {
+        "path": "results/rop/staging_runs/structured_5fold_s1337/fold_4.npz",
+        "git_tracked": true,
+        "sha256_16": "97b086eb1918f7a1"
+      }
+    ]
+  }
+}

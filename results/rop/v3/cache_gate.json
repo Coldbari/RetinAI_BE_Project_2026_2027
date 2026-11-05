@@ -1,0 +1,37 @@
+{
+  "n_images": 1691,
+  "n_psnr": 200,
+  "argmax_agreement": 0.9917208752217622,
+  "qwk_original": 0.606661841049874,
+  "qwk_cached": 0.6060850750874397,
+  "delta_qwk": -0.000576765962434278,
+  "psnr_median": 52.845822362672195,
+  "device": "mps",
+  "ckpt": "kaggle_cache/nat_a_out/code/results/experiment_001_staging_effnetv2s_fold0_s42_natural/weights.pth",
+  "completeness": {
+    "unique_paths": 7363,
+    "missing": 0,
+    "locked_present": 0
+  },
+  "stamp": {
+    "circle_crop": true,
+    "letterbox": true,
+    "clahe": true,
+    "ben_graham": false,
+    "max_side": 768,
+    "encoding": "PNG",
+    "encoding_note": "bytes are PNG inside files named .jpg (cached_path's suffix)",
+    "git_head": "ac4bef7be95e92cb87f1357fbb3ae08a17f80266",
+    "manifests": [
+      "fold_0.csv",
+      "fold_1.csv",
+      "fold_2.csv",
+      "fold_3.csv",
+      "fold_4.csv",
+      "test_dev.csv"
+    ],
+    "image_count": 7363,
+    "built": "2026-10-21"
+  },
+  "passed": true
+}

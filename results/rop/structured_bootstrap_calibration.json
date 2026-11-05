@@ -1,0 +1,164 @@
+{
+  "run": "structured effnetv2s seed 42, 5-fold CV pooled val predictions",
+  "bootstrap": {
+    "replicates": 2000,
+    "seed": 42,
+    "unit": "patient",
+    "n_images": 6700,
+    "n_patients": 1528,
+    "why_patient_unit": "frames within an infant are correlated; an image-level bootstrap understates the intervals",
+    "metrics": {
+      "macro_f1": {
+        "point": 0.6517,
+        "ci_low": 0.5741,
+        "ci_high": 0.7622
+      },
+      "qwk": {
+        "point": 0.761,
+        "ci_low": 0.627,
+        "ci_high": 0.9122
+      },
+      "arop_f1": {
+        "point": 0.4982,
+        "ci_low": 0.3972,
+        "ci_high": 0.8502
+      },
+      "arop_recall": {
+        "point": 0.3447,
+        "ci_low": 0.2513,
+        "ci_high": 0.8374
+      }
+    }
+  },
+  "calibration_pooled": {
+    "ece": 0.1075,
+    "brier": 0.3226,
+    "n_bins": 15,
+    "bins": [
+      {
+        "bin_low": 0.26666666666666666,
+        "bin_high": 0.3333333333333333,
+        "n": 3,
+        "mean_confidence": 0.3293,
+        "accuracy": 0.3333
+      },
+      {
+        "bin_low": 0.3333333333333333,
+        "bin_high": 0.4,
+        "n": 28,
+        "mean_confidence": 0.3795,
+        "accuracy": 0.25
+      },
+      {
+        "bin_low": 0.4,
+        "bin_high": 0.4666666666666667,
+        "n": 82,
+        "mean_confidence": 0.4388,
+        "accuracy": 0.2683
+      },
+      {
+        "bin_low": 0.4666666666666667,
+        "bin_high": 0.5333333333333333,
+        "n": 200,
+        "mean_confidence": 0.5045,
+        "accuracy": 0.39
+      },
+      {
+        "bin_low": 0.5333333333333333,
+        "bin_high": 0.6,
+        "n": 263,
+        "mean_confidence": 0.5671,
+        "accuracy": 0.4221
+      },
+      {
+        "bin_low": 0.6,
+        "bin_high": 0.6666666666666666,
+        "n": 245,
+        "mean_confidence": 0.6359,
+        "accuracy": 0.449
+      },
+      {
+        "bin_low": 0.6666666666666666,
+        "bin_high": 0.7333333333333333,
+        "n": 298,
+        "mean_confidence": 0.7005,
+        "accuracy": 0.4631
+      },
+      {
+        "bin_low": 0.7333333333333333,
+        "bin_high": 0.8,
+        "n": 318,
+        "mean_confidence": 0.7674,
+        "accuracy": 0.5346
+      },
+      {
+        "bin_low": 0.8,
+        "bin_high": 0.8666666666666667,
+        "n": 445,
+        "mean_confidence": 0.8369,
+        "accuracy": 0.573
+      },
+      {
+        "bin_low": 0.8666666666666667,
+        "bin_high": 0.9333333333333333,
+        "n": 563,
+        "mean_confidence": 0.9038,
+        "accuracy": 0.6909
+      },
+      {
+        "bin_low": 0.9333333333333333,
+        "bin_high": 1.0,
+        "n": 4255,
+        "mean_confidence": 0.9898,
+        "accuracy": 0.9396
+      }
+    ]
+  },
+  "per_fold": {
+    "fold_0": {
+      "macro_f1": 0.5527,
+      "qwk": 0.5685,
+      "arop_f1": 0.3477,
+      "arop_recall": 0.2122,
+      "ece": 0.1958,
+      "n_images": 1691,
+      "n_patients": 297
+    },
+    "fold_1": {
+      "macro_f1": 0.7573,
+      "qwk": 0.8642,
+      "arop_f1": 0.8679,
+      "arop_recall": 0.7667,
+      "ece": 0.0919,
+      "n_images": 1252,
+      "n_patients": 299
+    },
+    "fold_2": {
+      "macro_f1": 0.6712,
+      "qwk": 0.8731,
+      "arop_f1": 0.7463,
+      "arop_recall": 0.6944,
+      "ece": 0.0848,
+      "n_images": 1252,
+      "n_patients": 272
+    },
+    "fold_3": {
+      "macro_f1": 0.7184,
+      "qwk": 0.902,
+      "arop_f1": 0.8235,
+      "arop_recall": 0.8537,
+      "ece": 0.0913,
+      "n_images": 1252,
+      "n_patients": 327
+    },
+    "fold_4": {
+      "macro_f1": 0.7616,
+      "qwk": 0.9197,
+      "arop_f1": 0.8406,
+      "arop_recall": 0.8286,
+      "ece": 0.0572,
+      "n_images": 1253,
+      "n_patients": 333
+    }
+  }
+}

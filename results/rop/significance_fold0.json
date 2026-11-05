@@ -1,0 +1,119 @@
+{
+  "context": "fold 0, 1691 images, paired on identical validation rows. DeLong assumes independent images and one infant supplies 470/476 AP-ROP frames \u2014 where DeLong and the patient-clustered bootstrap disagree, trust the bootstrap.",
+  "pairs": {
+    "full_vs_flat_natural": {
+      "mcnemar": {
+        "b": 97.0,
+        "c": 126.0,
+        "statistic": 3.515695,
+        "p_value": 0.06079,
+        "test": "chi2-cc"
+      },
+      "arop_auc": {
+        "full": 0.8343,
+        "flat_natural": 0.7966
+      },
+      "delong_p": 0.009179,
+      "auc_diff_ci95_clustered": [
+        -0.021,
+        0.0677
+      ],
+      "clustered_replicates": 1997
+    },
+    "full_vs_nobranch": {
+      "mcnemar": {
+        "b": 81.0,
+        "c": 103.0,
+        "statistic": 2.396739,
+        "p_value": 0.121588,
+        "test": "chi2-cc"
+      },
+      "arop_auc": {
+        "full": 0.8343,
+        "nobranch": 0.9028
+      },
+      "delong_p": 0.0,
+      "auc_diff_ci95_clustered": [
+        -0.0985,
+        0.0
+      ],
+      "clustered_replicates": 1997
+    },
+    "full_vs_noordinal": {
+      "mcnemar": {
+        "b": 216.0,
+        "c": 112.0,
+        "statistic": 32.344512,
+        "p_value": 0.0,
+        "test": "chi2-cc"
+      },
+      "arop_auc": {
+        "full": 0.8343,
+        "noordinal": 0.7983
+      },
+      "delong_p": 0.01199,
+      "auc_diff_ci95_clustered": [
+        -0.0209,
+        0.0729
+      ],
+      "clustered_replicates": 1997
+    },
+    "full_vs_wsite0": {
+      "mcnemar": {
+        "b": 61.0,
+        "c": 115.0,
+        "statistic": 15.960227,
+        "p_value": 6.5e-05,
+        "test": "chi2-cc"
+      },
+      "arop_auc": {
+        "full": 0.8343,
+        "wsite0": 0.9478
+      },
+      "delong_p": 0.0,
+      "auc_diff_ci95_clustered": [
+        -0.1268,
+        0.0
+      ],
+      "clustered_replicates": 1997
+    },
+    "full_vs_sampler": {
+      "mcnemar": {
+        "b": 411.0,
+        "c": 89.0,
+        "statistic": 206.082,
+        "p_value": 0.0,
+        "test": "chi2-cc"
+      },
+      "arop_auc": {
+        "full": 0.8343,
+        "sampler": 0.8919
+      },
+      "delong_p": 0.0,
+      "auc_diff_ci95_clustered": [
+        -0.076,
+        0.0003
+      ],
+      "clustered_replicates": 1997
+    },
+    "full_vs_full_s1337": {
+      "mcnemar": {
+        "b": 67.0,
+        "c": 122.0,
+        "statistic": 15.428571,
+        "p_value": 8.6e-05,
+        "test": "chi2-cc"
+      },
+      "arop_auc": {
+        "full": 0.8343,
+        "full_s1337": 0.8487
+      },
+      "delong_p": 0.130126,
+      "auc_diff_ci95_clustered": [
+        -0.0309,
+        0.0023
+      ],
+      "clustered_replicates": 1997
+    }
+  }
+}

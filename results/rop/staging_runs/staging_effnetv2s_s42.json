@@ -1,0 +1,107 @@
+{
+  "arch": "effnetv2s",
+  "seed": 42,
+  "epochs": 20,
+  "folds_requested": 1,
+  "folds_completed": 1,
+  "folds": {
+    "fold_0": {
+      "macro_f1": 0.5199869698197593,
+      "accuracy": 0.6487285629804849,
+      "balanced_accuracy": 0.6451794826064051,
+      "qwk": 0.5939122193582664,
+      "auc": 0.8997649538080822,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8595238095238096,
+          "recall": 0.9413298565840938,
+          "f1": 0.8985687616677038,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.28391167192429023,
+          "recall": 0.656934306569343,
+          "f1": 0.3964757709251101,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.3146551724137931,
+          "recall": 0.44785276073619634,
+          "f1": 0.369620253164557,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.8661417322834646,
+          "recall": 0.8527131782945736,
+          "f1": 0.859375,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.17647058823529413,
+          "recall": 0.7894736842105263,
+          "f1": 0.28846153846153844,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9666666666666667,
+          "recall": 0.18277310924369747,
+          "f1": 0.30742049469964666,
+          "support": 476
+        }
+      },
+      "dir": "results/experiment_001_staging_effnetv2s_fold0_s42"
+    },
+    "fold_site": {
+      "macro_f1": 0.6406509623614294,
+      "accuracy": 0.8635135135135135,
+      "balanced_accuracy": 0.6300125139919016,
+      "qwk": 0.948831479242752,
+      "auc": NaN,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9914163090128756,
+          "recall": 0.9871794871794872,
+          "f1": 0.9892933618843683,
+          "support": 234
+        },
+        "Stage 1": {
+          "precision": 0.875,
+          "recall": 0.39325842696629215,
+          "f1": 0.5426356589147286,
+          "support": 89
+        },
+        "Stage 2": {
+          "precision": 0.685,
+          "recall": 0.8404907975460123,
+          "f1": 0.7548209366391184,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.9042145593869731,
+          "recall": 0.9291338582677166,
+          "f1": 0.916504854368932,
+          "support": 254
+        },
+        "Stage 4/5": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "AP-ROP": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "dir": "results/experiment_002_staging_effnetv2s_foldsite_s42"
+    }
+  },
+  "cv_macro_f1_mean": 0.52,
+  "cv_macro_f1_sd": 0.0,
+  "cv_balanced_accuracy_mean": 0.6452,
+  "cv_balanced_accuracy_sd": 0.0,
+  "cv_qwk_mean": 0.5939,
+  "cv_qwk_sd": 0.0
+}

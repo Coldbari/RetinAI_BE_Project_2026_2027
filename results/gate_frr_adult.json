@@ -1,0 +1,203 @@
+{
+  "thresholds": {
+    "min_redness": 1.029,
+    "min_saturation": 34.0,
+    "min_red_hue_frac": 0.34,
+    "require_rgb_order": false,
+    "min_blur_var": 5.0,
+    "min_luminance": 18.0,
+    "max_luminance": 235.0,
+    "min_fov_ratio": 0.05
+  },
+  "sample_per_source": 4000,
+  "sources": {
+    "eyepacs": {
+      "n": 4000,
+      "false_rejection_rate": 0.017249999999999988,
+      "verdicts": {
+        "gradable": 3931,
+        "not_fundus": 61,
+        "poor_exposure": 8
+      },
+      "percentiles_p0.5_p5_p50_p95": {
+        "redness": [
+          1.0107522535324096,
+          1.2632779240608216,
+          1.936310052871704,
+          7.134058260917658
+        ],
+        "saturation": [
+          32.92542848587036,
+          58.05478382110596,
+          121.74294662475586,
+          220.1307624816894
+        ],
+        "red_hue_frac": [
+          0.23633243503878082,
+          0.6754792776539856,
+          0.9498521734961807,
+          0.9999932961335761
+        ],
+        "blur_var": [
+          8.868628407778491,
+          18.596525114856487,
+          66.93170607618327,
+          266.11779096165407
+        ],
+        "luminance": [
+          23.305169505915735,
+          45.64956149534134,
+          96.94356575754254,
+          155.7890415842519
+        ]
+      },
+      "examples_rejected": [
+        [
+          "43166_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "27466_right.jpeg",
+          "not_fundus"
+        ],
+        [
+          "14569_right.jpeg",
+          "not_fundus"
+        ],
+        [
+          "43710_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "41349_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "41499_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "38612_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "36856_right.jpeg",
+          "not_fundus"
+        ],
+        [
+          "30675_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "39451_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "7825_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "42074_left.jpeg",
+          "poor_exposure"
+        ],
+        [
+          "43687_right.jpeg",
+          "not_fundus"
+        ],
+        [
+          "26402_left.jpeg",
+          "not_fundus"
+        ],
+        [
+          "37790_right.jpeg",
+          "poor_exposure"
+        ]
+      ]
+    },
+    "aptos": {
+      "n": 3662,
+      "false_rejection_rate": 0.0024576734025122393,
+      "verdicts": {
+        "gradable": 3653,
+        "not_fundus": 6,
+        "too_blurry": 3
+      },
+      "percentiles_p0.5_p5_p50_p95": {
+        "redness": [
+          1.115864735841751,
+          1.557647955417633,
+          7.1372504234313965,
+          49.953389930725095
+        ],
+        "saturation": [
+          54.23439790725708,
+          89.37276268005371,
+          219.51211547851562,
+          249.94992065429688
+        ],
+        "red_hue_frac": [
+          0.5577436540021768,
+          0.8334438629121129,
+          0.9989932873143361,
+          1.0
+        ],
+        "blur_var": [
+          6.648883627437186,
+          13.411531352549508,
+          61.541022417295366,
+          116.1446745310894
+        ],
+        "luminance": [
+          35.49546426552276,
+          48.946145942033674,
+          90.76379101014712,
+          116.27847714391471
+        ]
+      },
+      "examples_rejected": [
+        [
+          "e9faf0296643.png",
+          "not_fundus"
+        ],
+        [
+          "ecad6845f630.png",
+          "not_fundus"
+        ],
+        [
+          "00b74780d31d.png",
+          "not_fundus"
+        ],
+        [
+          "286e9981dd9b.png",
+          "not_fundus"
+        ],
+        [
+          "e821c1b6417a.png",
+          "too_blurry"
+        ],
+        [
+          "74211a2b6dcf.png",
+          "not_fundus"
+        ],
+        [
+          "5b301a6d1ac7.png",
+          "too_blurry"
+        ],
+        [
+          "77baa08a1345.png",
+          "too_blurry"
+        ],
+        [
+          "4554062fa836.png",
+          "not_fundus"
+        ]
+      ]
+    }
+  },
+  "overall": {
+    "n": 7662,
+    "false_rejection_rate": 0.010180109631949852,
+    "budget": 0.02,
+    "pass": true
+  }
+}

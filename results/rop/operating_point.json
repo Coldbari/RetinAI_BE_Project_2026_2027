@@ -1,0 +1,30 @@
+{
+  "target_sensitivity": 0.9,
+  "threshold": 0.1933,
+  "derived_on": "clean val (cross-split duplicates removed), 5-view TTA",
+  "val": {
+    "n": 909,
+    "sensitivity": 0.9014778325123153,
+    "specificity": 0.35
+  },
+  "test": {
+    "n": 1502,
+    "sensitivity": 0.9902912621359223,
+    "specificity": 0.39823008849557523,
+    "sens_ci": [
+      0.9809599489489359,
+      0.9957994008513806
+    ],
+    "spec_ci": [
+      0.3611567199500974,
+      0.4361932614056492
+    ]
+  },
+  "previous_threshold": 0.371,
+  "previous_test": {
+    "sensitivity": 0.9162621359223301,
+    "specificity": 0.7905604719764012,
+    "note": "threshold was selected on test \u2014 optimistic"
+  },
+  "removed_duplicate_images": 39
+}

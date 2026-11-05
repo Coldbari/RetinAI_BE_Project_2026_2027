@@ -1,0 +1,422 @@
+{
+  "what": "Per-hospital calibration of the structured model (seed 42), pooled from the five out-of-fold prediction sets so every image is scored exactly once by a model that did not train on it. Confidence = max softmax over the 6 decoded classes. Intervals are patient-clustered (2000 replicates).",
+  "why": "The committed calibration is pooled over all hospitals. A pooled ECE on a corpus where one site supplies 64% of images reports that site. Every served threshold assumes a probability means the same thing everywhere.",
+  "n_bins": 10,
+  "sources": {
+    "ostrava": {
+      "n_images": 4285,
+      "n_infants": 148,
+      "accuracy": 0.7568,
+      "mean_confidence": 0.9103,
+      "ece": 0.1534,
+      "ece_ci95": [
+        0.075,
+        0.2394
+      ],
+      "confidence_minus_accuracy": 0.1534,
+      "confidence_minus_accuracy_ci95": [
+        0.075,
+        0.2394
+      ],
+      "direction": "over-confident",
+      "brier_top1": 0.1555,
+      "arop_branch_at_apriori_threshold": {
+        "n_positive": 470,
+        "flagged_at_0.5": 106,
+        "recall_at_0.5": 0.2043,
+        "false_flag_rate_at_0.5": 0.0026
+      },
+      "classes_present": [
+        0,
+        1,
+        2,
+        3,
+        5
+      ],
+      "bins": [
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 24,
+          "mean_confidence": 0.3733,
+          "accuracy": 0.0833,
+          "gap": -0.2899
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 122,
+          "mean_confidence": 0.4594,
+          "accuracy": 0.1967,
+          "gap": -0.2627
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 205,
+          "mean_confidence": 0.5501,
+          "accuracy": 0.3073,
+          "gap": -0.2428
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 199,
+          "mean_confidence": 0.6545,
+          "accuracy": 0.3719,
+          "gap": -0.2827
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 252,
+          "mean_confidence": 0.7484,
+          "accuracy": 0.3373,
+          "gap": -0.4111
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 323,
+          "mean_confidence": 0.8531,
+          "accuracy": 0.4087,
+          "gap": -0.4445
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 3160,
+          "mean_confidence": 0.99,
+          "accuracy": 0.906,
+          "gap": -0.084
+        }
+      ]
+    },
+    "ropvl": {
+      "n_images": 1675,
+      "n_infants": 983,
+      "accuracy": 0.8119,
+      "mean_confidence": 0.8613,
+      "ece": 0.0493,
+      "ece_ci95": [
+        0.0348,
+        0.0678
+      ],
+      "confidence_minus_accuracy": 0.0493,
+      "confidence_minus_accuracy_ci95": [
+        0.0322,
+        0.0671
+      ],
+      "direction": "over-confident",
+      "brier_top1": 0.123,
+      "arop_branch_at_apriori_threshold": {
+        "n_positive": 148,
+        "flagged_at_0.5": 129,
+        "recall_at_0.5": 0.7905,
+        "false_flag_rate_at_0.5": 0.0079
+      },
+      "classes_present": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "bins": [
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 7,
+          "mean_confidence": 0.3793,
+          "accuracy": 0.0,
+          "gap": -0.3793
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 28,
+          "mean_confidence": 0.4675,
+          "accuracy": 0.3929,
+          "gap": -0.0747
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 134,
+          "mean_confidence": 0.5543,
+          "accuracy": 0.5299,
+          "gap": -0.0244
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 146,
+          "mean_confidence": 0.6532,
+          "accuracy": 0.5616,
+          "gap": -0.0915
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 174,
+          "mean_confidence": 0.7508,
+          "accuracy": 0.6437,
+          "gap": -0.1072
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 223,
+          "mean_confidence": 0.8528,
+          "accuracy": 0.7668,
+          "gap": -0.086
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 963,
+          "mean_confidence": 0.9724,
+          "accuracy": 0.9481,
+          "gap": -0.0243
+        }
+      ]
+    },
+    "shenzhen": {
+      "n_images": 740,
+      "n_infants": 397,
+      "accuracy": 0.8973,
+      "mean_confidence": 0.8863,
+      "ece": 0.0182,
+      "ece_ci95": [
+        0.0127,
+        0.0416
+      ],
+      "confidence_minus_accuracy": -0.011,
+      "confidence_minus_accuracy_ci95": [
+        -0.031,
+        0.0074
+      ],
+      "direction": "no significant bias",
+      "brier_top1": 0.0781,
+      "arop_branch_at_apriori_threshold": {
+        "n_positive": 0,
+        "flagged_at_0.5": 2,
+        "recall_at_0.5": null,
+        "false_flag_rate_at_0.5": 0.0027
+      },
+      "classes_present": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "bins": [
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 6,
+          "mean_confidence": 0.4613,
+          "accuracy": 0.6667,
+          "gap": 0.2053
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 50,
+          "mean_confidence": 0.5417,
+          "accuracy": 0.64,
+          "gap": 0.0983
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 41,
+          "mean_confidence": 0.6455,
+          "accuracy": 0.6098,
+          "gap": -0.0357
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 49,
+          "mean_confidence": 0.7606,
+          "accuracy": 0.8163,
+          "gap": 0.0557
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 120,
+          "mean_confidence": 0.8518,
+          "accuracy": 0.8417,
+          "gap": -0.0102
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 474,
+          "mean_confidence": 0.9706,
+          "accuracy": 0.9747,
+          "gap": 0.0041
+        }
+      ]
+    }
+  },
+  "pooled": {
+    "n_images": 6700,
+    "n_infants": 1528,
+    "accuracy": 0.7861,
+    "mean_confidence": 0.8954,
+    "ece": 0.1092,
+    "ece_ci95": [
+      0.0586,
+      0.1728
+    ],
+    "confidence_minus_accuracy": 0.1092,
+    "confidence_minus_accuracy_ci95": [
+      0.0577,
+      0.1728
+    ],
+    "brier_top1": 0.1388,
+    "bins": [
+      {
+        "lo": 0.3,
+        "hi": 0.4,
+        "n": 31,
+        "mean_confidence": 0.3746,
+        "accuracy": 0.0645,
+        "gap": -0.3101
+      },
+      {
+        "lo": 0.4,
+        "hi": 0.5,
+        "n": 156,
+        "mean_confidence": 0.4609,
+        "accuracy": 0.25,
+        "gap": -0.2109
+      },
+      {
+        "lo": 0.5,
+        "hi": 0.6,
+        "n": 389,
+        "mean_confidence": 0.5505,
+        "accuracy": 0.4267,
+        "gap": -0.1237
+      },
+      {
+        "lo": 0.6,
+        "hi": 0.7,
+        "n": 386,
+        "mean_confidence": 0.6531,
+        "accuracy": 0.4689,
+        "gap": -0.1841
+      },
+      {
+        "lo": 0.7,
+        "hi": 0.8,
+        "n": 475,
+        "mean_confidence": 0.7505,
+        "accuracy": 0.4989,
+        "gap": -0.2516
+      },
+      {
+        "lo": 0.8,
+        "hi": 0.9,
+        "n": 666,
+        "mean_confidence": 0.8528,
+        "accuracy": 0.6066,
+        "gap": -0.2462
+      },
+      {
+        "lo": 0.9,
+        "hi": 1.0,
+        "n": 4597,
+        "mean_confidence": 0.9843,
+        "accuracy": 0.9219,
+        "gap": -0.0624
+      }
+    ]
+  },
+  "disease_controlled_normal_only": {
+    "why": "Sites do not share a class distribution, so raw ECE confounds calibration with case difficulty. Normal is the only class present at all three sites; any spread that survives here is calibration, not case-mix.",
+    "sources": {
+      "ostrava": {
+        "n_images": 2980,
+        "n_infants": 135,
+        "accuracy": 0.9426,
+        "mean_confidence": 0.9699,
+        "ece": 0.0272,
+        "ece_ci95": [
+          0.0156,
+          0.0415
+        ],
+        "confidence_minus_accuracy": 0.0272,
+        "confidence_minus_accuracy_ci95": [
+          0.015,
+          0.0415
+        ],
+        "direction": "over-confident"
+      },
+      "ropvl": {
+        "n_images": 623,
+        "n_infants": 381,
+        "accuracy": 0.9743,
+        "mean_confidence": 0.9662,
+        "ece": 0.0218,
+        "ece_ci95": [
+          0.0162,
+          0.0328
+        ],
+        "confidence_minus_accuracy": -0.0081,
+        "confidence_minus_accuracy_ci95": [
+          -0.017,
+          0.0015
+        ],
+        "direction": "no significant bias"
+      },
+      "shenzhen": {
+        "n_images": 234,
+        "n_infants": 130,
+        "accuracy": 1.0,
+        "mean_confidence": 0.9883,
+        "ece": 0.0117,
+        "ece_ci95": [
+          0.0075,
+          0.0169
+        ],
+        "confidence_minus_accuracy": -0.0117,
+        "confidence_minus_accuracy_ci95": [
+          -0.0169,
+          -0.0075
+        ],
+        "direction": "under-confident"
+      }
+    },
+    "spread": {
+      "best": {
+        "source": "shenzhen",
+        "ece": 0.0117
+      },
+      "worst": {
+        "source": "ostrava",
+        "ece": 0.0272
+      },
+      "ratio": 2.32
+    }
+  },
+  "spread": {
+    "best_calibrated": {
+      "source": "shenzhen",
+      "ece": 0.0182
+    },
+    "worst_calibrated": {
+      "source": "ostrava",
+      "ece": 0.1534
+    },
+    "ratio": 8.43,
+    "reading": "RAW ECE ranges 0.018 (shenzhen) to 0.153 (ostrava) \u2014 8.4x, and the pooled 0.109 describes no single site. BUT the disease-controlled panel shows most of that spread is CASE-MIX, not a site-specific calibration defect: holding the class constant collapses the range to 0.012-0.027 (2.3x) and every site is well calibrated on the class they share. Do not report the 8x. The defensible statements are (1) the model is over-confident where the cases are hard, by +0.109 pooled, and (2) a residual site effect survives the control at Ostrava (+0.027, CI excludes 0) but it is an order of magnitude smaller than the raw number suggests.",
+    "controlled_ratio": 2.32,
+    "methodological_point": "This is the third place in this paper where an uncontrolled aggregate overstated a site effect: the naive site probe (\u00a74.4), image-level AP-ROP recall (\u00a74.3), and now per-site ECE. Each time the control was available and cheap."
+  }
+}

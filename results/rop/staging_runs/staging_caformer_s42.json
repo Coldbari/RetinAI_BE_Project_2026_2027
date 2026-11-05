@@ -1,0 +1,107 @@
+{
+  "arch": "caformer",
+  "seed": 42,
+  "epochs": 20,
+  "folds_requested": 1,
+  "folds_completed": 1,
+  "folds": {
+    "fold_0": {
+      "macro_f1": 0.49838746266792944,
+      "accuracy": 0.5659373151981076,
+      "balanced_accuracy": 0.6231809311399364,
+      "qwk": 0.5862863129266542,
+      "auc": 0.8935563920299675,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9289340101522843,
+          "recall": 0.7157757496740548,
+          "f1": 0.8085419734904271,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.1672473867595819,
+          "recall": 0.7007299270072993,
+          "f1": 0.270042194092827,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.4550561797752809,
+          "recall": 0.49693251533742333,
+          "f1": 0.4750733137829912,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.64,
+          "recall": 0.8682170542635659,
+          "f1": 0.7368421052631579,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.2222222222222222,
+          "recall": 0.7368421052631579,
+          "f1": 0.34146341463414637,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9545454545454546,
+          "recall": 0.22058823529411764,
+          "f1": 0.3583617747440273,
+          "support": 476
+        }
+      },
+      "dir": "results/experiment_001_staging_caformer_fold0_s42"
+    },
+    "fold_site": {
+      "macro_f1": 0.5067780230188957,
+      "accuracy": 0.7891891891891892,
+      "balanced_accuracy": 0.487882770530599,
+      "qwk": 0.8770459955337788,
+      "auc": NaN,
+      "per_class": {
+        "Normal": {
+          "precision": 0.995475113122172,
+          "recall": 0.9401709401709402,
+          "f1": 0.967032967032967,
+          "support": 234
+        },
+        "Stage 1": {
+          "precision": 0.7704918032786885,
+          "recall": 0.5280898876404494,
+          "f1": 0.6266666666666667,
+          "support": 89
+        },
+        "Stage 2": {
+          "precision": 0.6666666666666666,
+          "recall": 0.588957055214724,
+          "f1": 0.6254071661237784,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.778169014084507,
+          "recall": 0.8700787401574803,
+          "f1": 0.8215613382899628,
+          "support": 254
+        },
+        "Stage 4/5": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "AP-ROP": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "dir": "results/experiment_002_staging_caformer_foldsite_s42"
+    }
+  },
+  "cv_macro_f1_mean": 0.4984,
+  "cv_macro_f1_sd": 0.0,
+  "cv_balanced_accuracy_mean": 0.6232,
+  "cv_balanced_accuracy_sd": 0.0,
+  "cv_qwk_mean": 0.5863,
+  "cv_qwk_sd": 0.0
+}

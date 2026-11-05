@@ -1,0 +1,153 @@
+{
+  "arch": "effnetv2s",
+  "seed": 1337,
+  "epochs": 20,
+  "folds_requested": 2,
+  "folds_completed": 2,
+  "folds": {
+    "fold_3": {
+      "macro_f1": 0.7881568259604359,
+      "accuracy": 0.8594249201277955,
+      "balanced_accuracy": 0.7939562498126742,
+      "qwk": 0.9303724623523836,
+      "auc": 0.9512106022714423,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9811827956989247,
+          "recall": 0.9530026109660574,
+          "f1": 0.9668874172185431,
+          "support": 766
+        },
+        "Stage 1": {
+          "precision": 0.4112903225806452,
+          "recall": 0.4594594594594595,
+          "f1": 0.4340425531914894,
+          "support": 111
+        },
+        "Stage 2": {
+          "precision": 0.6544502617801047,
+          "recall": 0.6868131868131868,
+          "f1": 0.6702412868632708,
+          "support": 182
+        },
+        "Stage 3": {
+          "precision": 0.8931297709923665,
+          "recall": 0.8731343283582089,
+          "f1": 0.8830188679245283,
+          "support": 134
+        },
+        "Stage 4/5": {
+          "precision": 0.9411764705882353,
+          "recall": 0.8888888888888888,
+          "f1": 0.9142857142857143,
+          "support": 18
+        },
+        "AP-ROP": {
+          "precision": 0.8222222222222222,
+          "recall": 0.9024390243902439,
+          "f1": 0.8604651162790697,
+          "support": 41
+        }
+      },
+      "dir": "results/experiment_001_staging_effnetv2s_fold3_s1337_natural"
+    },
+    "fold_4": {
+      "macro_f1": 0.749399935878868,
+      "accuracy": 0.8611332801276935,
+      "balanced_accuracy": 0.7674942411213506,
+      "qwk": 0.9082628071054676,
+      "auc": 0.9482662733519572,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9762219286657859,
+          "recall": 0.9523195876288659,
+          "f1": 0.964122635355512,
+          "support": 776
+        },
+        "Stage 1": {
+          "precision": 0.4154929577464789,
+          "recall": 0.6413043478260869,
+          "f1": 0.5042735042735043,
+          "support": 92
+        },
+        "Stage 2": {
+          "precision": 0.7818181818181819,
+          "recall": 0.6417910447761194,
+          "f1": 0.7049180327868853,
+          "support": 201
+        },
+        "Stage 3": {
+          "precision": 0.8409090909090909,
+          "recall": 0.8473282442748091,
+          "f1": 0.844106463878327,
+          "support": 131
+        },
+        "Stage 4/5": {
+          "precision": 0.7222222222222222,
+          "recall": 0.7222222222222222,
+          "f1": 0.7222222222222222,
+          "support": 18
+        },
+        "AP-ROP": {
+          "precision": 0.717948717948718,
+          "recall": 0.8,
+          "f1": 0.7567567567567568,
+          "support": 35
+        }
+      },
+      "dir": "results/experiment_002_staging_effnetv2s_fold4_s1337_natural"
+    },
+    "fold_site": {
+      "macro_f1": 0.6593968845626156,
+      "accuracy": 0.8729729729729729,
+      "balanced_accuracy": 0.6460921754819514,
+      "qwk": 0.9540409146272035,
+      "auc": NaN,
+      "per_class": {
+        "Normal": {
+          "precision": 1.0,
+          "recall": 0.9914529914529915,
+          "f1": 0.9957081545064378,
+          "support": 234
+        },
+        "Stage 1": {
+          "precision": 0.88,
+          "recall": 0.4943820224719101,
+          "f1": 0.6330935251798561,
+          "support": 89
+        },
+        "Stage 2": {
+          "precision": 0.7043010752688172,
+          "recall": 0.803680981595092,
+          "f1": 0.7507163323782235,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.8951310861423221,
+          "recall": 0.9409448818897638,
+          "f1": 0.9174664107485605,
+          "support": 254
+        },
+        "Stage 4/5": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "AP-ROP": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "dir": "results/experiment_003_staging_effnetv2s_foldsite_s1337_natural"
+    }
+  },
+  "cv_macro_f1_mean": 0.7688,
+  "cv_macro_f1_sd": 0.0274,
+  "cv_balanced_accuracy_mean": 0.7807,
+  "cv_balanced_accuracy_sd": 0.0187,
+  "cv_qwk_mean": 0.9193,
+  "cv_qwk_sd": 0.0156
+}

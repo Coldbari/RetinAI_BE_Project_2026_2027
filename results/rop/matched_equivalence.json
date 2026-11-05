@@ -1,0 +1,260 @@
+{
+  "what": "Flat softmax vs the structured head at ONE sampling regime (natural prevalence), same folds/backbone/preprocessing, repeated at two seeds. Closes the confound that the previously reported comparison varied head AND sampler together.",
+  "previously_reported_confounded_arm": {
+    "what": "flat softmax with a WEIGHTED sampler \u2014 what the old table called 'flat'",
+    "cv_macro_f1_mean": 0.6828,
+    "cv_macro_f1_sd": 0.118
+  },
+  "seeds": {
+    "42": {
+      "seed": "42",
+      "arms": {
+        "structured_natural": {
+          "cv_macro_f1_mean": 0.6922,
+          "cv_macro_f1_sd": 0.0861,
+          "cv_qwk_mean": 0.8255,
+          "cv_qwk_sd": 0.1454,
+          "cv_arop_recall_mean": 0.6711,
+          "cv_arop_f1_mean": 0.7252,
+          "cv_stage2_recall_mean": 0.6316,
+          "per_fold_macro_f1": [
+            0.5527,
+            0.7573,
+            0.6712,
+            0.7184,
+            0.7616
+          ]
+        },
+        "flat_natural": {
+          "cv_macro_f1_mean": 0.6977,
+          "cv_macro_f1_sd": 0.0986,
+          "cv_qwk_mean": 0.8342,
+          "cv_qwk_sd": 0.1284,
+          "cv_arop_recall_mean": 0.7234,
+          "cv_arop_f1_mean": 0.7209,
+          "cv_stage2_recall_mean": 0.6147,
+          "per_fold_macro_f1": [
+            0.5451,
+            0.7521,
+            0.6556,
+            0.7454,
+            0.7904
+          ]
+        }
+      },
+      "per_fold": [
+        {
+          "fold": 0,
+          "structured": 0.5527,
+          "flat_natural": 0.5451,
+          "diff_structured_minus_flat": 0.0076,
+          "accuracy_diff_ci95_clustered": [
+            -0.0587,
+            0.017
+          ]
+        },
+        {
+          "fold": 1,
+          "structured": 0.7573,
+          "flat_natural": 0.7521,
+          "diff_structured_minus_flat": 0.0052,
+          "accuracy_diff_ci95_clustered": [
+            -0.0241,
+            0.0263
+          ]
+        },
+        {
+          "fold": 2,
+          "structured": 0.6712,
+          "flat_natural": 0.6556,
+          "diff_structured_minus_flat": 0.0156,
+          "accuracy_diff_ci95_clustered": [
+            0.0042,
+            0.0636
+          ]
+        },
+        {
+          "fold": 3,
+          "structured": 0.7184,
+          "flat_natural": 0.7454,
+          "diff_structured_minus_flat": -0.027,
+          "accuracy_diff_ci95_clustered": [
+            -0.0291,
+            0.0345
+          ]
+        },
+        {
+          "fold": 4,
+          "structured": 0.7616,
+          "flat_natural": 0.7904,
+          "diff_structured_minus_flat": -0.0288,
+          "accuracy_diff_ci95_clustered": [
+            -0.0542,
+            -0.0052
+          ]
+        }
+      ],
+      "held_out_hospital": {
+        "structured_natural": {
+          "macro_f1_present": 0.818,
+          "macro_f1_6label": 0.5454,
+          "qwk": 0.9462,
+          "classes_present": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "n": 740
+        },
+        "flat_natural": {
+          "macro_f1_present": 0.8182,
+          "macro_f1_6label": 0.5454,
+          "qwk": 0.947,
+          "classes_present": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "n": 740
+        }
+      },
+      "verdict": {
+        "structured_minus_flat_cv_mean": -0.0055,
+        "folds_favouring_structured": 3,
+        "folds_favouring_flat": 2,
+        "folds_whose_clustered_accuracy_CI_spans_zero": 3
+      }
+    },
+    "1337": {
+      "seed": "1337",
+      "arms": {
+        "structured_natural": {
+          "cv_macro_f1_mean": 0.7079,
+          "cv_macro_f1_sd": 0.0965,
+          "cv_qwk_mean": 0.8394,
+          "cv_qwk_sd": 0.1235,
+          "cv_arop_recall_mean": 0.6736,
+          "cv_arop_f1_mean": 0.7156,
+          "cv_stage2_recall_mean": 0.6454,
+          "per_fold_macro_f1": [
+            0.5464,
+            0.7687,
+            0.6908,
+            0.7554,
+            0.7783
+          ]
+        },
+        "flat_natural": {
+          "cv_macro_f1_mean": 0.6855,
+          "cv_macro_f1_sd": 0.1085,
+          "cv_qwk_mean": 0.8249,
+          "cv_qwk_sd": 0.1318,
+          "cv_arop_recall_mean": 0.7261,
+          "cv_arop_f1_mean": 0.6705,
+          "cv_stage2_recall_mean": 0.5947,
+          "per_fold_macro_f1": [
+            0.5767,
+            0.7539,
+            0.5594,
+            0.7882,
+            0.7494
+          ]
+        }
+      },
+      "per_fold": [
+        {
+          "fold": 0,
+          "structured": 0.5464,
+          "flat_natural": 0.5767,
+          "diff_structured_minus_flat": -0.0303,
+          "accuracy_diff_ci95_clustered": [
+            -0.0135,
+            0.0101
+          ]
+        },
+        {
+          "fold": 1,
+          "structured": 0.7687,
+          "flat_natural": 0.7539,
+          "diff_structured_minus_flat": 0.0148,
+          "accuracy_diff_ci95_clustered": [
+            -0.0058,
+            0.0282
+          ]
+        },
+        {
+          "fold": 2,
+          "structured": 0.6908,
+          "flat_natural": 0.5594,
+          "diff_structured_minus_flat": 0.1314,
+          "accuracy_diff_ci95_clustered": [
+            0.0411,
+            0.1216
+          ]
+        },
+        {
+          "fold": 3,
+          "structured": 0.7554,
+          "flat_natural": 0.7882,
+          "diff_structured_minus_flat": -0.0328,
+          "accuracy_diff_ci95_clustered": [
+            -0.0359,
+            0.0035
+          ]
+        },
+        {
+          "fold": 4,
+          "structured": 0.7783,
+          "flat_natural": 0.7494,
+          "diff_structured_minus_flat": 0.0289,
+          "accuracy_diff_ci95_clustered": [
+            -0.0125,
+            0.031
+          ]
+        }
+      ],
+      "held_out_hospital": {
+        "structured_natural": {
+          "macro_f1_present": 0.8201,
+          "macro_f1_6label": 0.5467,
+          "qwk": 0.96,
+          "classes_present": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "n": 740
+        },
+        "flat_natural": {
+          "macro_f1_present": 0.8242,
+          "macro_f1_6label": 0.5495,
+          "qwk": 0.954,
+          "classes_present": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "n": 740
+        }
+      },
+      "verdict": {
+        "structured_minus_flat_cv_mean": 0.0224,
+        "folds_favouring_structured": 3,
+        "folds_favouring_flat": 2,
+        "folds_whose_clustered_accuracy_CI_spans_zero": 4
+      }
+    }
+  },
+  "across_seeds": {
+    "structured_minus_flat": {
+      "seed_42": -0.0055,
+      "seed_1337": 0.0224
+    },
+    "sign_stable_across_seeds": false,
+    "reading": "The head difference is -0.0055 at seed 42 and +0.0224 at seed 1337 \u2014 OPPOSITE SIGNS. A difference that changes direction when only the random seed changes is not an architecture effect; it is noise, and reporting either seed alone would have produced a confident and wrong claim. Equivalence holds at both seeds."
+  }
+}

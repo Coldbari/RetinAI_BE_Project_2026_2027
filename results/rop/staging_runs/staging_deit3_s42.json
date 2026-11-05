@@ -1,0 +1,107 @@
+{
+  "arch": "deit3",
+  "seed": 42,
+  "epochs": 20,
+  "folds_requested": 1,
+  "folds_completed": 1,
+  "folds": {
+    "fold_0": {
+      "macro_f1": 0.5165891603697388,
+      "accuracy": 0.5842696629213483,
+      "balanced_accuracy": 0.6151148694243795,
+      "qwk": 0.5409137802473928,
+      "auc": 0.8809598128493441,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8439620081411127,
+          "recall": 0.8109517601043025,
+          "f1": 0.8271276595744681,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.1920374707259953,
+          "recall": 0.5985401459854015,
+          "f1": 0.2907801418439716,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.36666666666666664,
+          "recall": 0.4723926380368098,
+          "f1": 0.4128686327077748,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.5647668393782384,
+          "recall": 0.8449612403100775,
+          "f1": 0.6770186335403726,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.4838709677419355,
+          "recall": 0.7894736842105263,
+          "f1": 0.6,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.8924731182795699,
+          "recall": 0.17436974789915966,
+          "f1": 0.29173989455184535,
+          "support": 476
+        }
+      },
+      "dir": "results/experiment_001_staging_deit3_fold0_s42"
+    },
+    "fold_site": {
+      "macro_f1": 0.5074238221091949,
+      "accuracy": 0.7959459459459459,
+      "balanced_accuracy": 0.4951055264569402,
+      "qwk": 0.8738270310810722,
+      "auc": NaN,
+      "per_class": {
+        "Normal": {
+          "precision": 1.0,
+          "recall": 0.9145299145299145,
+          "f1": 0.9553571428571429,
+          "support": 234
+        },
+        "Stage 1": {
+          "precision": 0.71875,
+          "recall": 0.5168539325842697,
+          "f1": 0.6013071895424836,
+          "support": 89
+        },
+        "Stage 2": {
+          "precision": 0.6235955056179775,
+          "recall": 0.6809815950920245,
+          "f1": 0.6510263929618768,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.8164794007490637,
+          "recall": 0.8582677165354331,
+          "f1": 0.836852207293666,
+          "support": 254
+        },
+        "Stage 4/5": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "AP-ROP": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "dir": "results/experiment_002_staging_deit3_foldsite_s42"
+    }
+  },
+  "cv_macro_f1_mean": 0.5166,
+  "cv_macro_f1_sd": 0.0,
+  "cv_balanced_accuracy_mean": 0.6151,
+  "cv_balanced_accuracy_sd": 0.0,
+  "cv_qwk_mean": 0.5409,
+  "cv_qwk_sd": 0.0
+}

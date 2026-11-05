@@ -1,0 +1,34 @@
+{
+  "why": "The human ROP-staging literature reports UNWEIGHTED kappa; quadratic weighting inflates ordinal agreement because most errors are adjacent. Reporting only QWK makes our numbers incomparable to the only benchmark that matters.",
+  "human_benchmark": {
+    "inter_expert_stage_fleiss_kappa": 0.24,
+    "intra_expert_stage_cohen_kappa": 0.56,
+    "inter_expert_aprop_kappa": 0.35,
+    "stage_disagreement_rate": 0.4,
+    "type1_disease_agreement": ">0.95",
+    "sources": [
+      "Gschliesser et al., Am J Ophthalmol 2015;160(3):553-560 (PMID 26004406)",
+      "Campbell et al., Ophthalmology 2016;123(8):1795-1801 (PMID 27238376)"
+    ]
+  },
+  "not_a_superiority_claim": "Fleiss kappa among 7 mutually-disagreeing experts is a different quantity from Cohen kappa between one model and one institution's coding practice. We report both to show the reference standard is a moving target, never to claim superhuman agreement.",
+  "ours": {
+    "seed_42": {
+      "n": 6700,
+      "kappa_unweighted": 0.6549,
+      "kappa_linear": 0.7312,
+      "kappa_quadratic": 0.761
+    },
+    "seed_1337": {
+      "n": 6700,
+      "kappa_unweighted": 0.6806,
+      "kappa_linear": 0.754,
+      "kappa_quadratic": 0.7832
+    },
+    "seed_42_stage_only": {
+      "n": 6058,
+      "kappa_unweighted": 0.7014,
+      "kappa_quadratic": 0.8969
+    }
+  }
+}

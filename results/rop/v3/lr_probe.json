@@ -1,0 +1,63 @@
+{
+  "rule": "keep 1e-4 unless another lr's inner macro-F1 beats it by > 0.03; if several do, the best",
+  "grid": [
+    "3e-5",
+    "1e-4",
+    "2e-4"
+  ],
+  "arms": {
+    "retfound_green": {
+      "runs": {
+        "3e-5": {
+          "macro_f1": 0.7167748567327515,
+          "qwk": 0.8388302488748428,
+          "balanced_accuracy": 0.7647290123949136,
+          "gpu": "Tesla T4",
+          "n_inner": 497
+        },
+        "1e-4": {
+          "macro_f1": 0.7551173939481731,
+          "qwk": 0.856700064874216,
+          "balanced_accuracy": 0.782648150469214,
+          "gpu": "Tesla T4",
+          "n_inner": 497
+        },
+        "2e-4": {
+          "macro_f1": 0.8115962694403717,
+          "qwk": 0.9119249082287417,
+          "balanced_accuracy": 0.8293649648189717,
+          "gpu": "Tesla T4",
+          "n_inner": 497
+        }
+      },
+      "chosen_lr": "2e-4"
+    },
+    "dinov2_s": {
+      "runs": {
+        "3e-5": {
+          "macro_f1": 0.7464524673042842,
+          "qwk": 0.8601265252553587,
+          "balanced_accuracy": 0.7801806707120734,
+          "gpu": "Tesla T4",
+          "n_inner": 497
+        },
+        "1e-4": {
+          "macro_f1": 0.7638326063179434,
+          "qwk": 0.8718910691203835,
+          "balanced_accuracy": 0.8001119028055778,
+          "gpu": "Tesla T4",
+          "n_inner": 497
+        },
+        "2e-4": {
+          "macro_f1": 0.7719102275850395,
+          "qwk": 0.8704466128323435,
+          "balanced_accuracy": 0.8044151947943977,
+          "gpu": "Tesla T4",
+          "n_inner": 497
+        }
+      },
+      "chosen_lr": "1e-4"
+    }
+  },
+  "dev_predictions_deleted_unopened": 0
+}

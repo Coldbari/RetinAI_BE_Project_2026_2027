@@ -1,0 +1,336 @@
+{
+  "context": "fold 0 only, effnetv2s, seed 42, 20 epochs, last-epoch checkpoints. Fold 0 is the label-noisy fold (session-stamped AP-ROP labels): every image-level AP-ROP recall here is depressed by that, which is the evaluation-unit finding, not a model property. Single-fold numbers carry no error bars; only large gaps are interpretable.",
+  "readings": [
+    "The sampling confound is closed from both sides and changes nothing: flat holds with or without the sampler (QWK 0.603 weighted / 0.580 natural), while the CORN head only trains at natural prevalence (0.129 weighted). The flat-vs-structured CV equivalence stands on either sampling regime.",
+    "Four arms are statistically indistinguishable on this fold (flat-natural 0.580, no_branch 0.575, full 0.569, flat-weighted 0.603 QWK) \u2014 single-fold gaps this size are noise, per this project's own rule.",
+    "The two decisive gaps: +sampler on CORN collapses to 0.129, and no_ordinal decays to 0.394 \u2014 but no_ordinal held 0.645 at epoch 16 before a 4-epoch slide, and flat softmax at natural prevalence is fine, so read it as training instability of the masked-softmax+branch combination, not proof that softmax cannot rank. Last-epoch discipline reports the decay either way.",
+    "The adversary does not help: w0 0.648 vs w0.5 0.569 fold-0 QWK, cross-site tied (0.942 vs 0.946) \u2014 consistent with the disease-controlled probe finding.",
+    "Session-level AP-ROP scoring (ablation_session_level.json) lifts EVERY arm \u2014 0.73-0.95 recall with overlapping CIs on 22 sessions, flat-natural highest, and even the sampler-collapsed arm recovers to 0.909. The branch shows no session-level advantage either: its remaining justification is taxonomy fidelity (an independent AP-ROP probability, as ICROP-3 defines the form), not any measured recall gain. The evaluation-unit finding is model-independent, which is exactly what makes it a finding about the labels rather than about any architecture."
+  ],
+  "arms": {
+    "flat_weighted": {
+      "macro_f1": 0.5152,
+      "qwk": 0.603,
+      "arop_recall": 0.1912,
+      "arop_precision": 0.9479,
+      "stage2_recall": 0.454,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8616279069767442,
+          "recall": 0.9661016949152542,
+          "f1": 0.9108789182544561,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.2222222222222222,
+          "recall": 0.4233576642335766,
+          "f1": 0.2914572864321608,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.2835249042145594,
+          "recall": 0.4539877300613497,
+          "f1": 0.3490566037735849,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.8846153846153846,
+          "recall": 0.8914728682170543,
+          "f1": 0.888030888030888,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.20481927710843373,
+          "recall": 0.8947368421052632,
+          "f1": 0.3333333333333333,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9479166666666666,
+          "recall": 0.19117647058823528,
+          "f1": 0.3181818181818182,
+          "support": 476
+        }
+      },
+      "what": "flat 6-way softmax, weighted sampler (the benchmark baseline)"
+    },
+    "full": {
+      "macro_f1": 0.5527,
+      "qwk": 0.5685,
+      "arop_recall": 0.2122,
+      "arop_precision": 0.9619,
+      "stage2_recall": 0.5521,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8540925266903915,
+          "recall": 0.9387222946544981,
+          "f1": 0.8944099378881988,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.2366412213740458,
+          "recall": 0.45255474452554745,
+          "f1": 0.3107769423558897,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.313588850174216,
+          "recall": 0.5521472392638037,
+          "f1": 0.4,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.6981132075471698,
+          "recall": 0.8604651162790697,
+          "f1": 0.7708333333333334,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.45714285714285713,
+          "recall": 0.8421052631578947,
+          "f1": 0.5925925925925926,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9619047619047619,
+          "recall": 0.21218487394957983,
+          "f1": 0.3476764199655766,
+          "support": 476
+        }
+      },
+      "what": "CORN stages + AP-ROP branch + DANN w0.5, natural sampling"
+    },
+    "wsite0": {
+      "macro_f1": 0.5455,
+      "qwk": 0.6481,
+      "arop_recall": 0.2647,
+      "arop_precision": 0.9844,
+      "stage2_recall": 0.5276,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8769230769230769,
+          "recall": 0.9661016949152542,
+          "f1": 0.9193548387096774,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.28517110266159695,
+          "recall": 0.5474452554744526,
+          "f1": 0.375,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.37554585152838427,
+          "recall": 0.5276073619631901,
+          "f1": 0.4387755102040816,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.7913669064748201,
+          "recall": 0.8527131782945736,
+          "f1": 0.8208955223880597,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.1839080459770115,
+          "recall": 0.8421052631578947,
+          "f1": 0.3018867924528302,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.984375,
+          "recall": 0.2647058823529412,
+          "f1": 0.41721854304635764,
+          "support": 476
+        }
+      },
+      "what": "full head, adversary OFF (w_site=0) \u2014 true -DANN"
+    },
+    "plus_sampler": {
+      "macro_f1": 0.4026,
+      "qwk": 0.1291,
+      "arop_recall": 0.1408,
+      "arop_precision": 0.9853,
+      "stage2_recall": 0.5337,
+      "per_class": {
+        "Normal": {
+          "precision": 0.7403035413153457,
+          "recall": 0.5723598435462842,
+          "f1": 0.6455882352941177,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.28095238095238095,
+          "recall": 0.4306569343065693,
+          "f1": 0.3400576368876081,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.28524590163934427,
+          "recall": 0.5337423312883436,
+          "f1": 0.3717948717948718,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.6228571428571429,
+          "recall": 0.8449612403100775,
+          "f1": 0.7171052631578947,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.05,
+          "recall": 0.8947368421052632,
+          "f1": 0.0947075208913649,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9852941176470589,
+          "recall": 0.1407563025210084,
+          "f1": 0.24632352941176472,
+          "support": 476
+        }
+      },
+      "what": "full head trained with the weighted sampler (confound arm)"
+    },
+    "no_ordinal": {
+      "macro_f1": 0.4787,
+      "qwk": 0.3938,
+      "arop_recall": 0.1807,
+      "arop_precision": 1.0,
+      "stage2_recall": 0.5951,
+      "per_class": {
+        "Normal": {
+          "precision": 0.7813664596273292,
+          "recall": 0.8200782268578879,
+          "f1": 0.8002544529262087,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.32919254658385094,
+          "recall": 0.38686131386861317,
+          "f1": 0.35570469798657717,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.31290322580645163,
+          "recall": 0.5950920245398773,
+          "f1": 0.41014799154334036,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.773972602739726,
+          "recall": 0.875968992248062,
+          "f1": 0.8218181818181818,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.09836065573770492,
+          "recall": 0.9473684210526315,
+          "f1": 0.1782178217821782,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 1.0,
+          "recall": 0.18067226890756302,
+          "f1": 0.30604982206405695,
+          "support": 476
+        }
+      },
+      "what": "softmax over 5 stages + AP-ROP branch (CORN removed)",
+      "note": "QWK was 0.645 at epoch 16 and decayed to 0.394 by epoch 20 \u2014 last-epoch rule reports the decay; the instability is itself evidence the softmax head trains less stably here than CORN"
+    },
+    "no_branch": {
+      "macro_f1": 0.5485,
+      "qwk": 0.5748,
+      "arop_recall": 0.1954,
+      "arop_precision": 0.9588,
+      "stage2_recall": 0.5583,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8245033112582781,
+          "recall": 0.9739243807040417,
+          "f1": 0.8930065750149432,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.3105022831050228,
+          "recall": 0.49635036496350365,
+          "f1": 0.38202247191011235,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.33211678832116787,
+          "recall": 0.558282208588957,
+          "f1": 0.41647597254004576,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.7394366197183099,
+          "recall": 0.813953488372093,
+          "f1": 0.7749077490774908,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.33962264150943394,
+          "recall": 0.9473684210526315,
+          "f1": 0.5,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9587628865979382,
+          "recall": 0.1953781512605042,
+          "f1": 0.32460732984293195,
+          "support": 476
+        }
+      },
+      "what": "CORN over 6 forced ranks, AP-ROP as rank 5 (branch removed)"
+    },
+    "flat_natural": {
+      "macro_f1": 0.5626,
+      "qwk": 0.5797,
+      "arop_recall": 0.2374,
+      "arop_precision": 0.9741,
+      "stage2_recall": 0.5276,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8395904436860068,
+          "recall": 0.9621903520208605,
+          "f1": 0.8967193195625759,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.2397003745318352,
+          "recall": 0.46715328467153283,
+          "f1": 0.31683168316831684,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.3426294820717131,
+          "recall": 0.5276073619631901,
+          "f1": 0.41545893719806765,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.8296296296296296,
+          "recall": 0.8682170542635659,
+          "f1": 0.8484848484848485,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.37209302325581395,
+          "recall": 0.8421052631578947,
+          "f1": 0.5161290322580645,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9741379310344828,
+          "recall": 0.23739495798319327,
+          "f1": 0.38175675675675674,
+          "support": 476
+        }
+      },
+      "what": "flat 6-way softmax, natural sampling (confound arm)",
+      "npz": "results/rop/staging_runs/ablations/natural_fold0.npz"
+    }
+  }
+}

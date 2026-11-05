@@ -1,0 +1,102 @@
+{
+  "model": "structured",
+  "arch": "effnetv2s",
+  "seed": 42,
+  "epochs": 20,
+  "folds_requested": 1,
+  "folds_completed": 1,
+  "folds": {
+    "fold_0": {
+      "macro_f1": 0.5535885965609973,
+      "accuracy": 0.6842105263157895,
+      "balanced_accuracy": 0.6512829441086773,
+      "qwk": 0.6319669183746854,
+      "auc": 0.8675160218006881,
+      "per_class": {
+        "Normal": {
+          "precision": 0.8640661938534279,
+          "recall": 0.9530638852672751,
+          "f1": 0.9063856168629882,
+          "support": 767
+        },
+        "Stage 1": {
+          "precision": 0.3576158940397351,
+          "recall": 0.39416058394160586,
+          "f1": 0.375,
+          "support": 137
+        },
+        "Stage 2": {
+          "precision": 0.34375,
+          "recall": 0.6073619631901841,
+          "f1": 0.43902439024390244,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.5188679245283019,
+          "recall": 0.8527131782945736,
+          "f1": 0.6451612903225806,
+          "support": 129
+        },
+        "Stage 4/5": {
+          "precision": 0.3488372093023256,
+          "recall": 0.7894736842105263,
+          "f1": 0.4838709677419355,
+          "support": 19
+        },
+        "AP-ROP": {
+          "precision": 0.9801324503311258,
+          "recall": 0.31092436974789917,
+          "f1": 0.47208931419457734,
+          "support": 476
+        }
+      },
+      "dir": "results/experiment_001_structured_effnetv2s_fold0_s42"
+    },
+    "fold_site": {
+      "macro_f1": 0.6508420723427671,
+      "accuracy": 0.8648648648648649,
+      "balanced_accuracy": 0.6393946710206198,
+      "qwk": 0.954748259792525,
+      "auc": NaN,
+      "per_class": {
+        "Normal": {
+          "precision": 0.9957264957264957,
+          "recall": 0.9957264957264957,
+          "f1": 0.9957264957264957,
+          "support": 234
+        },
+        "Stage 1": {
+          "precision": 0.8235294117647058,
+          "recall": 0.47191011235955055,
+          "f1": 0.6,
+          "support": 89
+        },
+        "Stage 2": {
+          "precision": 0.6855670103092784,
+          "recall": 0.8159509202453987,
+          "f1": 0.7450980392156863,
+          "support": 163
+        },
+        "Stage 3": {
+          "precision": 0.9133858267716536,
+          "recall": 0.9133858267716536,
+          "f1": 0.9133858267716536,
+          "support": 254
+        },
+        "Stage 4/5": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "AP-ROP": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "dir": "results/experiment_002_structured_effnetv2s_foldsite_s42"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "arch": "effnetb0",
+  "seed": 42,
+  "epochs": 30,
+  "folds_requested": 1,
+  "folds_completed": 1,
+  "folds": {
+    "fold_0": {
+      "macro_f1": 0.4917227031876786,
+      "accuracy": 0.6173861620342992,
+      "balanced_accuracy": null,
+      "qwk": null,
+      "per_class_recall": null,
+      "dir": "results/experiment_001_staging_effnetb0_fold0_s42"
+    },
+    "fold_site": {
+      "macro_f1": 0.5363386600132124,
+      "accuracy": 0.8418918918918918,
+      "balanced_accuracy": null,
+      "qwk": null,
+      "per_class_recall": null,
+      "dir": "results/experiment_002_staging_effnetb0_foldsite_s42"
+    }
+  },
+  "cv_macro_f1_mean": 0.4917,
+  "cv_macro_f1_sd": 0.0
+}

@@ -1,0 +1,59 @@
+{
+ "what": "Linear site-probe (balanced acc, patient-grouped 5-fold CV) on penultimate embeddings, fold_0 val, effnetv2s, seed 42. 'controlled' = normal-class images only, holding disease constant so site-varying prevalence cannot explain the score.",
+ "untrained": {
+  "all_classes": 0.89,
+  "disease_controlled": 0.894
+ },
+ "flat_no_dann": {
+  "all_classes": 0.859,
+  "disease_controlled": 0.882
+ },
+ "structured_dann": {
+  "all_classes": 0.82,
+  "disease_controlled": 0.885,
+  "w_site": 0.5,
+  "superseded": "2026-08-15: these values were measured on a sibling training run of the same config whose checkpoint a later kernel version overwrote on Kaggle. The canonical fold-0 checkpoint (byte-identical to the HF-served weights, sha256 11b43960...) measures 0.809/0.852; the 0.033 sibling-run spread is a direct estimate of training-run variability in the probe. Authoritative cells with patient-clustered CIs: results/rop/dann_probe_ci.json."
+ },
+ "finding": "DANN reduces the NAIVE probe by 0.039 while leaving the disease-controlled probe unchanged (0.882 vs 0.885): it removed the disease-site correlation component, not site appearance. A naive probe overstates adversarial debiasing; the controlled probe is the honest instrument.",
+ "structured_dann_wsite2": {
+  "all_classes": 0.868,
+  "disease_controlled": 0.921,
+  "w_site": 2.0,
+  "clinical_cost": {
+   "arop_recall": "0.311 -> 0.168",
+   "qwk": "0.632 -> 0.525"
+  }
+ },
+ "dose_response": {
+  "w_site": [
+   0.0,
+   0.5,
+   2.0
+  ],
+  "naive_probe": [
+   0.788,
+   0.82,
+   0.868
+  ],
+  "controlled_probe": [
+   0.867,
+   0.885,
+   0.921
+  ],
+  "reference_flat_no_dann": {
+   "naive": 0.859,
+   "controlled": 0.882
+  },
+  "reference_untrained": {
+   "naive": 0.89,
+   "controlled": 0.894
+  },
+  "reading": "SUPERSEDED 2026-08-15 by results/rop/dann_probe_ci.json (patient-clustered CIs, hash-verified checkpoints): on the canonical checkpoints the controlled probe is 0.866 -> 0.852 -> 0.917 - NOT monotonic; the w=0->0.5 step is within noise (CI spans 0) and the w=2 jump is significant (+0.066, CI [+0.022,+0.115]). The durable claim: the adversary never reduces disease-controlled site decodability and significantly increases it at w=2, while costing clinical performance. The naive probe cannot see this."
+ },
+ "structured_wsite0": {
+  "all_classes": 0.788,
+  "disease_controlled": 0.867,
+  "w_site": 0.0,
+  "measured": "2026-08-14 on the checkpoint recovered from kernel rop-structured-ablation-wsite0-s42; same G5 protocol (linear probe, patient-grouped CV, fold_0 val). Until this measurement the w=0 row had been CARRIED OVER from w=0.5 in the paper draft - flagged by audit, now replaced by a real number."
+ }
+}

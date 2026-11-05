@@ -1,0 +1,38 @@
+{
+ "threshold": 0.5,
+ "image_level": {
+  "recall": 0.31092436974789917,
+  "n": 476,
+  "ci95": [
+   0.2695784934339212,
+   0.35463831402195817
+  ]
+ },
+ "session_level": {
+  "recall": 0.9047619047619048,
+  "n": 21,
+  "detected": 19,
+  "ci95": [
+   0.6962255930860758,
+   0.9882506821155542
+  ]
+ },
+ "patient_level": {
+  "recall": 0.8333333333333334,
+  "n": 6,
+  "ci95": [
+   0.35876542100232517,
+   0.9957892554855106
+  ]
+ },
+ "normal_fp_rate": {
+  "image": 0.0,
+  "session": 0.0
+ },
+ "median_frac_frames_below_p0.1_in_arop_sessions": 0.47058823529411764,
+ "frames_per_arop_session": {
+  "median": 18.0,
+  "max": 58
+ },
+ "SUPERSEDED": "2026-08-17: computed on an earlier prediction set (fold-0 image recall 0.311 vs canonical 0.212) and on fold 0 alone. The median_frac_frames_below_p0.1 of 0.4706 here is NOT the number to quote; see session_level_by_seed.json -> frames_without_the_appearance (Ostrava 0.704 of frames, median session 0.746)."
+}

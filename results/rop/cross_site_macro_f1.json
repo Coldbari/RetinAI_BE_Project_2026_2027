@@ -1,0 +1,67 @@
+{
+  "what": "Held-out-hospital macro-F1 with the denominator stated. The site has no stage 4/5 or AP-ROP, so a 6-label macro adds two structural zeros \u2014 a perfect classifier would score 0.667. macro_f1_present averages only the classes that occur at the site and is the number that describes the model.",
+  "perfect_classifier_would_score_6label": 0.6667,
+  "arms": {
+    "structured_s42": {
+      "n_images": 740,
+      "classes_present": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "macro_f1_6label": 0.5454,
+      "macro_f1_present": 0.818,
+      "per_class_f1": [
+        0.9915,
+        0.5874,
+        0.7705,
+        0.9228,
+        0.0,
+        0.0
+      ],
+      "source": "results/rop/staging_runs/structured_5fold/fold_site.npz"
+    },
+    "structured_s1337": {
+      "n_images": 740,
+      "classes_present": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "macro_f1_6label": 0.5467,
+      "macro_f1_present": 0.8201,
+      "per_class_f1": [
+        0.9957,
+        0.5692,
+        0.7897,
+        0.9256,
+        0.0,
+        0.0
+      ],
+      "source": "results/rop/staging_runs/structured_5fold_s1337/fold_site.npz"
+    },
+    "flat_s42": {
+      "n_images": 740,
+      "classes_present": [
+        "Normal",
+        "Stage 1",
+        "Stage 2",
+        "Stage 3"
+      ],
+      "macro_f1_6label": 0.5282,
+      "macro_f1_present": 0.7923,
+      "per_class_f1": [
+        0.9849,
+        0.5693,
+        0.7163,
+        0.8987,
+        0.0,
+        0.0
+      ],
+      "source": "results/rop/staging_runs/staging_effnetv2s_s42_5fold.json (per_class table)"
+    }
+  },
+  "reading": "Over the four classes the held-out hospital actually has, every arm clears 0.79 (flat 0.792, structured 0.818/0.820 across seeds). The previously quoted 0.528/0.545 measured the class roster of the site, not the classifier. QWK (0.930/0.946), computed only on present classes by construction, never had this problem \u2014 which is why the two metrics appeared to disagree."
+}

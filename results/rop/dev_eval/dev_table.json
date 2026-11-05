@@ -1,0 +1,1078 @@
+{
+  "protocol": "docs/paper/LOCKED_EVAL_PROTOCOL.md (committed before this ran)",
+  "set": "dev",
+  "n_images": 663,
+  "n_infants": 116,
+  "opened_at": "2026-08-18T18:57:53",
+  "device": "mps",
+  "cells": {
+    "structured_s42": {
+      "primary_per_checkpoint": {
+        "qwk": {
+          "mean": 0.4049,
+          "sd": 0.0099
+        },
+        "accuracy": {
+          "mean": 0.4284,
+          "sd": 0.0106
+        },
+        "macro_f1_present": {
+          "mean": 0.3611,
+          "sd": 0.0199
+        },
+        "macro_f1_6label": {
+          "mean": 0.3611,
+          "sd": 0.0199
+        },
+        "macro_f1_classes_ge30": {
+          "mean": 0.4062,
+          "sd": 0.0143
+        }
+      },
+      "coprimary_eye_level": {
+        "qwk": {
+          "mean": 0.7206,
+          "sd": 0.021
+        },
+        "accuracy": {
+          "mean": 0.6287,
+          "sd": 0.0113
+        },
+        "macro_f1_present": {
+          "mean": 0.5506,
+          "sd": 0.0092
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1722,
+          "sd": 0.021
+        }
+      },
+      "n_eyes": 230,
+      "n_stage123_eyes": 173,
+      "view_miss_table_ckpt_mean": {
+        "nasal": {
+          "n": 161,
+          "called_normal_mean": 0.682
+        },
+        "posterior pole": {
+          "n": 160,
+          "called_normal_mean": 0.7725
+        },
+        "temporal": {
+          "n": 172,
+          "called_normal_mean": 0.1721
+        }
+      },
+      "primary_qwk_ci95_clustered": [
+        0.3328,
+        0.4761
+      ],
+      "primary_macro_f1_present_ci95_clustered": [
+        0.3005,
+        0.4348
+      ],
+      "secondary_ensemble": {
+        "qwk": 0.3966,
+        "accuracy": 0.4344,
+        "macro_f1_present": 0.3698,
+        "macro_f1_6label": 0.3698,
+        "macro_f1_classes_ge30": 0.4142,
+        "per_class_recall": {
+          "normal": {
+            "recall": 1.0,
+            "n": 150
+          },
+          "stage_1": {
+            "recall": 0.1789,
+            "n": 190
+          },
+          "stage_2": {
+            "recall": 0.3704,
+            "n": 135
+          },
+          "stage_3": {
+            "recall": 0.2917,
+            "n": 168
+          },
+          "stage_4_5": {
+            "recall": 0.2857,
+            "n": 14
+          },
+          "arop": {
+            "recall": 0.1667,
+            "n": 6
+          }
+        }
+      },
+      "per_checkpoint_detail": [
+        {
+          "qwk": 0.4207,
+          "accuracy": 0.4359,
+          "macro_f1_present": 0.3887,
+          "macro_f1_6label": 0.3887,
+          "macro_f1_classes_ge30": 0.4153,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9867,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1684,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3704,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3155,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2857,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.3333,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.3976,
+          "accuracy": 0.4133,
+          "macro_f1_present": 0.3419,
+          "macro_f1_6label": 0.3419,
+          "macro_f1_classes_ge30": 0.389,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9733,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.2105,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.2889,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2679,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2143,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.1667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4079,
+          "accuracy": 0.4238,
+          "macro_f1_present": 0.3581,
+          "macro_f1_6label": 0.3581,
+          "macro_f1_classes_ge30": 0.3993,
+          "per_class_recall": {
+            "normal": {
+              "recall": 1.0,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1474,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3704,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2857,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2143,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.3333,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.3968,
+          "accuracy": 0.4404,
+          "macro_f1_present": 0.3438,
+          "macro_f1_6label": 0.3438,
+          "macro_f1_classes_ge30": 0.4254,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.98,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1895,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.4222,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2917,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.1429,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.1667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4014,
+          "accuracy": 0.4284,
+          "macro_f1_present": 0.3731,
+          "macro_f1_6label": 0.3731,
+          "macro_f1_classes_ge30": 0.4018,
+          "per_class_recall": {
+            "normal": {
+              "recall": 1.0,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1737,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3852,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.256,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.3571,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.1667,
+              "n": 6
+            }
+          }
+        }
+      ],
+      "unvalidated_note": "stage_4_5 and arop cells are NOT externally validated at these n regardless of their values (pre-registered)."
+    },
+    "structured_s1337": {
+      "primary_per_checkpoint": {
+        "qwk": {
+          "mean": 0.3977,
+          "sd": 0.0194
+        },
+        "accuracy": {
+          "mean": 0.425,
+          "sd": 0.0136
+        },
+        "macro_f1_present": {
+          "mean": 0.3576,
+          "sd": 0.022
+        },
+        "macro_f1_6label": {
+          "mean": 0.3576,
+          "sd": 0.022
+        },
+        "macro_f1_classes_ge30": {
+          "mean": 0.4038,
+          "sd": 0.0168
+        }
+      },
+      "coprimary_eye_level": {
+        "qwk": {
+          "mean": 0.7215,
+          "sd": 0.0241
+        },
+        "accuracy": {
+          "mean": 0.6252,
+          "sd": 0.0178
+        },
+        "macro_f1_present": {
+          "mean": 0.538,
+          "sd": 0.0212
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1826,
+          "sd": 0.0167
+        }
+      },
+      "n_eyes": 230,
+      "n_stage123_eyes": 173,
+      "view_miss_table_ckpt_mean": {
+        "nasal": {
+          "n": 161,
+          "called_normal_mean": 0.7006
+        },
+        "posterior pole": {
+          "n": 160,
+          "called_normal_mean": 0.79
+        },
+        "temporal": {
+          "n": 172,
+          "called_normal_mean": 0.1826
+        }
+      },
+      "primary_qwk_ci95_clustered": [
+        0.3275,
+        0.4678
+      ],
+      "primary_macro_f1_present_ci95_clustered": [
+        0.2984,
+        0.4317
+      ],
+      "secondary_ensemble": {
+        "qwk": 0.3972,
+        "accuracy": 0.4268,
+        "macro_f1_present": 0.3819,
+        "macro_f1_6label": 0.3819,
+        "macro_f1_classes_ge30": 0.4029,
+        "per_class_recall": {
+          "normal": {
+            "recall": 1.0,
+            "n": 150
+          },
+          "stage_1": {
+            "recall": 0.1842,
+            "n": 190
+          },
+          "stage_2": {
+            "recall": 0.3185,
+            "n": 135
+          },
+          "stage_3": {
+            "recall": 0.2917,
+            "n": 168
+          },
+          "stage_4_5": {
+            "recall": 0.2857,
+            "n": 14
+          },
+          "arop": {
+            "recall": 0.3333,
+            "n": 6
+          }
+        }
+      },
+      "per_checkpoint_detail": [
+        {
+          "qwk": 0.3838,
+          "accuracy": 0.4118,
+          "macro_f1_present": 0.3512,
+          "macro_f1_6label": 0.3512,
+          "macro_f1_classes_ge30": 0.3886,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.98,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1684,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.2889,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2976,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2143,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.3333,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.3708,
+          "accuracy": 0.4118,
+          "macro_f1_present": 0.3325,
+          "macro_f1_6label": 0.3325,
+          "macro_f1_classes_ge30": 0.3861,
+          "per_class_recall": {
+            "normal": {
+              "recall": 1.0,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1895,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.2963,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.256,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2143,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.1667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4157,
+          "accuracy": 0.4404,
+          "macro_f1_present": 0.3784,
+          "macro_f1_6label": 0.3784,
+          "macro_f1_classes_ge30": 0.4207,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9933,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.2,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3556,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3095,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2857,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.1667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4064,
+          "accuracy": 0.4238,
+          "macro_f1_present": 0.3434,
+          "macro_f1_6label": 0.3434,
+          "macro_f1_classes_ge30": 0.4026,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.98,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1895,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3407,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2917,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.1429,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.1667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4116,
+          "accuracy": 0.4374,
+          "macro_f1_present": 0.3826,
+          "macro_f1_6label": 0.3826,
+          "macro_f1_classes_ge30": 0.4211,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.98,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1789,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3778,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3095,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.2857,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.3333,
+              "n": 6
+            }
+          }
+        }
+      ],
+      "unvalidated_note": "stage_4_5 and arop cells are NOT externally validated at these n regardless of their values (pre-registered)."
+    },
+    "flat_s42": {
+      "primary_per_checkpoint": {
+        "qwk": {
+          "mean": 0.4368,
+          "sd": 0.0245
+        },
+        "accuracy": {
+          "mean": 0.4377,
+          "sd": 0.008
+        },
+        "macro_f1_present": {
+          "mean": 0.4134,
+          "sd": 0.0194
+        },
+        "macro_f1_6label": {
+          "mean": 0.4134,
+          "sd": 0.0194
+        },
+        "macro_f1_classes_ge30": {
+          "mean": 0.4134,
+          "sd": 0.0098
+        }
+      },
+      "coprimary_eye_level": {
+        "qwk": {
+          "mean": 0.7101,
+          "sd": 0.0331
+        },
+        "accuracy": {
+          "mean": 0.6217,
+          "sd": 0.024
+        },
+        "macro_f1_present": {
+          "mean": 0.5594,
+          "sd": 0.0426
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1514,
+          "sd": 0.0063
+        }
+      },
+      "n_eyes": 230,
+      "n_stage123_eyes": 173,
+      "view_miss_table_ckpt_mean": {
+        "nasal": {
+          "n": 161,
+          "called_normal_mean": 0.682
+        },
+        "posterior pole": {
+          "n": 160,
+          "called_normal_mean": 0.7675
+        },
+        "temporal": {
+          "n": 172,
+          "called_normal_mean": 0.1453
+        }
+      },
+      "primary_qwk_ci95_clustered": [
+        0.3547,
+        0.5144
+      ],
+      "primary_macro_f1_present_ci95_clustered": [
+        0.3571,
+        0.4783
+      ],
+      "secondary_ensemble": {
+        "qwk": 0.4162,
+        "accuracy": 0.4299,
+        "macro_f1_present": 0.3928,
+        "macro_f1_6label": 0.3928,
+        "macro_f1_classes_ge30": 0.4049,
+        "per_class_recall": {
+          "normal": {
+            "recall": 0.9933,
+            "n": 150
+          },
+          "stage_1": {
+            "recall": 0.1842,
+            "n": 190
+          },
+          "stage_2": {
+            "recall": 0.3333,
+            "n": 135
+          },
+          "stage_3": {
+            "recall": 0.2857,
+            "n": 168
+          },
+          "stage_4_5": {
+            "recall": 0.3571,
+            "n": 14
+          },
+          "arop": {
+            "recall": 0.5,
+            "n": 6
+          }
+        }
+      },
+      "per_checkpoint_detail": [
+        {
+          "qwk": 0.4592,
+          "accuracy": 0.4449,
+          "macro_f1_present": 0.4405,
+          "macro_f1_6label": 0.4405,
+          "macro_f1_classes_ge30": 0.4155,
+          "per_class_recall": {
+            "normal": {
+              "recall": 1.0,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1579,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3259,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3571,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.5,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.6667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4193,
+          "accuracy": 0.4284,
+          "macro_f1_present": 0.4248,
+          "macro_f1_6label": 0.4248,
+          "macro_f1_classes_ge30": 0.4008,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9933,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1842,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.2889,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3036,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.6667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4212,
+          "accuracy": 0.4314,
+          "macro_f1_present": 0.3935,
+          "macro_f1_6label": 0.3935,
+          "macro_f1_classes_ge30": 0.4075,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9933,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.2,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.2963,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3036,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.3571,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.5,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4676,
+          "accuracy": 0.4374,
+          "macro_f1_present": 0.398,
+          "macro_f1_6label": 0.398,
+          "macro_f1_classes_ge30": 0.4165,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9733,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1789,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.363,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3095,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.5,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4167,
+          "accuracy": 0.4465,
+          "macro_f1_present": 0.41,
+          "macro_f1_6label": 0.41,
+          "macro_f1_classes_ge30": 0.4266,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9867,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1789,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3926,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3155,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.3333,
+              "n": 6
+            }
+          }
+        }
+      ],
+      "unvalidated_note": "stage_4_5 and arop cells are NOT externally validated at these n regardless of their values (pre-registered)."
+    },
+    "flat_s1337": {
+      "primary_per_checkpoint": {
+        "qwk": {
+          "mean": 0.4388,
+          "sd": 0.0128
+        },
+        "accuracy": {
+          "mean": 0.4398,
+          "sd": 0.0123
+        },
+        "macro_f1_present": {
+          "mean": 0.4165,
+          "sd": 0.017
+        },
+        "macro_f1_6label": {
+          "mean": 0.4165,
+          "sd": 0.017
+        },
+        "macro_f1_classes_ge30": {
+          "mean": 0.4156,
+          "sd": 0.0156
+        }
+      },
+      "coprimary_eye_level": {
+        "qwk": {
+          "mean": 0.727,
+          "sd": 0.0208
+        },
+        "accuracy": {
+          "mean": 0.6269,
+          "sd": 0.0235
+        },
+        "macro_f1_present": {
+          "mean": 0.5858,
+          "sd": 0.0277
+        },
+        "stage123_eyes_called_normal": {
+          "mean": 0.1757,
+          "sd": 0.0251
+        }
+      },
+      "n_eyes": 230,
+      "n_stage123_eyes": 173,
+      "view_miss_table_ckpt_mean": {
+        "nasal": {
+          "n": 161,
+          "called_normal_mean": 0.6969
+        },
+        "posterior pole": {
+          "n": 160,
+          "called_normal_mean": 0.7663
+        },
+        "temporal": {
+          "n": 172,
+          "called_normal_mean": 0.1628
+        }
+      },
+      "primary_qwk_ci95_clustered": [
+        0.3559,
+        0.5158
+      ],
+      "primary_macro_f1_present_ci95_clustered": [
+        0.3722,
+        0.4772
+      ],
+      "secondary_ensemble": {
+        "qwk": 0.444,
+        "accuracy": 0.4419,
+        "macro_f1_present": 0.4223,
+        "macro_f1_6label": 0.4223,
+        "macro_f1_classes_ge30": 0.4182,
+        "per_class_recall": {
+          "normal": {
+            "recall": 0.9933,
+            "n": 150
+          },
+          "stage_1": {
+            "recall": 0.1789,
+            "n": 190
+          },
+          "stage_2": {
+            "recall": 0.3704,
+            "n": 135
+          },
+          "stage_3": {
+            "recall": 0.3036,
+            "n": 168
+          },
+          "stage_4_5": {
+            "recall": 0.4286,
+            "n": 14
+          },
+          "arop": {
+            "recall": 0.5,
+            "n": 6
+          }
+        }
+      },
+      "per_checkpoint_detail": [
+        {
+          "qwk": 0.4391,
+          "accuracy": 0.4223,
+          "macro_f1_present": 0.395,
+          "macro_f1_6label": 0.395,
+          "macro_f1_classes_ge30": 0.3936,
+          "per_class_recall": {
+            "normal": {
+              "recall": 1.0,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1632,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3259,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2738,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.5,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4249,
+          "accuracy": 0.4374,
+          "macro_f1_present": 0.4353,
+          "macro_f1_6label": 0.4353,
+          "macro_f1_classes_ge30": 0.4114,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9867,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1474,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3926,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3036,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.6667,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.436,
+          "accuracy": 0.4555,
+          "macro_f1_present": 0.4324,
+          "macro_f1_6label": 0.4324,
+          "macro_f1_classes_ge30": 0.4353,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9867,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1842,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.4148,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3274,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.3333,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4597,
+          "accuracy": 0.4465,
+          "macro_f1_present": 0.4086,
+          "macro_f1_6label": 0.4086,
+          "macro_f1_classes_ge30": 0.4243,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9867,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1526,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.4,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.3393,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.3571,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.5,
+              "n": 6
+            }
+          }
+        },
+        {
+          "qwk": 0.4341,
+          "accuracy": 0.4374,
+          "macro_f1_present": 0.4111,
+          "macro_f1_6label": 0.4111,
+          "macro_f1_classes_ge30": 0.4136,
+          "per_class_recall": {
+            "normal": {
+              "recall": 0.9933,
+              "n": 150
+            },
+            "stage_1": {
+              "recall": 0.1789,
+              "n": 190
+            },
+            "stage_2": {
+              "recall": 0.3556,
+              "n": 135
+            },
+            "stage_3": {
+              "recall": 0.2917,
+              "n": 168
+            },
+            "stage_4_5": {
+              "recall": 0.4286,
+              "n": 14
+            },
+            "arop": {
+              "recall": 0.6667,
+              "n": 6
+            }
+          }
+        }
+      ],
+      "unvalidated_note": "stage_4_5 and arop cells are NOT externally validated at these n regardless of their values (pre-registered)."
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "what": "The 6-class predictions re-scored as the binary decisions a screening service actually makes, at both the image and the examination-session unit.",
+  "definitions": {
+    "referral_warranted": "any ROP: stage 1, 2, 3, 4/5 or AP-ROP",
+    "severe": "stage 3, stage 4/5, or AP-ROP \u2014 the end of the ladder where treatment decisions live",
+    "why_not_type_1": "ICROP-3 Type 1 is defined on zone x stage x plus. This corpus has no usable zone axis (Multi-View records zone for 13 of 232 patients; the rest record none), so Type 1 cannot be computed and is not claimed.",
+    "bias_direction": "SEVERE over-includes \u2014 a stage 3 in zone III without plus is not Type 1. It is a sensitivity-oriented proxy, stated so that it is not read as Type 1 performance."
+  },
+  "endpoints": {
+    "referral_warranted": {
+      "image": {
+        "unit": "image",
+        "n": 6700,
+        "n_positive": 2863,
+        "tp": 2585,
+        "fn": 278,
+        "fp": 187,
+        "tn": 3650,
+        "sensitivity": 0.9029,
+        "sensitivity_ci95_exact": [
+          0.8915,
+          0.9135
+        ],
+        "specificity": 0.9513,
+        "specificity_ci95_exact": [
+          0.944,
+          0.9579
+        ],
+        "ppv": 0.9325,
+        "npv": 0.9292,
+        "sensitivity_ci95_patient_clustered": [
+          0.8703,
+          0.9443
+        ],
+        "ci_note": "the clustered interval is the one to quote; the exact interval treats correlated frames from one infant as independent evidence"
+      },
+      "session": {
+        "unit": "session",
+        "n": 1722,
+        "n_positive": 963,
+        "tp": 952,
+        "fn": 11,
+        "fp": 88,
+        "tn": 671,
+        "sensitivity": 0.9886,
+        "sensitivity_ci95_exact": [
+          0.9797,
+          0.9943
+        ],
+        "specificity": 0.8841,
+        "specificity_ci95_exact": [
+          0.8591,
+          0.906
+        ],
+        "ppv": 0.9154,
+        "npv": 0.9839,
+        "sensitivity_ci95_patient_clustered": [
+          0.982,
+          0.9949
+        ],
+        "ci_note": "the clustered interval is the one to quote; the exact interval treats correlated frames from one infant as independent evidence"
+      }
+    },
+    "severe": {
+      "image": {
+        "unit": "image",
+        "n": 6700,
+        "n_positive": 1327,
+        "tp": 821,
+        "fn": 506,
+        "fp": 103,
+        "tn": 5270,
+        "sensitivity": 0.6187,
+        "sensitivity_ci95_exact": [
+          0.5919,
+          0.6449
+        ],
+        "specificity": 0.9808,
+        "specificity_ci95_exact": [
+          0.9768,
+          0.9843
+        ],
+        "ppv": 0.8885,
+        "npv": 0.9124,
+        "sensitivity_ci95_patient_clustered": [
+          0.4689,
+          0.8764
+        ],
+        "ci_note": "the clustered interval is the one to quote; the exact interval treats correlated frames from one infant as independent evidence"
+      },
+      "session": {
+        "unit": "session",
+        "n": 1722,
+        "n_positive": 491,
+        "tp": 444,
+        "fn": 47,
+        "fp": 37,
+        "tn": 1194,
+        "sensitivity": 0.9043,
+        "sensitivity_ci95_exact": [
+          0.8747,
+          0.9288
+        ],
+        "specificity": 0.9699,
+        "specificity_ci95_exact": [
+          0.9588,
+          0.9788
+        ],
+        "ppv": 0.9231,
+        "npv": 0.9621,
+        "sensitivity_ci95_patient_clustered": [
+          0.8781,
+          0.9293
+        ],
+        "ci_note": "the clustered interval is the one to quote; the exact interval treats correlated frames from one infant as independent evidence"
+      }
+    }
+  },
+  "severe_miss_anatomy": {
+    "severe_images": 1327,
+    "missed": 506,
+    "predicted_instead": {
+      "normal": 106,
+      "stage_1": 116,
+      "stage_2": 284
+    },
+    "adjacent_misses": 284,
+    "called_normal": 106,
+    "reading": "Of 506 missed severe images, 284 were called stage 2 \u2014 a near miss a graded referral protocol still escalates \u2014 and 106 were called normal, which is the failure that matters. The ratio, not the miss count, is the clinically informative number, and it is a direct consequence of training the stage axis as an ORDINAL problem: errors land next door.",
+    "sessions_severe": 491,
+    "sessions_missed_entirely": 47
+  }
+}

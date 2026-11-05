@@ -1,0 +1,11 @@
+{
+  "dropped_contradictory": 39,
+  "merged_signatures": 14,
+  "units": 174,
+  "positives": 59,
+  "counts": {
+    "train": 4173,
+    "val": 851,
+    "test": 941
+  }
+}
