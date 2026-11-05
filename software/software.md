@@ -11,6 +11,11 @@ architecture and flowchart images the README uses:
 python software/make_diagrams.py
 ```
 
+> **Current model (November 2026).** The app now serves a DINOv2 ViT-S/14 five-fold ensemble, set
+> by `configs/rop_staging_deploy.yaml`. The notes below were written during the earlier phases,
+> so their EfficientNetV2-S and ResNet50 details are the record of those phases. The
+> [README](../README.md#the-served-model-and-the-v3v4-rounds) has the current state.
+
 ---
 
 ## 1. The config-driven training framework
@@ -230,7 +235,7 @@ EfficientNet-B0, EfficientNetV2-S, ConvNeXt-T (in12k), DeiT3-S, CAFormer-S18.
 
 `models/comparison/make_table.py` will not state a ranking the numbers cannot support. On one
 fold and one seed the spread is 0.028 macro-F1, so what it reports is that no model is separable
-from another, not that EfficientNetV2-S wins. Full 5-fold CV is running.
+from another, not that EfficientNetV2-S wins. The full 5-fold CV has since finished; see the README.
 
 ### The structured head, `configs/rop_staging_structured.yaml`
 

@@ -17,9 +17,9 @@ project history.</sub>
 [![Weights](https://img.shields.io/badge/Weights-HuggingFace-FFD21E?style=flat&logo=huggingface)](https://huggingface.co/Champ610/retinai-rop-weights)
 
 RetinAI screens a colour fundus (retina) photograph for Retinopathy of Prematurity (ROP). The
-deployed product is deliberately ROP-only. One model — EfficientNetV2-S with a clinically
-structured head — produces both the binary screening verdict, at a sensitivity-first operating
-point vetted at two hospitals, and a 6-class ICROP staging research preview. Every result comes
+deployed product is deliberately ROP-only. One model — a five-checkpoint DINOv2 ViT-S/14 ensemble,
+served since 1 Nov 2026 — produces both the binary screening verdict, at an operating point
+pre-registered on cross-validation, and a 6-class ICROP staging research preview. Every result comes
 back with a Grad-CAM heatmap taken from that same model, a graded risk level and a downloadable
 PDF report.
 The DR and glaucoma models we built earlier in the project were retired from the product after
@@ -347,13 +347,14 @@ than leaving it blank, since the template asks for it.
 
 ## Technologies Used
 
-* **Deep learning:** PyTorch, EfficientNetV2-S, ResNet50, ImageNet transfer learning,
+* **Deep learning:** PyTorch, DINOv2 ViT-S/14 (timm), EfficientNetV2-S, ResNet50, transfer learning,
   mixed-precision (AMP) training, OneCycleLR, gradient accumulation, Mixup regularisation
 * **Loss design:** focal loss (gamma 2.0), class-balanced weights using the effective-number
   method, weighted random sampling, ordinal regression head
 * **Computer vision:** circle-crop segmentation, CLAHE, Ben-Graham background subtraction,
   5-view test-time augmentation, letterbox resizing
-* **Explainable AI:** Grad-CAM through forward and backward hooks on the last conv layer
+* **Explainable AI:** Grad-CAM through forward and backward hooks, on the last conv layer for the
+  CNNs and on the token grid for the ViT ensemble
 * **Statistics:** quadratic weighted kappa, bootstrap confidence intervals, cluster-bootstrap
   over patients, McNemar and DeLong tests, expected calibration error, temperature scaling
 * **Web:** Flask, Jinja2, vanilla JavaScript, ReportLab
@@ -389,6 +390,9 @@ than leaving it blank, since the template asks for it.
 12. **Integration.** Flask web app, Android client, PDF reporting, Docker deployment.
 13. **Documentation and publication.** This repository, the technical documentation set, and a
     paper in preparation.
+14. **Model redesign after the review.** A pre-registered protocol compared nine arms at two seeds
+    on the same folds, selected on cross-validation only, and scored per eye at a hospital the
+    models never trained on.
 
 ---
 
@@ -411,7 +415,10 @@ than leaving it blank, since the template asks for it.
 | Week 15 (14 Sep) | Package the eleven ROP sources into one releasable, de-identified dataset | Completed |
 | Week 16 (21 Sep) | Log book brought current; September work committed and pushed | Completed |
 | Week 16–18 (22 Sep – 11 Oct) | Post-proposal review: evidence package, review decks, proposal document, metric sheet; review presented | Completed |
-| Week 19 (12 Oct) | Respond to review feedback: eye-level model redesign — data audit and literature survey first | In progress |
+| Week 19 (12 Oct) | Respond to review feedback: eye-level model redesign — data audit and literature survey first | Completed |
+| Week 20–21 (19 Oct – 01 Nov) | Pre-registered v3 and v4 rounds: nine arms, two seeds, eye-level scoring, leave-one-source-out folds | Completed |
+| Week 22 (02 Nov) | Move the app to the selected model; second paper draft, results compendium and BE report; publish the code and results in this log book | Completed |
+| Next | Second and final opening of the locked half, after supervisor approval; publish the served checkpoints | Planned |
 
 ---
 
@@ -430,24 +437,18 @@ got done that week.
 | Week 8 | 27 Jul–02 Aug 2026 | Safety, honesty and statistics overhaul. T9 device-confound audit, which confirmed a real confound. Cluster-bootstrap intervals. DR and glaucoma serving calibration. Gradability gate false-rejection measured on adults. Glaucoma source audit. Started the Android client | Finish the Android client and the confound audits | ROP's 0.927 turned out to be partly device recognition. We also found and closed a PHI egress risk | 21 |
 | Week 9 | 03–09 Aug 2026 | Android client finished (CameraX capture, on-device quality gate, result and report screens, PDF export, instrumented tests). T12 glaucoma zero-shot range. T13 DR on IDRiD plus resolution sensitivity. T16 cross-disease routing. T17 confusion matrices and clinic PPV. 12 evidence figures. PHI incident remediated. ROP staging corpus consolidated from four sources | ROP 6-class ICROP staging, five-backbone benchmark | Six infant patient photographs were being served publicly. Removed and swept. Also found the ROP model fires on 59 of 59 adult eyes | 43 |
 | Week 10 | 10–16 Aug 2026 | ROP 6-class ICROP staging, corpus to conclusions. Corpus consolidated from four sources (6,700 CV images from 1,528 infants, plus 1,324 held-out). Patient-grouped 5-fold splits with a held-out hospital. Five-gate shortcut audit passed. Five-backbone benchmark. Clinically-structured head built and cross-validated against flat softmax — the two are equivalent (macro-F1 0.692 ± 0.086 vs 0.683 ± 0.118), which withdrew our earlier fold-0 claim that the structured head wins. Seven-arm ablation isolating the ordinal head, the AP-ROP branch, the sampler and the adversary. Session-level AP-ROP scoring pooled over all folds (0.84 recall against 0.35 image-level). Patient-clustered bootstrap CIs and calibration (ECE) | Seed repeats 1337 and 2024, session-level scoring of every ablation arm, start the ISBI draft | The fold-0 result we had built the architecture story on did not survive 5-fold CV — fold 0 concentrates the session-labelled AP-ROP infants, and all five backbones had "failed" on the same broken evaluation unit rather than on the disease. The corrected claim is measurement, not architecture | 24 |
-
 | Week 11 | 17–23 Aug 2026 | Number-by-number verification of every published claim (19 errors found in 261, all corrected). Matched head×seed 2×2 closing the sampling confound — the equivalence result's sign flips between seeds. Locked held-out-hospital test **pre-registered, then opened once** on 18 Aug; eye-level QWK 0.79–0.80 across all four arm-seed cells, and both measurement findings replicate externally. Repository narrowed to ROP only (158 renames, zero deletions). Gradability gate rebuilt twice from real uploads: v2 structural checks, v3 a learned feature-space layer. Grad-CAM confined to the retina with its off-retina leakage published as a number. **Binary screening re-based off the ResNet50 onto the structured model** after an external audit found the served threshold degenerate | ISBI draft compressed into the 4-page LaTeX template; contact a pediatric ophthalmologist co-author for label adjudication | Our own web app scored a photograph of furniture, then a night-time temple interior, as ROP-positive — the gate was a colour rule list, not a gate. Then a healthy retina came back "ROP Detected 48.4%", and the audit that followed showed the screening head flags 100% of images at any hospital it did not train on. Both were found by uploading real images to our own product rather than by reading a metric | 16 |
-
 | Week 12 | 24–30 Aug 2026 | No repository activity. The ISBI LaTeX package and the editable Word version had landed on 22 Aug, at the end of Week 11, and this week went to the co-author approach for label adjudication, which is correspondence rather than code | Make the demo runnable by someone who is not us | The pediatric-ophthalmologist co-author contact has not yet produced an adjudication agreement, so the label-quality ceiling described in the Limitations section is still unaddressed. It is the single biggest open risk in the project | 0 |
-
 | Week 13 | 31 Aug–06 Sep 2026 | **Two pages of the app stopped disagreeing about the same photograph.** The Gallery was still calling the retired ResNet50 head directly while /screen went through the registry, so one image could be "ROP Detected" on one page and "No ROP" on the other. Gallery now routes through the same `REGISTRY.analyze` path the product serves. Session history retention forced to zero on any public build, so a hosted deployment cannot show one operator's infant fundus uploads and PDF reports to the next visitor. `demo.sh` — one command, waits for the app to answer before opening the browser — plus `DEMO.md`, a presenter runbook with the numbers to quote. 34 demo images vetted and fixed into the private repository with their measured scores | Test whether a better preprocessing pipeline removes the known device shortcut | The retention deque was process-global. On a single-operator laptop that is a feature; on a public deployment it is the same exposure class that forced the 14 Aug hosted-app deletion. Found by reasoning about the deployment, not by a test failing | 3 |
-
 | Week 14 | 07–13 Sep 2026 | **Preprocessing investigation, and an honest negative result.** Four scripts. `rop_enhance_demo` renders one photograph nine ways — red-free, illumination, CLAHE, vesselness, black-hat, blue-red LUT — all computed inside the retinal mask, since every local-contrast method will otherwise amplify sensor noise in the black surround into something that looks like pathology. `rop_rgb_illum_demo` shows the same correction in the RGB the model actually receives, and separates shared-gain from per-channel: per-channel removes more device signature and destroys the colour that carries choroidal pigmentation and haemorrhage. `rop_device_fingerprint` put the claim to a test instead of a picture — fit a logistic regression to predict *which source* an image came from using only its radial brightness profile. `rop_pipeline_ab` then follows the measurement that did hold | Package the ROP sources into one releasable dataset | **The proposal failed its own test.** Illumination correction moved device separability only **46.7% → 45.0% against 20% chance**. The vignette is not where the site signature lives, so the original case for training on corrected input does not survive. `preprocessing.py` already recorded where it does live — the R/B ratio, post-CLAHE mean blue 53.6/73.3/74.5 across training sites against 87.6 at the held-out hospital. The revised proposal targets colour directly with grey-world normalisation. Logged as a negative result rather than quietly dropped | 1 |
-
 | Week 15 | 14–20 Sep 2026 | `build_rop_release.py`: the eleven ROP sources on disk packaged into one self-describing tree a stranger can unzip and use. It re-derives no labels — the four-source ICROP reconciliation and the patient-grouped folds each already have one owner, and it reads those and extends them to the sources they never covered rather than creating a second source of truth that drifts. Three label schemas stay in three folders because the sources do not share a label *type*: 10,613 staged images, 1,533 plus-disease images with five independent rater opinions, 733 image+mask pairs. De-identification is part of packaging: ROP-VL embeds an exam date, COph100 inherits Ostrava's sex/GA/birth-weight filenames, and littlevision carries hospital record numbers and is excluded outright | Bring the log book current | Pooling the three schemas into one `labels.csv` would have been convenient and would have been a lie — a plus-disease rater opinion is not an ICROP stage | 1 |
-
 | Week 16 | 21 Sep 2026 | Log book brought current after a four-week gap. September work committed and pushed. Code drift between the development repository and this log book closed: `configs/rop.yaml`, four `models/` modules, and the web app's history view were all behind. **The 34 demo images were deliberately not published here** — their filenames encode infant ID, sex, gestational age and birth weight, and this is a public repository. `DEMO.md` reports what they produced instead of shipping them | Co-author adjudication; train and evaluate the grey-world pipeline against the current one | This log book went four weeks without an update against a two-week expectation. The work existed — it was committed late, not done late — but the gap is real and is recorded here rather than papered over by backdating | 2 |
-
 | Week 16–19 | 22 Sep – 17 Oct 2026 | **Post-proposal review prepared and presented.** On 22–23 Sep: an evidence package arranging the artifacts behind every number so a reviewer can check them rather than trust them; a plain-language write-up of the project; six rival papers read for method rather than for their headline numbers. Then the review materials: a 19-slide [post-proposal review deck](docs/review/RetinAI_Post_Proposal_Review.pptx) with every slide tagged to the review criterion it answers, a [plain-language version](docs/review/RetinAI_ROP_Plain_Review.pptx) for readers who do not read confusion matrices, the [project proposal](docs/PROJECT_PROPOSAL.docx), and a [one-page metric sheet](images/rop_metrics/rop_metric_sheet.png) in which each table names the artifact its numbers come from. The web app's decision meter was removed from the result card; its threshold and false-alarm numbers stay in the `/predict` response. **Review feedback:** change the model and the approach — not EfficientNet, possibly a design of our own; diagnose per *eye* (all photographs of one eye in, one diagnosis out) instead of per photograph; train more and target higher accuracy and F1 on every metric. Started the response with an audit of what eye-level data each source actually records and a literature survey of eye-level ROP models and retinal foundation models | Agree the eye-level model design and write it up; build the eye-level data pipeline; define a new pre-registered test, because the sealed held-out half was spent on 18 Aug and cannot score a new model | Eye-level training data is thin: most training eyes have a single photograph, and the largest source (Ostrava) records one diagnosis per examination with no left/right eye, so there the unit is the examination, not the eye. The number of photographs per examination also differs between diseased and normal exams, so it must be held fixed or a model can learn to count photographs instead of reading retinas. The log book again went about four weeks without an update, and renaming the 34 demo images in the development repository (never published here) is still open | 9 |
+| Week 19–22 | 18 Oct – 05 Nov 2026 | **The review's answer: new models, per-eye scoring, and a new served model.** Protocol v2 was pre-registered on 20 Oct, before any v3 training run, and amended in the open as the work went on. Nine arms were scored at two seeds: retina-pretrained RETFound-Green (A), DINOv2 ViT-S/14 as its matched control (B), the EfficientNetV2-S baseline (C), an exam-level bag loss (D), an ensemble (E), self-ensembling on unlabelled photos (F), native 518 px input (G), and in the v4 round a cleaned training pool (H) and a new training recipe (I), with leave-one-source-out folds. The web app gained whole-eye mode: every photograph of one eye in, one answer out. A second paper draft, a [results compendium](docs/paper/RetinAI_Paper3_Results_Compendium.pdf), the [BE project report](docs/report/RetinAI_BE_Project_Report.pdf) and the [v4 model report](docs/v4/V4_MODEL_REPORT.md) were written, their tables generated from the score files. On 1 Nov the app moved to arm B, a five-checkpoint DINOv2 ensemble, for both the stage and the verdict. This update also brings the code, configs, scored results, reports and figures into this log book, with patient-level files held back | Ask the supervisor to approve the second and final opening of the locked half; publish the five served checkpoints to the model repository; settle the paper venue | **The new models tie the old one.** Cross-validated QWK is B 0.825, I 0.821, H 0.813, so neither v4 arm met the +0.010 rule and B stayed. At the new hospital the ensemble scores QWK 0.752 over 230 eyes, catches 66% of eyes with any ROP at its line, and only 31% of ROP images from a single photograph. The one large effect is the exam-level loss on Ostrava examinations (QWK 0.846 against 0.701), where training matched the unit the labels describe, and it did not carry over to the new hospital's eyes. This log book update also came 19 days after the last one, against a two-week expectation | 72 |
 
-The full commit history, code and results live in our development repository. This log book
-mirrors the milestones. Please ask if direct access to the development history is needed for
-evaluation.
+This repository now carries the code, configs, scored results, reports and figures. The commit
+history and the patient-level files stay in our private development repository, which this log
+book mirrors at milestone level. Please ask if direct access is needed for evaluation.
 
 ---
 
@@ -457,10 +458,17 @@ evaluation.
 |---|---|---|
 | System architecture | [images/system_architecture.png](images/system_architecture.png) | Training and serving data flow |
 | Flowchart | [images/flowchart.png](images/flowchart.png) | Gate, route, preprocess, infer, explain, report |
-| Model evidence figures | [images/](images/) | 12 figures covering every headline claim |
+| Model evidence figures | [images/](images/) | The figures behind every headline claim, by phase; indexed in [images/images.md](images/images.md) |
 | Preprocessing investigation | [images/enhancement/](images/enhancement/) | Nine enhancement methods, the RGB the model receives, and the device-fingerprint test that the illumination proposal failed |
 | Demo runbook | [DEMO.md](DEMO.md) | One-command launch (`./demo.sh`) and the numbers to quote while presenting |
 | Project video | [YouTube — RetinAI project walkthrough](https://youtu.be/fQpp9Fr1Up4) | 4 min 35 s presentation walkthrough, streams directly, no sign-in needed |
+| Model report (current) | [docs/v4/V4_MODEL_REPORT.md](docs/v4/V4_MODEL_REPORT.md) | The v4 round and the selection outcome; [PDF](docs/v4/V4_MODEL_REPORT.pdf) |
+| Pre-registered protocol | [docs/paper/PROTOCOL_V2.md](docs/paper/PROTOCOL_V2.md) | Arms, selection rule and amendments, written before the runs |
+| Results compendium | [docs/paper/RetinAI_Paper3_Results_Compendium.pdf](docs/paper/RetinAI_Paper3_Results_Compendium.pdf) | Every model trained, current arms and historical generations |
+| BE project report | [docs/report/RetinAI_BE_Project_Report.pdf](docs/report/RetinAI_BE_Project_Report.pdf) | Department-template report; LaTeX in [docs/report/BE_Project_Report/](docs/report/BE_Project_Report/) |
+| Evidence package | [FINAL_MODEL_EVIDENCE_PACKAGE/](FINAL_MODEL_EVIDENCE_PACKAGE/00_START_HERE/README.md) | The audit behind the EfficientNet model's numbers (public copy) |
+| Plain-language summary | [RETINAI_FINAL_SUMMARY/](RETINAI_FINAL_SUMMARY/00_READ_ME_FIRST.md) | The project for readers who do not read confusion matrices |
+| Model catalog | [output/pdf/retinai_model_experiment_catalog.pdf](output/pdf/retinai_model_experiment_catalog.pdf) | Inventory of tested architectures, a 23 Oct 2026 snapshot from before the v4 round |
 | Software design | [software/software.md](software/software.md) | Module-by-module implementation notes |
 | Literature survey | [docs/literarture_survey.md](docs/literarture_survey.md) | Reviewed work and how it shaped our design |
 | Reference papers | [reference/paper.md](reference/paper.md) | IEEE-format reference list |
@@ -554,12 +562,12 @@ sampler, 5-view TTA, and early stopping on the disease's primary metric.
 
 | | DR | ROP | Glaucoma |
 |---|---|---|---|
-| Architecture | EfficientNetV2-S | EfficientNetV2-S, structured head (re-based 19 Aug 2026; the ResNet50 that won the sweep is retired from deciding) | EfficientNetV2-S |
+| Architecture | EfficientNetV2-S | DINOv2 ViT-S/14, five-fold ensemble (served since 1 Nov 2026; before that EfficientNetV2-S with the structured head, and before that the ResNet50 that won the sweep) | EfficientNetV2-S |
 | Classes | 5 (No / Mild / Moderate / Severe / Proliferative) | 2 (No ROP / ROP) | 2 (Non-glaucoma / Glaucoma) |
 | Primary metric | QWK, with referable (grade ≥ 2) as the screening endpoint | recall | AUC |
 | Preprocessing | circle-crop + Ben-Graham + CLAHE | circle-crop + CLAHE + strong augmentation | circle-crop + CLAHE |
 | Epochs / patience | 25 / 7 | 30 / 8 | 25 / 7 |
-| Operating point | argmax, referable grade = 2 | P(any ROP) > 0.0155 — the largest threshold holding sens ≥ 0.90 at **both** the training hospitals and the held-out one (the retired 0.1933 met its target at one site and collapsed at the other) | threshold 0.5 |
+| Operating point | argmax, referable grade = 2 | 1 − P(Normal) ≥ 0.9894 — the largest threshold keeping out-of-fold any-ROP sensitivity ≥ 0.90, fixed by the protocol. The EfficientNet model's 0.0155 and the ResNet50's 0.1933 are retired with their models | threshold 0.5 |
 
 **Data handling.** `build_manifest` pools heterogeneous sources into a uniform
 `image_path,label,split` manifest. The ROP database gets split by patient rather than by image.
@@ -576,7 +584,9 @@ suppresses clinically impossible findings.
 **Serving.** `webapp/inference.py` holds a `Registry` that loads the models declared in
 `registry.yaml`. It degrades gracefully, so a missing checkpoint just marks that disease
 unavailable while the rest keep working. Grad-CAM is generic across backbones through forward and
-backward hooks, and is always taken from the model that produced the verdict.
+backward hooks, and is always taken from the model that produced the verdict. The served ROP
+model is `StagingEnsemble`: the softmax outputs of five fold checkpoints are averaged, with its
+configuration in `configs/rop_staging_deploy.yaml`.
 
 > **Deployment scope, as shipped.** `registry.yaml` in this repository declares **ROP only**.
 > Glaucoma was withdrawn from scope after a source-confound audit, and DR is parked rather than
@@ -608,53 +618,75 @@ RetinAI_BE_Project_2026_2027/
 ├── DEMO.md                     ← 5-minute presenter runbook
 ├── demo.sh                     ← one command: boots the app and opens the browser
 ├── requirements.txt
+├── train.py · train_structured.py · evaluate.py · predict.py · prepare_data.py · benchmark.py
 │
 ├── webapp/                     ← the Flask application (the product)
 │   ├── app.py                  ← entry point: python webapp/app.py
-│   ├── inference.py            ← model registry, TTA, Grad-CAM, staging preview
+│   ├── inference.py            ← model registry, DINOv2 ensemble, Grad-CAM, staging
 │   ├── registry.yaml           ← which model serves which patient context (ROP/infant only)
 │   ├── templates/ · static/    ← the UI
 │
-├── models/                     ← the shared framework the app imports
-│   └── common/                 ← config, preprocessing (identical to training),
-│                                 architectures, structured staging head, gradability gate
+├── models/                     ← the config-driven framework the app also imports
+│   ├── common/                 ← config, preprocessing (identical to training),
+│   │                             architectures, structured staging head, gradability gate
+│   └── evaluation/ · validation/ · comparison/ · experiments/
 │
-├── configs/                    ← rop.yaml (screening) · rop_staging_structured.yaml (preview)
+├── configs/                    ← one YAML per experiment, every v3/v4 arm, and
+│                                 rop_staging_deploy.yaml (the served model)
+├── scripts/                    ← data preparation, scoring, figures, reports, get_weights.py
+├── kaggle_kernels/             ← the kernels that trained each arm on Kaggle GPUs
+├── data_prep/ · data/          ← patient-level splitting; dataset provenance (no images)
+├── experiments/                ← eye_spike: frozen-feature eye and exam aggregation tests
+├── tests/                      ← the pytest suite
 ├── reports/                    ← ReportLab clinical-PDF generator
-├── scripts/                    ← get_weights.py (one-time checkpoint download, ~180 MB)
-│                                 rop_enhance_demo.py · rop_rgb_illum_demo.py
-│                                 rop_device_fingerprint.py · rop_pipeline_ab.py
-│                                 build_rop_release.py (dataset packaging + de-identification)
 │
 ├── results/                    ← recorded metrics, calibration, operating points
-│   ├── rop/                    ← binary model: metrics, calibration, device-audit CIs
-│   │                             (+ weights.pth after step 3)
-│   ├── rop_staging/            ← staging preview: provenance (+ weights.pth after step 3)
+│   ├── rop/v3/v3_scores.json   ← every arm, the selection rule and its outcome
+│   ├── rop/                    ← screening, staging and paper evidence
+│   ├── rop_staging/            ← staging provenance (+ weights.pth after step 3)
 │   └── gate_thresholds.json    ← the gradability gate's calibrated bounds
 │
 ├── images/                     ← the evidence figures cited throughout this README
-│   ├── enhancement/            ← the Week 14 preprocessing investigation
-│   └── rop_metrics/            ← one-page metric sheet (dark + light/ for print)
-├── docs/ · reference/          ← literature survey, software notes, IEEE references
-│   ├── PROJECT_PROPOSAL.docx   ← the capstone proposal
-│   └── review/                 ← post-proposal review deck + plain-language version
+│   ├── v4/                     ← the current model report's figures
+│   ├── paper/ · isbi/          ← the ROP paper figure sets
+│   ├── rop_dataset/ · rop_staging/ · rop_metrics/ · enhancement/
+│
+├── docs/                       ← technical documentation
+│   ├── v4/                     ← the current model report and run log
+│   ├── paper/                  ← protocol, paper drafts, results compendium
+│   ├── report/                 ← BE project report, LaTeX source and figures
+│   └── review/                 ← post-proposal review decks
+├── FINAL_MODEL_EVIDENCE_PACKAGE/ ← audit behind the EfficientNet model's numbers (public copy)
+├── RETINAI_FINAL_SUMMARY/      ← plain-language write-up
+├── thesis_assets/ · output/pdf/ ← results summary; model experiment catalog
+├── reference/ · software/      ← IEEE references, software notes
 ├── hardware/                   ← honest "not applicable" (software-only project)
 └── demo/                       ← pointer to the project video on YouTube
 ```
 
-The full development history — training kernels, the five-gate shortcut audit, the 5-fold CV
-and ablation scripts, tests, and every experiment's saved config — lives in our development
-repository, which this log book mirrors at milestone level. Ask if evaluation needs direct
-access.
+### What is deliberately not in this repository
+
+- **Patient-level data.** The infant photographs we evaluate on, the per-image lists and fold
+  files, the prediction files that carry image paths or patient IDs, and the case figures from the evidence
+  package. A filename can be patient data, and this is a public repository. The only retinal
+  photographs here are the sampled panels in `images/enhancement/`, which carry no filenames.
+  Because the fold files are withheld, training cannot be re-run from this repository alone, and
+  the tests that read those files skip with a stated reason.
+- **Model weights.** They are too large for git; see [Step 3](#step-3-fetch-the-model-weights).
+- **Development clutter.** Virtual environments, editor settings, caches, scratch files and the
+  parked DR, glaucoma and Android code.
+
+The commit history lives in our development repository, which this log book mirrors at milestone
+level. Ask if evaluation needs direct access.
 
 ---
 
 ## How to Run the Project
 
-This repository contains the complete, runnable **ROP screening web application** — the same
-code that powers the live deployment. Cloning it and following the four steps below gives you
-a working local copy. (Training code, experiment history and audit scripts live in our
-development repository; this log book carries the product.)
+This repository contains the complete, runnable **ROP screening web application**, the same
+code we run locally. Cloning it and following the four steps below gives you a working local
+copy. The training framework and scoring scripts are here too; the patient-level files they
+read are not.
 
 The hosted demo was retired on 14 Aug 2026 (see the note at the top — deleted to purge patient images from its git history; the Space now serves a [static project page](https://huggingface.co/spaces/Champ610/retinal-ai) instead). The four steps below give you the identical application locally.
 
@@ -676,7 +708,7 @@ pip install -r requirements.txt
 
 ### Step 3: Fetch the Model Weights
 
-The two trained checkpoints are too large for GitHub, so they are downloaded once from our
+The trained checkpoints are too large for GitHub. Two of them are downloaded once from our
 HuggingFace **model repository** ([`Champ610/retinai-rop-weights`](https://huggingface.co/Champ610/retinai-rop-weights),
 ~180 MB total):
 
@@ -684,11 +716,15 @@ HuggingFace **model repository** ([`Champ610/retinai-rop-weights`](https://huggi
 python scripts/get_weights.py
 ```
 
-This places `results/rop_staging/weights.pth` — the **product model** (EfficientNetV2-S with
-the structured head), which produces both the binary screening verdict and the ICROP stage — and
-`results/rop/weights.pth`, the ResNet50 that used to make the screening decision and was retired
-from it on 19 Aug 2026 (kept as the routing anchor and as a fallback). The app boots without
-them, but every result then says "model not loaded".
+This places `results/rop_staging/weights.pth`, the EfficientNetV2-S model served until 1 Nov 2026,
+and `results/rop/weights.pth`, the ResNet50 retired on 19 Aug 2026 and kept as the routing anchor
+and fallback. The app boots without them, but every result then says "model not loaded".
+
+> **These are not the served model.** The app serves five DINOv2 ViT-S/14 checkpoints
+> (`results/rop_staging_v3/`, 437 MB), and they are not on the model repository yet. Without them
+> the app still boots, but the verdict comes from the retired ResNet50, which flagged 663 of 663
+> images at a hospital it never trained on, and no staging preview is shown. Treat a run like that
+> as a check that the software works, not as a screening result. `demo.sh` prints the same warning.
 
 ### Step 4: Run the Web App
 
@@ -727,12 +763,45 @@ is processed differently from what the model was trained on.
 |---|---|---|---|---|
 | DR (referable, grade ≥ 2) | EfficientNetV2-S | AUC 0.906 [0.893, 0.919] | n/a | Messidor-2 0.837 (−6.9%, PASS) |
 | DR (5-class) | EfficientNetV2-S | QWK 0.728 [0.709, 0.746], acc 74.4% | n/a | Messidor-2 QWK 0.654 |
-| ROP screening (current, re-based 19 Aug 2026) | EfficientNetV2-S, structured head, P(any ROP) | AUC 0.970 (5-fold out-of-fold) | — | **held-out hospital AUC 0.821**; at the served threshold 0.0155, sens 0.905 / spec 0.387 |
+| ROP stage + verdict (**served since 1 Nov 2026**) | DINOv2 ViT-S/14, 5-fold ensemble | CV QWK 0.825, both seeds pooled | — | **held-out hospital, development half, 230 eyes: QWK 0.752**; at the line 0.9894, any-ROP sensitivity 0.656, stage 3 or worse 0.924, no false alarms on 50 normal eyes |
+| ROP screening (19 Aug – 1 Nov 2026, retired from serving) | EfficientNetV2-S, structured head, P(any ROP) | AUC 0.970 (5-fold out-of-fold) | — | **held-out hospital AUC 0.821**; at its threshold 0.0155, sens 0.905 / spec 0.387 |
 | ROP screening (retired 19 Aug 2026) | ResNet50 | AUC 0.927 | 0.881 device-controlled | **held-out hospital AUC 0.691 — flagged 663 of 663 images, spec 0.000** |
 | Glaucoma (exploratory) | EfficientNetV2-S | AUC 0.967 [0.957, 0.976] | 0.878 source-controlled | zero-shot 0.735 (ORIGA) to 0.936 (REFUGE1) |
 
 The confound-controlled column is the one to read. The gap between it and the pooled column is
 the actual finding here.
+
+### The served model and the v3/v4 rounds
+
+The post-proposal review asked for a new model and a diagnosis per eye. We pre-registered a
+[protocol](docs/paper/PROTOCOL_V2.md) and scored nine arms at two seeds on the same folds.
+Selection used cross-validation only; the new hospital's development half selected nothing, so its
+column is descriptive. The locked half has not been scored for any of these arms.
+
+| Arm | Model | CV QWK, per photograph | New hospital, per eye (QWK) |
+|---|---|---|---|
+| A | RETFound-Green ViT-S/14 | 0.794 | 0.774 |
+| **B** | **DINOv2 ViT-S/14 (selected)** | **0.825** | **0.756** |
+| C | EfficientNetV2-S baseline | 0.816 | 0.760 |
+| D | DINOv2 + exam-level bag loss | 0.797 | 0.746 |
+| E | Ensemble of A, B and C | 0.821 | 0.770 |
+| F | DINOv2 + self-ensembling on unlabelled new-hospital photos | 0.812 | 0.744 |
+| G | DINOv2 at native 518 px | 0.814 | 0.767 |
+| H | DINOv2, cleaned v4 training pool | 0.813 | 0.750 |
+| I | DINOv2, v4 pool + new recipe | 0.821 | 0.776 |
+
+To replace B, an arm needed CV QWK at least 0.010 higher and a leave-one-source-out mean no more
+than 0.010 lower. Neither H nor I met the first condition, so **B stays**, even though their
+leave-one-source-out means were slightly higher (B 0.834, H 0.842, I 0.839). I reads best on the
+new hospital's eyes (+0.020 over B, 95% CI [0.003, 0.041]), but that half is descriptive and cannot
+select a model. The table pools both seeds; the served five-checkpoint ensemble, seed 42 alone,
+scores 0.752 there.
+
+Read this as a tie. Nine arms sit inside each other's confidence intervals, and the limit is the
+labels and the data rather than the backbone. The served model under-calls mild ROP: one
+photograph catches only 31% of ROP images, and a negative means "not flagged", not "healthy".
+Its scores are not probabilities (eye-level ECE 0.144). Full tables are in the
+[v4 model report](docs/v4/V4_MODEL_REPORT.md).
 
 ---
 
@@ -941,20 +1010,38 @@ failed tests are where this project actually learned something.
 
 ## Result Images / Videos
 
-Two sets. The **ROP paper figures** below are the current ones; figures 01-12 further down are
-the earlier multi-disease phase, kept because their measurements are still the record of what
-we found.
+Three sets. The **v3 and v4 figures** are the current model's; the **ROP paper figures** cover
+the EfficientNet phase; figures 01-12 further down are the earlier multi-disease phase, kept
+because their measurements are still the record of what we found.
 
 **Every measured number on one page:** the [metric sheet](images/rop_metrics/rop_metric_sheet.png)
 ([light version for print](images/rop_metrics/light/rop_metric_sheet.png)). Each table names the
 committed artifact its numbers come from.
 
+### The v3 and v4 figures
+
+From the [v4 model report](docs/v4/V4_MODEL_REPORT.md), in [images/v4/](images/v4/).
+
+| Figure | The question it answers |
+|---|---|
+| [Selection](images/v4/f03_selection.png) | Did any arm beat B on the pre-registered rule? |
+| [New-hospital eyes](images/v4/f04_dev_eye.png) | How does each arm score per eye at a hospital it never saw? |
+| [Paired contrasts](images/v4/f05_contrasts.png) | Which differences between arms are more than noise? |
+| [Stage recall](images/v4/f06_stage_recall.png) | Which stages does each model find? |
+| [Confusion, per eye](images/v4/f07_confusion_dev_eye.png) | Where do the eye-level errors go? |
+| [Leave-one-source-out](images/v4/f08_loso.png) | Does the result hold when a whole source is held out? |
+| [Any-ROP curves](images/v4/f10_any_rop_dev_eye.png) | How does the screening decision trade off per eye? |
+| [Reliability](images/v4/f11_reliability_dev_eye.png) | Can the confidence be read as a probability? |
+
+The other four cover [data](images/v4/f01_data.png), [recipe](images/v4/f02_recipe.png),
+[training curves](images/v4/f09_training_curves.png) and [timing](images/v4/f12_timing.png).
+
 ### The ROP paper figure set
 
 Fourteen figures, print palette, in [images/paper/](images/paper/). Full commentary - including
 what is deliberately *absent* and why - is in [docs/FIGURE_GUIDE.md](docs/FIGURE_GUIDE.md).
-Generated by `scripts/make_paper_figures.py` in our development repository, which reads the
-committed prediction arrays; every number is read from an artifact, none is typed in.
+Generated by `scripts/make_paper_figures.py`, which reads the committed prediction arrays;
+every number is read from an artifact, none is typed in.
 
 **If you only read three:**
 
@@ -1185,6 +1272,8 @@ it every time a result moves.
 | Paper Status | Drafting — all core experiments complete, seed repeats and locked-test scoring remain |
 | Submission Date | ISBI deadline 26 October 2026 (planned) |
 | Paper Link | `TO FILL — after submission` |
+| Second draft | [Retinal vs natural-image pre-training for eye-level ICROP-3 staging](docs/paper/RetinAI_Paper2_Pretraining_draft.pdf) (draft, from the v3 and v4 rounds) |
+| Results compendium | [Every model trained, with all tables and figures generated from the source files](docs/paper/RetinAI_Paper3_Results_Compendium.pdf) |
 
 The paper is ROP-focused. The contribution is the measurement methodology, not the classifier —
 the 5-fold CV says our structured head and a plain softmax are equivalent, and we say so. Four
@@ -1211,8 +1300,8 @@ results carry it:
    intends (an independent AP-ROP probability alongside a stage distribution) — with a
    component ablation showing what each branch contributes.
 
-Figures and tables are collected in our development repository under `thesis_assets/` and
-`graphs/rop_staging/`.
+Figures are in [images/](images/) and the report's are in
+[docs/report/figures/](docs/report/figures/).
 
 ---
 
