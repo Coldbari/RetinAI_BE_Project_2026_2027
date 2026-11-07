@@ -2,7 +2,7 @@
 
 ## Project Title
 
-**RetinAI: Explainable Screening for Retinopathy of Prematurity from a Single Fundus Photograph**
+**RetinAI:  Retinopathy of Prematurity using Machine Learning**
 
 <sub>Registered earlier in the year as *"Explainable Multi-Disease Retinal Screening from a
 Single Fundus Photograph"*. The title was narrowed to match what the project actually delivers:
