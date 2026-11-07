@@ -1,0 +1,12 @@
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.5cm}>{\raggedright\arraybackslash}p{3.1cm}@{}}
+\toprule
+Gate & What it measures & Result\\
+\midrule
+G1 & Patient leakage across folds & none \\
+G2 & Exact (MD5) and perceptual (256-bit dHash) duplicate leakage & 0 / 0 pairs; closest distance 15 \\
+G3 & Site decodable from trivial metadata (balanced accuracy; chance) & 0.997 (chance 0.333); stage 4/5 exists in one source only \\
+G4 & Metadata-only classifier, no pixels (macro-F1 floor) & CV 0.187, unseen hospital 0.062 \\
+G5 & Disease-controlled site probe on embeddings & per model; not run for A--I (reported for the CNN generation in~\cite{nagpure2026}) \\
+-- & Image dimensions alone, earlier binary split (AUC) & 0.911 \\
+\bottomrule
+\end{tabular}

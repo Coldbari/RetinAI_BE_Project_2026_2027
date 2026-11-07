@@ -1,0 +1,26 @@
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{3.3cm}ccc@{\hspace{5pt}}c@{\hspace{6pt}}ccccc@{}}
+\toprule
+ & & Trainable & & & Val & \multicolumn{5}{c}{Test, 315 photographs}\\
+\cmidrule(l){7-11}
+Run & Change & (M) & px & Epochs & mF1 & Acc. & Bal.\,acc. & mF1 & QWK & AUC\\
+\midrule
+\multicolumn{11}{@{}l}{\emph{Stage-2 probes, 10 epochs, seed 42 (one change each vs the first row)}}\\
+p mlp & LoRA on attention + MLP (probe base) & 6.30 & 224 & 10 & 0.810 & 0.797 & 0.798 & 0.792 & 0.862 & 0.947 \\
+p mlp r32 & rank 32, alpha 64 & 12.59 & 224 & 10 & 0.819 & 0.816 & 0.811 & 0.810 & 0.867 & 0.950 \\
+p mlp dp1 & drop-path 0.1 & 6.30 & 224 & 10 & 0.830 & 0.797 & 0.799 & 0.793 & 0.861 & 0.951 \\
+p mlp lr6e4 & lr 6e-4 & 6.30 & 224 & 10 & 0.829 & 0.829 & 0.825 & 0.823 & 0.897 & 0.958 \\
+p mlp img280 & 280 px input & 6.30 & 280 & 10 & 0.834 & 0.822 & 0.821 & 0.818 & 0.875 & 0.959 \\
+p mlp ord & ordinal auxiliary loss 0.3 & 6.30 & 224 & 10 & 0.807 & 0.806 & 0.807 & 0.803 & 0.876 & 0.951 \\
+p mlp combo & r32 + dp 0.1 + lr 6e-4 + 280 px & 12.59 & 280 & 10 & 0.623 & 0.651 & 0.662 & 0.617 & 0.761 & 0.900 \\
+\midrule
+\multicolumn{11}{@{}l}{\emph{Full-length runs, 30 epochs max}}\\
+final base s42 & attention-only LoRA, 30 ep & 2.37 & 224 & 30 & 0.817 & 0.825 & 0.818 & 0.818 & 0.900 & 0.956 \\
+final mlp s42 & attention + MLP, 224 px, 30 ep & 6.30 & 224 & 25 & 0.816 & 0.778 & 0.763 & 0.765 & 0.860 & 0.948 \\
+final mlp img280 s42 & chosen config, seed 42 & 6.30 & 280 & 25 & 0.846 & 0.787 & 0.787 & 0.779 & 0.870 & 0.950 \\
+final mlp img280 s1 & chosen config, seed 1 & 6.30 & 280 & 30 & 0.841 & 0.822 & 0.818 & 0.815 & 0.888 & 0.952 \\
+final mlp img280 s2 & chosen config, seed 2 & 6.30 & 280 & 30 & 0.846 & 0.832 & 0.827 & 0.826 & 0.889 & 0.951 \\
+\midrule
+3 seeds averaged & chosen config, seeds 42, 1, 2 & -- & -- & -- & 0.839 & 0.844 & 0.842 & 0.839 & 0.900 & 0.964 \\
+3 seeds + 4 CNNs & plus EffNet-B2, ResNet50, DenseNet121, ResNeSt-50d & -- & -- & -- & 0.863 & 0.860 & 0.859 & 0.855 & 0.908 & 0.972 \\
+\bottomrule
+\end{tabular}

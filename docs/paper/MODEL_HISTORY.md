@@ -29,6 +29,27 @@ Path: CNN (v1) → CNN comparison, ResNet50 then EfficientNetV2-S (v2) → visio
 
 Totals: 11 distinct architectures, ~20 trained arms (heads, losses, training variants), 4 frozen-feature heads.
 
+## Independent teammate packages (November 2026)
+
+Three packages trained by a team member on one Windows GPU, 3–5 Nov 2026, OUTSIDE the protocol; collected by
+`scripts/collect_teammate_packages.py` into `results/comparison/teammate_packages.json` (paper 3, Section "Independent
+Teammate Packages"). Same data in all three: 3,141 of this project's photographs (ROP-VL 1,438, Multi-View 896,
+Shenzhen 630, 177 renamed copies), four classes (Normal, stage 1, 2, 3), split 80/10/10 BY PHOTOGRAPH (rop_ml 80/20),
+black-border crop + CLAHE.
+
+| Package | Models | Best, own test split | Fate | Source |
+|---|---|---|---|---|
+| rop_ml | 428 hand-made features (colour, LBP, GLCM, HOG, Frangi); SVM, KNN, RF, ExtraTrees, XGBoost, LightGBM, CatBoost, HistGB, LogReg, MLP, voting, stacking | SVM (RBF): acc 0.585, QWK 0.547 (629 photos) | Reference only | `outputs/results.csv`, `best_model_report.txt` |
+| rop_cnn | ResNet50, DenseNet121, EfficientNet-B2, ConvNeXt-T, ResNeSt-50d, MobileNetV3-L (ImageNet, 224 px, 40 ep, early stop) + soft vote | ResNeSt-50d: acc 0.835, QWK 0.898 (315 photos); ConvNeXt-T diverged (0.530) | Reference only | `outputs/cnn_results.csv`, `*/meta.json` |
+| rop_foundation | RETFound-DINOv2 ViT-L/14 frozen + LoRA r16/a32 on attention + MLP (6.30 M trainable of 309.7 M), 7 ten-epoch probes, 5 thirty-epoch runs | chosen config, 3 seeds: 0.787 / 0.822 / 0.832; 3-seed ensemble 0.844, QWK 0.900; + 4 CNNs 0.860, QWK 0.908, AUC 0.972 | 3-seed ensemble served in the webapp as a COMPARISON panel only (never decides) | `outputs/fm_results*.csv`, `*/meta.json`, `CHANGES_FOR_PAPER.md` |
+
+Why none of it is comparable with arms A–I: photo-level split (73% of test and 73% of validation photographs share an
+infant with their training set; 99% of the Multi-View test photographs); 390 development-half and 331 locked-half
+photographs were trained on, so these models can never be scored on this project's test halves; four classes; test
+n = 315 (±4 points); selection on 314 validation photographs. What it does show: a frozen retina-pretrained ViT-L with
+6.3 M adapted weights ties fully fine-tuned CNNs (as arm A did), single-change recipe effects sit inside seed noise,
+and model averaging is the only reliable gain.
+
 ## Comparability cautions
 
 - v2's EfficientNet CV QWK 0.896 vs v3's 0.816 for the same architecture is not a drop: v2 used a different
@@ -38,3 +59,5 @@ Totals: 11 distinct architectures, ~20 trained arms (heads, losses, training var
   with max-of-predicted-stage. Different data and rule.
 - The June binary numbers (0.96, 0.93) were inflated by the device shortcut; the v2 protocol's shortcut audits
   exist because of them.
+- The teammate packages' 0.84–0.86 are four-class, photo-level, same-hospital numbers with infant leakage and
+  test-half contamination; they are never set against B's 0.825 (CV) or 0.756 (unseen hospital, eye).

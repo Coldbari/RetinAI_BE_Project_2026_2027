@@ -47,35 +47,32 @@ function setFile(f) {
   syncAnalyze();
 }
 
-const MIN_LOADER_MS = 5000;   // keep the full-screen loader on screen for at least 5s
+// A plain status line while the two models run. No forced wait: the page shows the
+// answer as soon as the server has it.
+function busy(on, text) {
+  const s = $("status");
+  if (s) { s.textContent = text || ""; s.hidden = !on; }
+  ["analyze", "analyze-eye"].forEach(id => { const b = $(id); if (b) b.disabled = on || b.disabled; });
+  if (!on) { syncAnalyze(); syncEye(); }
+}
 
 $("analyze").onclick = async () => {
   if (!file) return;
-  const overlay = $("loader-overlay");
-  overlay.classList.add("show");                 // open the full-screen black loading page
-  document.body.style.overflow = "hidden";
+  busy(true, "Analysing — both models are running on this photo…");
   $("results").hidden = true;
-
   eyeSummary = null; $("eyecard").hidden = true; $("eyephotos").hidden = true;
   const fd = new FormData(); fd.append("image", file); fd.append("context", context);
-  const started = Date.now();
   let res;
   try {
     const r = await fetch("/predict", { method: "POST", body: fd });
     res = await readJson(r);
     if (!r.ok) throw new Error(res.detail || res.error || "Analysis failed");
   } catch (e) {
-    overlay.classList.remove("show"); document.body.style.overflow = "";
+    busy(false);
     alert(e.message || "Analysis failed."); return;
   }
-
-  // hold the loading animation for a minimum of 5 seconds, even if analysis finished sooner
-  const elapsed = Date.now() - started;
-  if (elapsed < MIN_LOADER_MS) await wait(MIN_LOADER_MS - elapsed);
-
   render(res);
-  overlay.classList.remove("show");
-  document.body.style.overflow = "";
+  busy(false);
   $("results").hidden = false;
   $("results").scrollIntoView({ behavior: "smooth" });
 };
@@ -122,14 +119,51 @@ function renderStaging(st, rop) {
      <b>${st.any_rop_probability}%</b></div>`;
   host.innerHTML = `
     <div class="card staging">
-      <h3>ICROP stage: ${st.prediction}
+      <h3>Our model — ICROP stage: ${st.prediction}
         <span class="risk r-preview">research preview</span></h3>
-      <div class="rec">Six-class ICROP-3 staging. This is <b>not</b> the screening decision
-        above and must not be read as one.</div>
+      <div class="rec">Six-class ICROP-3 staging by the served ensemble. This is <b>not</b> the
+        screening decision above and must not be read as one.</div>
       ${any}
       ${stagingVsScreening(st, rop)}
       ${bars}
       <p class="dm-raw">${st.note || ""}</p>
+    </div>`;
+  host.hidden = false;
+}
+
+// The comparison model's stage, beside ours. It never decides: the verdict, the Grad-CAM and
+// the PDF stay with the served model. The agreement mark is the whole point of the panel.
+function agreeBadge(a) {
+  if (!a) return "";
+  const cls = a.status === "agree" ? "agree-yes" : a.status === "disagree" ? "agree-no" : "agree-na";
+  const txt = a.status === "agree" ? "models agree"
+    : a.status === "disagree" ? (a.adjacent ? "disagree · one stage apart" : "disagree")
+    : a.status === "not_covered" ? "not covered by comparison model" : "no reference";
+  return `<span class="agree ${cls}">${txt}</span>`;
+}
+
+function renderComparison(cmp, st) {
+  const host = $("comparisoncard");
+  if (!host) return;
+  if (!cmp) { host.hidden = true; host.innerHTML = ""; return; }
+  const entries = Object.entries(cmp.scores).sort((a, b) => b[1] - a[1]);
+  const bars = entries.map(([k, v]) =>
+    `<div class="scoreline"><span${k === cmp.prediction ? ' class="on"' : ""}>${k}</span><span>${v}%</span></div>
+     <div class="bar"><span class="${k === cmp.prediction ? "on" : ""}" style="width:${v}%"></span></div>`).join("");
+  const a = cmp.agreement || {};
+  host.innerHTML = `
+    <div class="card comparison">
+      <h3>Comparison model — stage: ${cmp.prediction} ${agreeBadge(a)}</h3>
+      <div class="compare-row">
+        <div>Our model<b>${st ? esc(st.prediction) : "—"}</b></div>
+        <div>Comparison model<b>${esc(cmp.prediction)}</b></div>
+      </div>
+      <div class="rec">${esc(a.message || "")}</div>
+      <div class="anyrop"><span>Any ROP <i>(stages 1–3 added together; this model has no Stage 4/5 or AP-ROP)</i></span>
+        <b>${cmp.any_rop_probability}%</b></div>
+      ${bars}
+      <p class="dm-raw">${esc(cmp.model)} · ${esc(cmp.credit || "")} · ${cmp.n_members} seeds averaged.
+        ${esc(cmp.note || "")}</p>
     </div>`;
   host.hidden = false;
 }
@@ -157,6 +191,15 @@ function render(res) {
       q.classList.remove("warn-soft");
       q.hidden = true;
     }
+  }
+  // The seen-photo guard: a photo either model trained or tested on is not a fair demo.
+  const sb = $("seenbanner");
+  if (sb) {
+    const sd = res.seen_in_data;
+    sb.textContent = sd ? sd.message : "";
+    sb.classList.toggle("warn-soft", !sd || sd.level === "warn");
+    sb.classList.toggle("info", !!sd && sd.level === "info");
+    sb.hidden = !sd;
   }
   if (dl) {
     dl.disabled = ungradable;
@@ -216,8 +259,9 @@ function render(res) {
 
   // Ungradable images carry no staging key at all; pass null explicitly so a stale card
   // from the previous upload can never survive into a "not gradable" result.
-  renderStaging(ungradable ? null : res.staging,
-                res.findings.find(f => f.disease === "ROP" && f.available));
+  const st = ungradable ? null : res.staging;
+  renderStaging(st, res.findings.find(f => f.disease === "ROP" && f.available));
+  renderComparison(ungradable ? null : res.comparison, st);
 
   // visualization — one heatmap per positive disease, not one for the whole image
   heatmaps = res.heatmaps || (res.heatmap ? [{ disease: res.heatmap_disease, image: res.heatmap }] : []);
@@ -288,7 +332,7 @@ function selectViz(v) {
     const h = heatmaps[Number(v.split(":")[1])];
     $("heatimg").src = "data:image/png;base64," + h.image;
     $("heatcap").textContent = "Grad-CAM — " + h.disease
-      + " · coloured inside the retinal field only; the white outline is its edge.";
+      + " · from the served model only · coloured inside the retinal field; the white outline is its edge.";
     evidencePanel(h);
   } else {
     $("heatcap").textContent = "";
@@ -316,6 +360,7 @@ $("again").onclick = () => {
   $("download").disabled = false;
   eyeSummary = null; $("eyecard").hidden = true; $("eyephotos").hidden = true;
   const q = $("qualitybanner"); if (q) q.hidden = true;
+  const sb = $("seenbanner"); if (sb) sb.hidden = true;
   syncAnalyze();          // keeps the chosen context, re-blocks on the missing image
 };
 
@@ -336,18 +381,28 @@ const esc = (t) => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">
 
 function renderEye(res) {
   eyeSummary = { eye: res.eye, laterality: res.laterality, warnings: res.warnings };
-  const e = res.eye;
+  const e = res.eye, ce = res.comparison_eye;
+  const cmpLine = ce
+    ? `<div class="compare-row">
+         <div>Our model (eye)<b>${esc(e.stage)}</b></div>
+         <div>Comparison model (eye) ${agreeBadge(ce.agreement)}<b>${esc(ce.stage)}</b></div>
+       </div><div class="rec">${esc((ce.agreement || {}).message || "")}
+         Comparison driven by photo ${ce.driving_photo + 1}.</div>`
+    : "";
   $("eyecard").innerHTML = `<div class="card staging eye-card">
     <h3>Eye summary (${esc(res.laterality)}): ${esc(e.stage)}</h3>
     <div class="rec">Worst view across ${res.per_photo.length} photograph(s) &mdash; driven by
       <b>photo ${e.driving_photo + 1}</b>. Research preview, not a clinical grade.</div>
+    ${cmpLine}
     ${res.warnings.map(w => `<p class="muted small">&#9888; ${esc(w)}</p>`).join("")}</div>`;
   $("eyecard").hidden = false;
   $("eyephotos").innerHTML = res.per_photo.map((p, i) => {
     const st = p.staging ? esc(p.staging.prediction) : "not graded";
+    const cmp = p.comparison ? ` · comparison: ${esc(p.comparison.prediction)} ${agreeBadge(p.comparison.agreement)}` : "";
+    const seen = p.seen_in_data ? `<p class="muted small">&#9888; ${esc(p.seen_in_data.message)}</p>` : "";
     const drv = i === e.driving_photo;
-    return `<div class="card${drv ? " staging driving" : ""}"${drv ? ' style="outline:2px solid var(--amber)"' : ""}>
-      <h3>Photo ${i + 1}${drv ? " &mdash; drives the eye stage" : ""}: ${st}</h3></div>`;
+    return `<div class="card${drv ? " staging driving" : ""}">
+      <h3>Photo ${i + 1}${drv ? " &mdash; drives the eye stage" : ""}: ${st}${cmp}</h3>${seen}</div>`;
   }).join("");
   $("eyephotos").hidden = false;
   // the page's single-image machinery shows the driving photo's own result and heatmaps
@@ -357,8 +412,7 @@ function renderEye(res) {
 }
 
 if ($("analyze-eye")) $("analyze-eye").onclick = async () => {
-  const overlay = $("loader-overlay");
-  overlay.classList.add("show"); document.body.style.overflow = "hidden";
+  busy(true, `Analysing ${eyeFiles.length} photograph(s) — both models run on each one…`);
   $("results").hidden = true;
   const fd = new FormData();
   eyeFiles.forEach(f => fd.append("images", f));
@@ -369,11 +423,11 @@ if ($("analyze-eye")) $("analyze-eye").onclick = async () => {
     res = await readJson(r);
     if (!r.ok) throw new Error(res.detail || res.error || "Analysis failed");
   } catch (e) {
-    overlay.classList.remove("show"); document.body.style.overflow = "";
+    busy(false);
     alert(e.message || "Analysis failed."); return;
   }
   renderEye(res);
-  overlay.classList.remove("show"); document.body.style.overflow = "";
+  busy(false);
   $("results").hidden = false;
   $("results").scrollIntoView({ behavior: "smooth" });
 };
@@ -384,5 +438,3 @@ async function readJson(r) {
   try { return JSON.parse(t); }
   catch { return { error: r.ok ? "Unexpected server response" : `Server error ${r.status}` }; }
 }
-
-const wait = (ms) => new Promise(r => setTimeout(r, ms));

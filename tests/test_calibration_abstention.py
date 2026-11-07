@@ -49,8 +49,8 @@ def test_predict_returns_score_not_confidence(registry):
 
 def test_no_source_surface_labels_a_raw_probability_confidence():
     """Guards the UI/PDF, not just the API."""
-    for rel in ("webapp/static/js/main.js", "webapp/templates/history.html",
-                "webapp/templates/gallery.html", "reports/report_generator.py"):
+    for rel in ("webapp/static/js/main.js", "webapp/templates/screen.html",
+                "webapp/comparison.py", "reports/report_generator.py"):
         txt = (ROOT / rel).read_text()
         assert "f.confidence" not in txt and "it.confidence" not in txt, rel
         assert "'confidence'" not in txt, rel

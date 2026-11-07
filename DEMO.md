@@ -4,7 +4,7 @@
 ./demo.sh
 ```
 Boot takes ~15–40s (five DINOv2 checkpoints load and warm up, plus the gate), then the
-browser opens on **Screen**. Everything runs on this laptop — no internet needed once the
+browser opens on the one page. Everything runs on this laptop — no internet needed once the
 weights are in place.
 
 Fetch the weights first if this is a fresh clone; they are not in the repository:
@@ -44,11 +44,11 @@ diagnosis. A filename is patient data. This log book is a public repository, so 
 images and the file list live only in the private working repository, and this page
 reports what they produced rather than shipping them.
 
-The same reasoning retired the Gallery page and keeps `webapp/static/` free of patient
-photographs. See the PHI remediation note in the main README.
+The same reasoning retired the Gallery page, and since 7 Nov 2026 the whole multi-page design
+is gone; `webapp/static/` stays free of patient photographs. See the PHI remediation note in the main README.
 
-To run the demo on your own data, upload any preterm infant fundus photograph from the
-Screen page with the context set to `Preterm infant (NICU screening)`.
+To run the demo on your own data, upload any preterm infant fundus photograph on the
+page with the context set to `Preterm infant (NICU screening)`.
 
 **Whole-eye mode:** upload 1–16 photos of one eye with OD/OS. The eye gets the most severe
 stage across its photos; the heatmap is drawn for the photo that drove it.
@@ -93,13 +93,23 @@ eye level, this exact ensemble. The locked half has not been scored for this mod
 - The contribution is measurement, not architecture: the ViTs tie the EfficientNet on the
   protocol's cross-validation rule.
 
-## Pages
+## The one page
 
-- **Screen** — the demo. Upload, verdict, stage, Grad-CAM, PDF download; whole-eye mode.
-- **History** — the screenings from this session (local only; disabled on any hosted build).
-- **About** — model card: what is served, why, and the new-hospital numbers.
-- **Gallery** — *skip it, it is empty by design.* `webapp/static/` is web-servable, so a
-  repo guard forbids putting patient photographs there. If asked, that is a good answer.
+Since 7 Nov 2026 the app is a single page at `/`: upload, verdict, stage, Grad-CAM, PDF
+download, whole-eye mode, and both model cards at the foot. The dashboard, history, about,
+gallery and diseases pages are gone with the old design. `webapp/static/` is web-servable, so a
+repo guard still forbids putting patient photographs there.
+
+**Comparison panel.** Beside our model's stage the page shows the stage from a teammate's
+RETFound-DINOv2 + LoRA model (three seeds averaged) with an agree / disagree mark. It never
+decides anything: the verdict, the Grad-CAM and the PDF stay with the served ensemble. Say
+plainly if asked: it was trained on a photo-level split of our photos, so its own 84.4% carries
+infant leakage and it has seen 390 development-half and 331 sealed-half photos. **Demo it on
+new photos only.** The page warns when an uploaded photo is one that either model trained or
+tested on (the seen-photo guard, `results/comparison/seen_photos.json`, hashes of image bytes).
+The panel's weights (630 MB) come from the teammate's `rop_foundation` package through
+`scripts/deploy_comparison_weights.py` and are not on the model repository; a clone without
+them boots without the panel, and everything else on the page is unchanged.
 
 ## If it will not start
 

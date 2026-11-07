@@ -31,7 +31,7 @@ Corresponding author: \FILL{name, e-mail, ORCID}}}
 \maketitle
 
 \begin{abstract}
-This document reports, without discussion, every model the RetinAI project trained for staging retinopathy of prematurity (ROP) in 2026, the protocol each was scored under, and the file each number comes from. The current generation (\nArms{} arms, A--I) shares one pre-registered protocol: patient-grouped five-fold cross-validation (CV) on \poolImages{} photographs of \poolInfants{} infants from \poolSources{} hospitals, eye-level scoring at a fourth hospital unseen in training, and leave-one-source-out folds. The selected model, B (DINOv2 ViT-S/14), scores CV QWK5 \BcvQ{} \BcvQci{} and, at the unseen hospital, eye-level QWK5 \BdevQ{} \BdevQci{}. Earlier generations are tabulated separately under their own protocols.
+This document reports, without discussion, every model the RetinAI project trained for staging retinopathy of prematurity (ROP) in 2026, the protocol each was scored under, and the file each number comes from. The current generation (\nArms{} arms, A--I) shares one pre-registered protocol: patient-grouped five-fold cross-validation (CV) on \poolImages{} photographs of \poolInfants{} infants from \poolSources{} hospitals, eye-level scoring at a fourth hospital unseen in training, and leave-one-source-out folds. The selected model, B (DINOv2 ViT-S/14), scores CV QWK5 \BcvQ{} \BcvQci{} and, at the unseen hospital, eye-level QWK5 \BdevQ{} \BdevQci{}. Earlier generations are tabulated separately under their own protocols, as are three independent packages a team member trained in November 2026 on a photo-level split of \mateN{} of the same photographs (hand-made features with classical learners, ImageNet CNNs, and a RETFound-DINOv2 adapter model; best four-class test accuracy \mateBestAcc{}), with the reasons their numbers are not comparable.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -42,7 +42,14 @@ retinopathy of prematurity, ICROP-3, staging, benchmark, results, pre-registrati
 \textbf{Settings.} (i)~\emph{CV per photograph}: five patient-grouped folds, out-of-fold, seeds \seedA{} and \seedB{} pooled, \dupExcl{} duplicates excluded. (ii)~\emph{Unseen hospital per eye}: Multi-View development half (\devImages{} photographs, \devEyes{} eyes); eye = most severe predicted stage; descriptive; locked half unopened for A--I. (iii)~\emph{LOSO}: train on two sources, score the third.
 \textbf{Metrics.} QWK5: quadratic-weighted kappa, five ordinal levels, AP-ROP folded onto stage~4/5~\cite{icrop3}; mF1: mean per-class F1, present classes; Acc.: exact six-class matches; CIs: 95\% percentile bootstrap, \nReps{} infant resamples.
 \textbf{Pre-registration.} \path{PROTOCOL_V2.md} (\texttt{\protoCommit}, \protoDate{}; \nAmend{} amendments to \lastAmendDate{}); selection on CV only.
-\textbf{Caveats} (\path{MODEL_HISTORY.md}): QWK definitions, eye rules and test halves changed across generations; the June binary numbers carry a device shortcut. Section~\ref{sec:hist} is never pooled with A--I.
+\textbf{Caveats} (\path{MODEL_HISTORY.md}): QWK definitions, eye rules and test halves changed across generations; the June binary numbers carry a device shortcut. Sections~\ref{sec:hist} and~\ref{sec:mate} are never pooled with A--I. Table~\ref{tab:best} lists every generation's best model under its own protocol with the reason it is or is not comparable.
+
+\begin{table*}[!t]
+\caption{Every generation at a glance: the best model of each under its own protocol. Only one row is the project's selected model; every other row is listed with the reason its number cannot be read against it. Teammate rows: four classes, photo-level split, test n\,=\,\mateTest{} (\mateMLTest{} for rop\_ml); CI: 95\% Wilson.}
+\label{tab:best}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_best}
+\end{table*}
 
 \section{Current Generation (Protocol v2, Arms A--I)}
 Tables~\ref{tab:headline}--\ref{tab:secondary} and Figs.~\ref{fig:selection}--\ref{fig:training}. Arms: A RETFound-Green~\cite{engelmann2025}, B DINOv2~\cite{oquab2024}, C EfficientNetV2-S~\cite{tan2021} from~\cite{nagpure2026}, D--I variants of B (Table~\ref{tab:recipe}).
@@ -212,6 +219,54 @@ Each table keeps its own protocol and definitions; none is comparable with Table
 \input{figs3/tab_screener}
 \end{table}
 
+\section{Independent Teammate Packages (Photo-Level Split, Four Classes)}\label{sec:mate}
+Three packages trained by a team member on one Windows GPU (3--5 Nov 2026), outside the protocol, collected from their result files (\texttt{scripts/collect\_teammate\_packages.py}, \texttt{\mateCommit}); no model was re-run. \textbf{Data} (Table~\ref{tab:matedata}): \mateN{} photographs of this project (ROP-VL \mateSrcRopvl{}, Multi-View \mateSrcMultiview{}, Shenzhen \mateSrcShenzhen{}, \mateUnmatched{} renamed copies not matched by file name) in four classes (Normal, stage~1, 2, 3; no stage~4/5, no AP-ROP), split 80/10/10 \emph{by photograph} with seed \seedA{} (rop\_ml: 80/20), and the same preprocessing in all three (black-border crop, resize, CLAHE). \textbf{Why these numbers are not comparable with Tables~\ref{tab:headline}--\ref{tab:secondary}.} (i)~The split is by photograph: \mateLeakTest{} of the test photographs and \mateLeakVal{} of the validation photographs share an infant with the training set (\mateLeakMV{} of the Multi-View test photographs), so every test number is optimistic by an unmeasured amount. (ii)~\mateDevTrain{} development-half and \mateLockedTrain{} locked-half photographs were used for training, so none of these models can ever be scored on this project's test halves. (iii)~Four classes, \mateTest{} test photographs: a 95\% CI about $\pm$\mateHalfWidth{} points, wider than most differences between runs. (iv)~Early stopping and ensemble membership were chosen on \mateVal{} validation photographs.
+
+\textbf{rop\_ml} (Table~\ref{tab:mateml}): \mateMLFeat{} hand-made features per 256-px photograph (colour statistics, LBP, GLCM, HOG, Frangi vessel responses), training rows balanced by augmentation, twelve learners ranked by five-fold CV accuracy; best \mateMLBest{}, test accuracy \mateMLAcc{}, QWK \mateMLQ{}. \textbf{rop\_cnn} (Table~\ref{tab:matecnn}): six ImageNet-pretrained timm CNNs at 224\,px, head warm-up then full fine-tuning, AdamW, cosine schedule, class-weighted cross-entropy with label smoothing, early stopping on validation macro-F1, three-view flip TTA; best \mateCNNBest{}, test accuracy \mateCNNAcc{}, QWK \mateCNNQ{}; \mateCNNDiverged{} diverged (\mateCNNDivergedAcc{}). \textbf{rop\_foundation} (Table~\ref{tab:matefm}): RETFound-DINOv2 ViT-L/14~\cite{zhou2023} kept frozen (\mateFMtotal{}\,M weights) with LoRA adapters~\cite{hu2022} of rank~16 on the attention and MLP projections of all 24 blocks and a linear head (\mateFMtrainable{}\,M trainable), bf16, 4-view flip TTA; a stage-2 sweep of one change each (10 epochs) chose the 280-px variant on validation, trained for 30 epochs with three seeds: test accuracy \mateFMlo{}--\mateFMhi{} (mean \mateFMmean{}, SD \mateFMsd{}), against \mateFMbaseAcc{} for the attention-only adapters (\mateFMbaseTrainable{}\,M) and \mateFMcomboAcc{} when four changes were combined. Averaging the three seeds gives \mateEnsAcc{} (QWK \mateEnsQ{}); adding the four CNNs gives the best number in the packages, \mateBestAcc{} \mateBestAccci{} (QWK \mateBestQ{}, AUC \mateBestAUC{}). Per-class recall and precision of the best models: Table~\ref{tab:matestage}; all \nMateSeries{} models with Wilson CIs: Fig.~\ref{fig:teammate}. \textbf{Reading.} Within the packages, a frozen retina-pretrained ViT-L with \mateFMtrainable{}\,M adapted weights ties fully fine-tuned CNNs, and seed-to-seed spread exceeds every single-change effect in the sweep; averaging models is the only reliable gain. The three-seed RETFound-DINOv2 ensemble is shown in the webapp beside B as a comparison only; B remains the selected model.
+
+\begin{table*}[!t]
+\caption{Teammate packages: their photo-level split against this project's splits, by file name (\mateMatched{} of \mateN{} matched). ``Elsewhere'': renamed copies not matched. Last column: validation/test photographs whose infant also has photographs in their training set (matched photographs only).}
+\label{tab:matedata}
+\centering\scriptsize\setlength{\tabcolsep}{4pt}
+\input{figs3/tab_mate_data}
+\end{table*}
+
+\begin{table}[!t]
+\caption{rop\_ml: twelve classical learners on \mateMLFeat{} features; CV: five-fold accuracy on the (augmented) training rows, which ranked the learners and chose the top three for the two ensembles; s: training seconds. \emph{Caveat}: photo-level split (Section~\ref{sec:mate}).}
+\label{tab:mateml}
+\centering\scriptsize\setlength{\tabcolsep}{3pt}
+\input{figs3/tab_mate_ml}
+\end{table}
+
+\begin{table}[!t]
+\caption{rop\_cnn: ImageNet-pretrained CNNs (timm), 224\,px, up to 40 epochs with early stopping on validation macro-F1; the soft vote averages the three models with the highest validation macro-F1 (EfficientNet-B2, ResNet50, DenseNet121). \emph{Caveat}: photo-level split.}
+\label{tab:matecnn}
+\centering\scriptsize\setlength{\tabcolsep}{1.9pt}
+\input{figs3/tab_mate_cnn}
+\end{table}
+
+\begin{table*}[!t]
+\caption{rop\_foundation: RETFound-DINOv2 ViT-L/14 frozen, LoRA adapters (rank 16, alpha 32 unless stated) on attention and MLP layers, linear 4-class head; lr $4\times10^{-4}$ unless stated; batch $4\times4$; class-weighted cross-entropy, label smoothing 0.1; best epoch by validation macro-F1; 4-view flip TTA. Probes: 10 epochs, one change each. \emph{Caveat}: photo-level split; the chosen configuration was picked on validation and is not better than the attention-only run on test.}
+\label{tab:matefm}
+\centering\scriptsize\setlength{\tabcolsep}{3.4pt}
+\input{figs3/tab_mate_fm}
+\end{table*}
+
+\begin{table}[!t]
+\caption{Recall / precision per class of the packages' best models on their own test photographs. \emph{Caveat}: photo-level split; rop\_ml's test set differs from the other two.}
+\label{tab:matestage}
+\centering\scriptsize\setlength{\tabcolsep}{2pt}
+\input{figs3/tab_mate_stage}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_teammate.pdf}
+\caption{Teammate packages: four-class test accuracy of every model with 95\% Wilson CI (n in the legend), one colour per package. Dotted: chance. Not comparable with Figs.~\ref{fig:selection}--\ref{fig:dev} (Section~\ref{sec:mate}).}
+\label{fig:teammate}
+\end{figure}
+
+\clearpage
 \section{Data}
 Ostrava~\cite{timkovic2024} labels one examination session; ROP-VL one photograph with an eye-examination identifier; Shenzhen one photograph; Multi-View one eye.
 
@@ -240,7 +295,7 @@ Figures, tables and every number above: \texttt{.venv/bin/python scripts/paper3\
 \end{table*}
 
 \section*{Compliance with Ethical Standards}
-This retrospective study used only publicly released, de-identified datasets under their licences (Ostrava/RIDIRP, ROP-VL, Shenzhen, Multi-View ROP, CC BY-NC); no new data were collected and no ethical approval was required. RETFound-Green's weights are used under their non-commercial licence. The system is research software and not a medical device. No funding was received; the authors declare no conflicts of interest.
+This retrospective study used only publicly released, de-identified datasets under their licences (Ostrava/RIDIRP, ROP-VL, Shenzhen, Multi-View ROP, CC BY-NC); no new data were collected and no ethical approval was required. RETFound-Green's and RETFound-DINOv2's weights are used under their non-commercial licences. The system is research software and not a medical device. No funding was received; the authors declare no conflicts of interest.
 
 \section*{Acknowledgments}
 We thank the releasing institutions and Kaggle for the free GPU time on which every model was trained. \FILL{venue-specific AI disclosure, e.g.: Claude (Anthropic) was used to draft and edit code and text in all sections under the authors' direction; the authors verified every number against the committed result files and take full responsibility for the content.}
@@ -253,6 +308,8 @@ We thank the releasing institutions and Kaggle for the free GPU time on which ev
 \bibitem{nagpure2026} P.~Nagpure, R.~Bait, P.~Rangnekar, Y.~Shengale, and A.~Kumar, ``What the label unit hides: an audited multi-hospital benchmark for ICROP retinopathy of prematurity staging,'' \FILL{preprint venue, DOI, 2026}.
 \bibitem{cui2019} Y.~Cui, M.~Jia, T.-Y.~Lin, Y.~Song, and S.~Belongie, ``Class-balanced loss based on effective number of samples,'' in \emph{Proc. IEEE/CVF CVPR}, 2019, pp.~9268--9277.
 \bibitem{french2018} G.~French, M.~Mackiewicz, and M.~Fisher, ``Self-ensembling for visual domain adaptation,'' in \emph{Proc. ICLR}, 2018.
+\bibitem{zhou2023} Y.~Zhou, M.~A.~Chia, S.~K.~Wagner, \emph{et al.}, ``A foundation model for generalizable disease detection from retinal images,'' \emph{Nature}, vol.~622, pp.~156--163, 2023.
+\bibitem{hu2022} E.~J.~Hu, Y.~Shen, P.~Wallis, \emph{et al.}, ``LoRA: low-rank adaptation of large language models,'' in \emph{Proc. ICLR}, 2022.
 \bibitem{timkovic2024} J.~Timkovi\v{c}, \emph{et al.}, ``Retinal image dataset of infants and retinopathy of prematurity,'' \emph{Sci. Data}, vol.~11, art.~814, 2024.
 \end{thebibliography}
 \end{document}

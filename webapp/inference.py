@@ -32,6 +32,7 @@ from models.common.data_quality import gradability, retina_mask
 from models.common.preprocessing import build_transforms, build_tta_transforms
 from models.common.train_utils import predict_with_tta
 from reports.report_generator import recommendation
+from webapp.comparison import ComparisonModel, compare, eye_from_comparisons
 
 try:
     import cv2
@@ -1143,6 +1144,9 @@ class Registry:
                                        (spec.get("staging") or {}).get("config", DEPLOY_CFG))
         self.legacy_staging = (StagingPreview(self.device)
                                if os.environ.get("RETINAI_LEGACY_STAGING") == "1" else None)
+        # The demo's second opinion (webapp/comparison.py): shown beside the ensemble's stage,
+        # never a decision. Absent files -> loaded False and the page says so.
+        self.comparison = ComparisonModel(self.device, spec.get("comparison"))
         rop = next((m for m in self.models if m.disease == "ROP"), self.models[0])
         # NOTE: the gate is an ImageNet ResNet-50 and must keep ImageNet normalisation. If a
         # ViT with `preprocess.normalize: half` is ever served, do NOT hand the gate that
@@ -1288,6 +1292,11 @@ class Registry:
                 f.get("available") for f in findings):
             staging = (self.staging.predict(image, probs6, idx6) if rebased
                        else self.staging.predict(image))
+        # The comparison model answers only when the served model did, on the same photo, so
+        # the panel is always "ours beside theirs" and never a lone second opinion.
+        comparison = None
+        if staging is not None and self.comparison.loaded:
+            comparison = self.comparison.predict(image, staging["prediction"])
 
         return {
             "context": context,
@@ -1299,6 +1308,7 @@ class Registry:
                         "metrics": quality["metrics"]},
             "findings": findings,
             "staging": staging,
+            "comparison": comparison,
             "heatmaps": heatmaps,
             # legacy single-heatmap fields kept so older callers keep working
             "heatmap": heatmaps[0]["image"] if heatmaps else None,
@@ -1319,13 +1329,18 @@ class Registry:
         per_photo = [{**self.analyze(im, context, cams=False), "index": i}
                      for i, im in enumerate(images)]
         out = eye_from_photos(per_photo, eye)
+        # The same worst-view rule on the comparison model's stages, so the two eye answers
+        # are built the same way before they are compared.
+        comparison_eye = eye_from_comparisons(per_photo)
+        if comparison_eye:
+            comparison_eye["agreement"] = compare(out["eye"]["stage"], comparison_eye["stage"])
         # Grad-CAM for the DRIVING photo only: it is the one the page shows, and a five-model
         # Grad-CAM per positive photo would put a 16-photo severe eye far past the 10 s budget.
         d = out["eye"]["driving_photo"]
         hm = self._heatmaps(images[d], per_photo[d]["findings"])
         per_photo[d].update(heatmaps=hm, heatmap=hm[0]["image"] if hm else None,
                             heatmap_disease=hm[0]["disease"] if hm else None)
-        return {"per_photo": per_photo, **out}
+        return {"per_photo": per_photo, "comparison_eye": comparison_eye, **out}
 
     def summary(self):
         """Per-disease status + headline test metrics for the dashboard."""

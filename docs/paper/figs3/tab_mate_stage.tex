@@ -1,0 +1,14 @@
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Model & Normal & Stage 1 & Stage 2 & Stage 3\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{rop\_ml test, 629 photographs; n: Normal 172, S1 129, S2 163, S3 165}}\\
+SVM (RBF) & 0.767 / 0.706 & 0.450 / 0.423 & 0.515 / 0.486 & 0.503 / 0.629 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{rop\_cnn and rop\_foundation test, 315 photographs; n: Normal 86, S1 64, S2 82, S3 83}}\\
+resnest50d & 0.977 / 0.966 & 0.719 / 0.742 & 0.793 / 0.730 & 0.819 / 0.883 \\
+CNN vote, top 3 & 1.000 / 0.915 & 0.781 / 0.676 & 0.720 / 0.756 & 0.783 / 0.942 \\
+RETFound LoRA, 3 seeds & 0.965 / 0.965 & 0.828 / 0.726 & 0.707 / 0.806 & 0.868 / 0.857 \\
+3 seeds + 4 CNNs & 0.988 / 0.966 & 0.859 / 0.733 & 0.744 / 0.803 & 0.843 / 0.921 \\
+\bottomrule
+\end{tabular}

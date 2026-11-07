@@ -148,13 +148,6 @@ def test_contexts_endpoint_lists_the_routing_table(client):
     assert all("label" in c for c in body)
 
 
-def test_history_entry_records_its_context(client):
-    import webapp.app as A
-    A.HISTORY.clear()
-    client.post("/predict", data={"image": (_png_bytes(), "a.png"), "context": "infant"},
-                content_type="multipart/form-data")
-    assert A.HISTORY[0]["context"] == "infant"
-
 
 # ── the decision line and the staging preview must reach the reader ──────────
 #
@@ -333,11 +326,3 @@ def test_staging_block_clears_the_heatmap_caption(tmp_path):
     staging_top = max(y for s, (y, x) in placed.items() if "ICROP staging" in s)
     assert cam_last - staging_top > 14, "staging heading overlaps the heatmap caption"
 
-
-def test_legacy_history_entry_cannot_produce_a_report(client):
-    """A pre-routing entry has no context; regenerating would apply arbitrary routing."""
-    import webapp.app as A
-    A.HISTORY.clear()
-    A.HISTORY.appendleft({"id": "legacy00", "time": "2026-01-01 00:00:00",
-                          "image": "", "findings": [], "flagged": 0})
-    assert client.get("/history/report/legacy00").status_code == 409

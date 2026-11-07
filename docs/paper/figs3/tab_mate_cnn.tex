@@ -1,0 +1,16 @@
+\begin{tabular}{@{}lccc@{\hspace{6pt}}ccccc@{}}
+\toprule
+ & & & Val & \multicolumn{5}{c}{Test, 315 photographs}\\
+\cmidrule(l){5-9}
+Model & Par.\,(M) & Ep. & mF1 & Acc. & Bal. & mF1 & QWK & AUC\\
+\midrule
+resnest50d & 25.4 & 32 & 0.821 & 0.835 & 0.827 & 0.828 & 0.898 & 0.956 \\
+densenet121 & 7.0 & 36 & 0.822 & 0.822 & 0.816 & 0.815 & 0.880 & 0.942 \\
+efficientnet\_b2 & 7.7 & 40 & 0.832 & 0.819 & 0.812 & 0.811 & 0.884 & 0.943 \\
+resnet50 & 23.5 & 40 & 0.827 & 0.810 & 0.802 & 0.800 & 0.860 & 0.951 \\
+mobilenetv3\_large\_100 & 4.2 & 22 & 0.769 & 0.775 & 0.775 & 0.769 & 0.840 & 0.925 \\
+convnext\_tiny & 27.8 & 13 & 0.491 & 0.530 & 0.546 & 0.520 & 0.497 & 0.821 \\
+\midrule
+Soft vote, top 3 & -- & -- & 0.856 & 0.825 & 0.821 & 0.818 & 0.881 & 0.959 \\
+\bottomrule
+\end{tabular}

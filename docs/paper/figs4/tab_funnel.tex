@@ -1,0 +1,13 @@
+\begin{tabular}{@{}lrrr>{\raggedright\arraybackslash}p{7.6cm}@{}}
+\toprule
+Step & Photos & Infants & Removed & Reason / note\\
+\midrule
+Acquired & 13{,}037 & -- & -- & 11 publicly released sources \\
+Stage-labelled cohorts & 10{,}427 & 2{,}015 & 2{,}610 & no ICROP stage label (plus-only, segmentation sets), too small to fold, re-encoded duplicates \\
+Six-class eligible & 8{,}024 & 1{,}760 & 2{,}403 & other pathology 1{,}295, treated 1{,}063, stage 0 45 \\
+Cross-validation pool & 6{,}700 & 1{,}528 & -- & three cohorts; every photo in one validation fold \\
+Training-eligible & 3{,}112 & 1{,}528 & 3{,}588 & per-infant caps: 2 normal, 20 per disease class; capped photos stay in validation \\
+Held-out cohort, dev half & 663 & 116 & -- & 230 eyes; checks and every reported external number \\
+Held-out cohort, locked half & 661 & 116 & -- & 230 eyes; opened once, Aug 2026, for the CNN generation \\
+\bottomrule
+\end{tabular}

@@ -242,8 +242,9 @@ def test_eye_route_three_photos_one_answer(app_module):
         "Grad-CAM is computed for the driving photo only"
 
 
-def test_about_page_carries_the_model_card(app_module):
-    html = app_module.app.test_client().get("/about").get_data(as_text=True)
+def test_the_one_page_carries_the_model_card(app_module):
+    """The about page went with the old design; its model card moved to the foot of /."""
+    html = app_module.app.test_client().get("/").get_data(as_text=True)
     card = app_module.REGISTRY.staging.card
     assert card["name"] in html and "0.752" in html and "230 eyes" in html
     assert "not a medical device" in html.lower()

@@ -1,0 +1,139 @@
+{
+  "model": "RETFound-DINOv2 ViT-L/14 + LoRA, 3-seed ensemble",
+  "role": "comparison only \u2014 never decides",
+  "architecture": {
+    "cfg": {
+      "name": "retfound_dinov2",
+      "img": 280,
+      "n_cls": 4,
+      "strategy": "lora",
+      "pool": null,
+      "drop_path": 0.2,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_mlp": true,
+      "unfreeze": 6
+    },
+    "classes": [
+      "NORMAL",
+      "STAGE1",
+      "STAGE2",
+      "STAGE3"
+    ],
+    "img": 280,
+    "store": 320,
+    "preproc": "clahe"
+  },
+  "commit": "424ad77",
+  "source_dir": "/Users/praharsh/Downloads/rop_foundation - Copy (2)/outputs",
+  "files": [
+    {
+      "file": "results/comparison/retfound_dinov2_vitl14_backbone.pt",
+      "sha256": "d6c751dfd558b2fd9b53a53fb3a155ab30dabeabf0c28bfae939968a185821c8",
+      "bytes": 606866099,
+      "n_tensors": 342,
+      "n_params": 303375360
+    },
+    {
+      "file": "results/comparison/adapters_s42.pt",
+      "seed": 42,
+      "sha256": "10c11b6128f08e81cbaf64d8b010b98ffae87281e8397b63d975cfa3a6de1018",
+      "bytes": 25258473,
+      "source_file": "/Users/praharsh/Downloads/rop_foundation - Copy (2)/outputs/retfound_dinov2_lora_final_mlp_img280_s42/best.pt",
+      "source_sha256": "9caad234b59eb9275822e60b4b75a74476b5c4cf376e9d0596f7238e3376cb90",
+      "n_tensors": 196,
+      "n_params": 6298631,
+      "source_test": {
+        "Accuracy": 0.7873015873015873,
+        "BalancedAcc": 0.7865235402756802,
+        "MacroF1": 0.7785111316937396,
+        "QWK": 0.8698705590746351,
+        "AUC_OvR": 0.9502223635688456
+      },
+      "source_val": {
+        "Accuracy": 0.8535031847133758,
+        "BalancedAcc": 0.8500063697218169,
+        "MacroF1": 0.8458201545983083,
+        "QWK": 0.9231810154356618,
+        "AUC_OvR": 0.9608442758441127
+      }
+    },
+    {
+      "file": "results/comparison/adapters_s1.pt",
+      "seed": 1,
+      "sha256": "81818822d6cbc036223a5e9d0357d93fc788ac0c026dde3c98b4b71777cd510f",
+      "bytes": 25258271,
+      "source_file": "/Users/praharsh/Downloads/rop_foundation - Copy (2)/outputs/retfound_dinov2_lora_final_mlp_img280_s1/best.pt",
+      "source_sha256": "2dfbac1aa71be0b8c6483347ff645916a753cb59d825b37f3f42f601c062a13f",
+      "n_tensors": 196,
+      "n_params": 6298631,
+      "source_test": {
+        "Accuracy": 0.8222222222222222,
+        "BalancedAcc": 0.8182349897320422,
+        "MacroF1": 0.8148933547836494,
+        "QWK": 0.8882852292020373,
+        "AUC_OvR": 0.9522912777091149
+      },
+      "source_val": {
+        "Accuracy": 0.8503184713375797,
+        "BalancedAcc": 0.840842077224191,
+        "MacroF1": 0.8408948182631693,
+        "QWK": 0.9149635732539955,
+        "AUC_OvR": 0.9447719259063077
+      }
+    },
+    {
+      "file": "results/comparison/adapters_s2.pt",
+      "seed": 2,
+      "sha256": "a94ad33b5e96b8551ea88f5f7c72120621d194dcdfe111e8b43d148868bbbbf4",
+      "bytes": 25258271,
+      "source_file": "/Users/praharsh/Downloads/rop_foundation - Copy (2)/outputs/retfound_dinov2_lora_final_mlp_img280_s2/best.pt",
+      "source_sha256": "763e07c920c1329a770eaf68efcca9c992590dc524f23c9c8f23b04db6a087a7",
+      "n_tensors": 196,
+      "n_params": 6298631,
+      "source_test": {
+        "Accuracy": 0.8317460317460318,
+        "BalancedAcc": 0.8267023977219143,
+        "MacroF1": 0.8264812506151372,
+        "QWK": 0.889490302210194,
+        "AUC_OvR": 0.9513732935611701
+      },
+      "source_val": {
+        "Accuracy": 0.8535031847133758,
+        "BalancedAcc": 0.844763509600908,
+        "MacroF1": 0.8457079442505416,
+        "QWK": 0.9224242424242424,
+        "AUC_OvR": 0.954408853584623
+      }
+    }
+  ],
+  "overlap_audit": {
+    "n_their_photos": 3141,
+    "matched_to_our_data_by_name": 2964,
+    "their_split_vs_our_split": {
+      "test": {
+        "multiview_dev": 50,
+        "multiview_locked": 38,
+        "not in our splits": 14,
+        "train_cv": 213
+      },
+      "train": {
+        "multiview_dev": 390,
+        "multiview_locked": 331,
+        "not in our splits": 144,
+        "train_cv": 1647
+      },
+      "val": {
+        "multiview_dev": 48,
+        "multiview_locked": 39,
+        "not in our splits": 19,
+        "train_cv": 208
+      }
+    },
+    "sources_matched": {
+      "ropvl": 1438,
+      "multiview": 896,
+      "shenzhen": 630
+    }
+  }
+}

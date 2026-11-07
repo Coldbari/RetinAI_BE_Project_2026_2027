@@ -49,3 +49,32 @@ contexts:
       ROP screening for premature infants. This deployment screens for ROP only; it has no
       adult models, so adult fundus photographs have nothing valid to run against.
     runs: [ROP]
+
+# COMPARISON MODEL, 2026-11-07 — a second opinion shown BESIDE arm B, never a decision.
+# A teammate's RETFound-DINOv2 ViT-L/14 with LoRA adapters (rank 16, alpha 32, attention + MLP
+# layers) and a 4-class head (Normal, Stage 1, 2, 3), three seeds averaged. Trained on a
+# PHOTO-level 80/10/10 split of 3,141 of our photos (ROP-VL, Multi-View, Shenzhen), so its
+# reported 84.4% test accuracy (315 photos, QWK 0.900) has infant leakage and it has seen
+# 390 development-half and 331 sealed-half photos; it can never be scored on our test sets.
+# Demo on NEW photos only; the app warns when an upload is a photo in results/comparison/
+# seen_photos.json. Files come from scripts/deploy_comparison_weights.py (one shared frozen
+# backbone + one adapter file per seed). Missing files -> the panel says so and the app runs.
+comparison:
+  name: "RETFound-DINOv2 ViT-L/14 + LoRA, 3-seed ensemble"
+  credit: "trained by a RetinAI teammate (rop_foundation package, 4–5 Nov 2026)"
+  backbone: results/comparison/retfound_dinov2_vitl14_backbone.pt
+  adapters:
+    - {seed: 42, file: results/comparison/adapters_s42.pt}
+    - {seed: 1,  file: results/comparison/adapters_s1.pt}
+    - {seed: 2,  file: results/comparison/adapters_s2.pt}
+  tta: true            # 4-view flip average, as the source package reported its numbers
+  seen_photos: results/comparison/seen_photos.json
+  scores:              # from the source package's own test split (photo level, 315 photos)
+    unit: photo
+    n_test_photos: 315
+    accuracy: 0.844
+    qwk: 0.900
+    auc: 0.964
+    single_seed_accuracy: [0.787, 0.822, 0.832]
+    split: "80/10/10 by photo, seed 42; 73% of test photos share an infant with training"
+    overlap_with_our_tests: "trained on 390 development-half and 331 sealed-half photos"

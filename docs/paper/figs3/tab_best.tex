@@ -1,0 +1,14 @@
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.55cm}>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}p{3.55cm}>{\raggedright\arraybackslash}p{4.9cm}@{}}
+\toprule
+Generation & Best model & Task; split; unit & Headline, own protocol & Comparable with B?\\
+\midrule
+v1, Jun 2026 & EfficientNet-B3, one model for ROP and DR & ROP yes/no; image-level split; photo & test acc.\ 0.733, ROP F1 0.706 & No: image-level split; other task (Table~\ref{tab:v1}) \\
+Jun 2026 sweep & ResNet50 & ROP yes/no; Ostrava; photo & test AUC 0.927, QWK$_2$ 0.688 & No: device shortcut, AUC 0.911 from image size alone (Table~\ref{tab:sweep}) \\
+v2, Aug 2026 & EfficientNetV2-S, structured head & 6 classes; patient-grouped 5-fold CV; photo / eye & CV QWK$_6$ 0.761; locked eye QWK5$_d$ 0.813 (seed 42) & No: own QWK definitions and checkpoint rule; re-scored as arm C (Table~\ref{tab:v2}) \\
+v3/v4, Oct 2026 & \textbf{B: DINOv2 ViT-S/14, 5-fold ensemble (selected)} & 6 classes; protocol v2; photo / eye & CV QWK5 0.825 [0.737, 0.911]; unseen-hospital eye QWK5 0.756 [0.679, 0.821] & Reference (Table~\ref{tab:headline}); the served model \\
+Teammate, Nov 2026 & rop\_ml: SVM (RBF) on 428 hand-made features & 4 classes; photo-level 80/20; photo & test acc.\ 0.585, QWK 0.547 & No: photo-level split (73\% of test photos share an infant with training); trained on 390 dev-half and 331 locked-half photos; four classes (Table~\ref{tab:mateml}) \\
+ & rop\_cnn: resnest50d & 4 classes; photo-level 80/10/10; photo & test acc.\ 0.835, QWK 0.898 & As above (Table~\ref{tab:matecnn}) \\
+ & rop\_foundation: RETFound-DINOv2 ViT-L/14 + LoRA, 3 seeds averaged & 4 classes; photo-level 80/10/10; photo & test acc.\ 0.844, QWK 0.900 & As above (Table~\ref{tab:matefm}) \\
+ & \textbf{Best of the packages: 3 seeds + 4 CNNs averaged} & 4 classes; photo-level 80/10/10; photo & test acc.\ 0.860 [0.820, 0.896], QWK 0.908, AUC 0.972 & As above; selected on validation, 314 photos (Table~\ref{tab:matefm}) \\
+\bottomrule
+\end{tabular}

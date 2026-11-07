@@ -34,9 +34,9 @@ trap 'kill $APP 2>/dev/null || true' EXIT INT TERM
 for _ in $(seq 1 90); do
   if curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then
     echo "ready -> http://127.0.0.1:$PORT"
-    command -v open >/dev/null && open "http://127.0.0.1:$PORT/screen"
+    command -v open >/dev/null && open "http://127.0.0.1:$PORT/"
     echo
-    echo "  On the Screen page, set the patient context to 'Preterm infant (NICU"
+    echo "  On the page, set the patient context to 'Preterm infant (NICU"
     echo "  screening)' first — it is required, and the app returns 400 without it."
     echo
     echo "  No fundus images ship with this repository. The evaluation set is private"

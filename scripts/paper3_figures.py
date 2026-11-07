@@ -54,6 +54,7 @@ SRC_FILES = {
     "sampler": f"{PKG}/19_COMPARISONS/retired_models/weighted_sampler_v1_arm.md",
     "screener": f"{PKG}/19_COMPARISONS/retired_models/resnet50_binary_screener.md",
     "legacy_qwk": f"{PKG}/19_COMPARISONS/retired_models/legacy_qwk_values.csv",
+    "teammate": "results/comparison/teammate_packages.json",
 }
 CFG_FILES = {"A": "configs/rop_staging_rfg.yaml", "B": "configs/rop_staging_dinov2.yaml",
              "C": "configs/rop_staging.yaml", "D": "configs/rop_staging_dinov2_bag.yaml",
@@ -61,7 +62,8 @@ CFG_FILES = {"A": "configs/rop_staging_rfg.yaml", "B": "configs/rop_staging_dino
              "H": "configs/rop_staging_dinov2_v4data.yaml", "I": "configs/rop_staging_dinov2_v4recipe.yaml"}
 C_KERNEL = "kaggle_kernels/rop_staging_benchmark.py"
 SCRIPTS = {"scorer": "scripts/rop_v3_score.py", "report_data": "scripts/rop_v3_report_data.py",
-           "v4_report": "scripts/rop_v4_model_report.py", "this": "scripts/paper3_figures.py"}
+           "v4_report": "scripts/rop_v4_model_report.py", "this": "scripts/paper3_figures.py",
+           "teammate": "scripts/collect_teammate_packages.py"}
 
 
 def _guard(p):
@@ -103,6 +105,7 @@ def md_table_with(rel, first_header):
 R = jload(SRC_FILES["report_data"])
 SCO = jload(SRC_FILES["scores"])
 V4 = jload(SRC_FILES["v4_summary"])
+MATE = jload(SRC_FILES["teammate"])                 # a teammate's independent packages (Section mate)
 ARMS = "ABCDEFGHI"
 TRAINED = [a for a in ARMS if "training" in R["arms"][a]]
 CL = R["classes"]
@@ -888,7 +891,9 @@ def tab_repro():
              ("June 2026 binary sweep", SRC_FILES["sweep"], git_last(SRC_FILES["sweep"])),
              ("ResNet50 val/test metrics", SRC_FILES["resnet_metrics"], git_last(SRC_FILES["resnet_metrics"])),
              ("v1 EfficientNet-B3 evaluation", SRC_FILES["v1"], git_last(SRC_FILES["v1"])),
-             ("Arm configs (A, B, D, F--I; C)", "configs/rop_staging_*.yaml", git_last(*CFG_FILES.values()))]
+             ("Arm configs (A, B, D, F--I; C)", "configs/rop_staging_*.yaml", git_last(*CFG_FILES.values())),
+             ("Teammate packages, collected (Section~\\ref{sec:mate})", SRC_FILES["teammate"], git_last(SRC_FILES["teammate"])),
+             ("Teammate-package collector", SCRIPTS["teammate"], git_last(SCRIPTS["teammate"]))]
     rows = []
     for name, path, (h, d) in items:
         p = path.replace(PKG + "/", "PKG/")
@@ -896,6 +901,254 @@ def tab_repro():
                      (f" {d}" if d else "")])
     tabular("repro", "@{}>{\\raggedright\\arraybackslash}p{4.6cm}>{\\raggedright\\arraybackslash}p{9.6cm}l@{}",
             [r"Item & Path & Commit\\"], rows)
+
+
+
+# ------------------------------------------------------------------ teammate packages (photo-level split; Section mate)
+MCL = MATE["data"]["classes"]                                    # NORMAL, STAGE1, STAGE2, STAGE3
+MCLN = {"NORMAL": "Normal", "STAGE1": "Stage 1", "STAGE2": "Stage 2", "STAGE3": "Stage 3"}
+PKG_COL = {"ml": "#6b7280", "cnn": "#0891b2", "fm": "#4338ca"}
+PKG_NAME = {"ml": "rop\\_ml (features + classical learners)", "cnn": "rop\\_cnn (ImageNet CNNs)",
+            "fm": "rop\\_foundation (RETFound-DINOv2 + LoRA)"}
+TEST_KEYS = ("Accuracy", "BalancedAcc", "MacroF1", "QWK", "AUC_OvR")
+
+
+def wilson(k, n, z=1.96):
+    p = k / n
+    den = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / den
+    h = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
+    return c - h, c + h
+
+
+def mate_test_n():
+    return sum(MATE["data"]["per_class_by_split"]["test"].values())
+
+
+def mate_numbers():
+    d, lk, t = MATE["data"], MATE["data"]["infant_leakage"], MATE["data"]["their_split_vs_our_split"]
+    mac("mateN", n0(d["n_photos"]))
+    mac("mateMatched", n0(d["matched_to_our_data_by_name"]))
+    mac("mateUnmatched", n0(d["n_photos"] - d["matched_to_our_data_by_name"]))
+    for k, v in d["sources_by_name"].items():
+        mac("mateSrc" + k.capitalize(), n0(v))
+    mac("mateDevTrain", n0(t["train"]["multiview_dev"]))
+    mac("mateLockedTrain", n0(t["train"]["multiview_locked"]))
+    mac("matePoolTrain", n0(t["train"]["train_cv"]))
+    for s in ("train", "val", "test"):
+        mac("mate" + s.capitalize(), n0(sum(d["per_class_by_split"][s].values())))
+    mac("mateMLTest", n0(sum(d["ml_split"]["test"].values())))
+    mac("mateLeakTest", f"{100 * lk['test']['same_infant_as_train'] / lk['test']['matched']:.0f}\\%")
+    mac("mateLeakVal", f"{100 * lk['val']['same_infant_as_train'] / lk['val']['matched']:.0f}\\%")
+    mv = lk["test"]["by_source"]["multiview"]
+    mac("mateLeakMV", f"{100 * mv['same_infant_as_train'] / mv['n']:.0f}\\%")
+    ml, best = MATE["ml"], MATE["ml"]["models"][0]
+    mac("mateMLFeat", str(ml["n_features"]))
+    mac("mateMLBest", esc(best["Model"]))
+    mac("mateMLAcc", f3(best["Accuracy"]))
+    mac("mateMLQ", f3(best["Kappa"]))
+    cnn = MATE["cnn"]
+    cb = max(cnn["models"], key=lambda m: m["test"]["Accuracy"])
+    mac("mateCNNBest", esc(cb["name"]))
+    mac("mateCNNAcc", f3(cb["test"]["Accuracy"]))
+    mac("mateCNNQ", f3(cb["test"]["QWK"]))
+    mac("mateCNNEnsAcc", f3(cnn["ensemble"]["test"]["Accuracy"]))
+    worst = min(cnn["models"], key=lambda m: m["test"]["Accuracy"])
+    mac("mateCNNDiverged", esc(worst["name"]))
+    mac("mateCNNDivergedAcc", f3(worst["test"]["Accuracy"]))
+    fm = MATE["foundation"]
+    finals = [r for r in fm["runs"] if r["tag"].startswith("final_mlp_img280")]
+    accs = [r["test"]["Accuracy"] for r in finals]
+    mac("mateFMlo", f3(min(accs)))
+    mac("mateFMhi", f3(max(accs)))
+    mac("mateFMmean", f3(float(np.mean(accs))))
+    mac("mateFMsd", f3(float(np.std(accs, ddof=1))))
+    mac("mateFMtrainable", f"{finals[0]['trainable_M']:.2f}")
+    mac("mateFMtotal", f"{finals[0]['total_M']:.1f}")
+    base = next(r for r in fm["runs"] if r["tag"] == "final_base_s42")
+    mac("mateFMbaseAcc", f3(base["test"]["Accuracy"]))
+    mac("mateFMbaseTrainable", f"{base['trainable_M']:.2f}")
+    combo = next(r for r in fm["runs"] if r["tag"] == "p_mlp_combo")
+    mac("mateFMcomboAcc", f3(combo["test"]["Accuracy"]))
+    e3, e7 = fm["ensembles"]["seeds"], fm["ensembles"]["with_cnn"]
+    mac("mateEnsAcc", f3(e3["test"]["Accuracy"]))
+    mac("mateEnsQ", f3(e3["test"]["QWK"]))
+    mac("mateBestAcc", f3(e7["test"]["Accuracy"]))
+    mac("mateBestQ", f3(e7["test"]["QWK"]))
+    mac("mateBestAUC", f3(e7["test"]["AUC_OvR"]))
+    mac("mateBestN", str(len(e7["members"])))
+    n = mate_test_n()
+    cc = e7.get("test_acc_clustered")
+    mac("mateBestAccci", ci(cc["ci95_infant"]) if cc else ci(wilson(round(e7["test"]["Accuracy"] * n), n)))
+    mac("mateCIkind", "infant-clustered bootstrap" if cc else "Wilson")
+    mac("mateHalfWidth", f"{100 * (wilson(round(0.83 * n), n)[1] - wilson(round(0.83 * n), n)[0]) / 2:.0f}")
+    mac("mateCommit", MATE["commit"])
+    mac("nMateSeries", str(len(mate_series())))
+    mac("mateDate", MATE["generated_on"])
+
+
+def mate_series():
+    """[(package, label, accuracy, n_test, ci)]: ci = infant-clustered bootstrap where the package saved test
+    probabilities (rop_cnn, rop_foundation), else Wilson on the photograph count (rop_ml)."""
+    out = []
+    n_ml, n = sum(MATE["data"]["ml_split"]["test"].values()), mate_test_n()
+    for m in MATE["ml"]["models"]:
+        out.append(("ml", m["Model"], m["Accuracy"], n_ml, wilson(round(m["Accuracy"] * n_ml), n_ml)))
+    cnn = MATE["cnn"]
+    cl = lambda d, acc: tuple(d["test_acc_clustered"]["ci95_infant"]) if d.get("test_acc_clustered") else wilson(round(acc * n), n)  # noqa: E731
+    for m in sorted(cnn["models"], key=lambda m: -m["test"]["Accuracy"]):
+        out.append(("cnn", m["name"], m["test"]["Accuracy"], n, cl(m, m["test"]["Accuracy"])))
+    e = cnn["ensemble"]
+    out.append(("cnn", "ensemble top-3", e["test"]["Accuracy"], n, cl(e, e["test"]["Accuracy"])))
+    fm = MATE["foundation"]
+    for r in fm["runs"]:
+        out.append(("fm", r["tag"].replace("_", " "), r["test"]["Accuracy"], n, cl(r, r["test"]["Accuracy"])))
+    for key, label in (("seeds", "3 seeds averaged"), ("with_cnn", "3 seeds + 4 CNNs")):
+        e = fm["ensembles"][key]
+        out.append(("fm", label, e["test"]["Accuracy"], n, cl(e, e["test"]["Accuracy"])))
+    return out
+
+
+def fig_teammate():
+    ser = mate_series()
+    fig, ax = plt.subplots(figsize=(3.5, 5.6))
+    for i, (pkg, label, acc, n, (lo, hi)) in enumerate(ser):
+        bold = label.startswith(("3 seeds + 4", "ensemble top", "SVM"))
+        ax.plot([lo, hi], [i, i], color=PKG_COL[pkg], lw=1.4, solid_capstyle="round")
+        ax.plot(acc, i, "o", color=PKG_COL[pkg], ms=4.2, mec="white", mew=0.5)
+        ax.text(1.005, i, p3(acc), va="center", fontsize=6.3, weight="bold" if bold else "normal")
+    ax.set_yticks(range(len(ser)), [s[1] for s in ser], fontsize=6.2)
+    ax.set_ylim(len(ser) - 0.4, -0.8)
+    ax.set_xlim(0.4, 1.06)
+    ax.set_xlabel("Test accuracy, four classes; 95% CI: infant-clustered bootstrap (rop_cnn, rop_foundation), Wilson (rop_ml)", fontsize=6.4)
+    ax.tick_params(axis="x", labelsize=7)
+    ax.grid(axis="x", lw=0.4, alpha=0.5)
+    ax.axvline(0.25, color=GREY, lw=0.6, ls=":")
+    ax.legend(handles=[Line2D([], [], color=PKG_COL[k], marker="o", ms=4, lw=1.4,
+                              label={"ml": "rop_ml (629 photos)", "cnn": "rop_cnn (315)", "fm": "rop_foundation (315)"}[k])
+                       for k in ("ml", "cnn", "fm")], fontsize=6.2, loc="lower left", frameon=False)
+    fig.tight_layout()
+    save(fig, "fig_teammate")
+
+
+def tab_mate_data():
+    d = MATE["data"]
+    t, lk, pc = d["their_split_vs_our_split"], d["infant_leakage"], d["per_class_by_split"]
+    rows = []
+    for s in ("train", "val", "test"):
+        leak = "--" if s == "train" else f"{lk[s]['same_infant_as_train']} / {lk[s]['matched']}"
+        rows.append([s.capitalize(), n0(sum(pc[s].values()))] + [n0(pc[s][c]) for c in MCL] +
+                    [n0(t[s]["train_cv"]), n0(t[s]["multiview_dev"]), n0(t[s]["multiview_locked"]),
+                     n0(t[s]["not in our splits"]), leak])
+    tabular("mate_data", "@{}lr@{\\hspace{6pt}}rrrr@{\\hspace{6pt}}rrrr@{\\hspace{6pt}}c@{}",
+            [r" & & \multicolumn{4}{c}{Their classes} & \multicolumn{4}{c}{Where the photographs sit in this project} & Same infant\\",
+             r"\cmidrule(lr){3-6}\cmidrule(lr){7-10}",
+             r"Their split & Photos & N & S1 & S2 & S3 & CV pool & Dev half & Locked half & Elsewhere & as their training\\"],
+            rows)
+
+
+def tab_mate_ml():
+    rows = [[esc(m["Model"]), f3(m["CV_Acc"]), f3(m["Accuracy"]), f3(m["BalancedAcc"]), f3(m["MacroF1"]), f3(m["Kappa"]),
+             f3(m["AUC_OvR"]), n0(m["Sec"])] for m in MATE["ml"]["models"]]
+    tabular("mate_ml", "@{}lccccccr@{}",
+            [r" & CV & \multicolumn{5}{c}{Test, " + MAC["mateMLTest"] + r" photographs} & \\", r"\cmidrule(lr){3-7}",
+             r"Model & Acc. & Acc. & Bal.\,acc. & mF1 & QWK & AUC & s\\"], rows)
+
+
+def tab_mate_cnn():
+    cnn = MATE["cnn"]
+    rows = []
+    for m in sorted(cnn["models"], key=lambda m: -m["test"]["Accuracy"]):
+        te = m["test"]
+        rows.append([esc(m["name"]), f"{m['params'] / 1e6:.1f}", str(m["epochs_run"]), f3(m["val"]["MacroF1"]),
+                     f3(te["Accuracy"]), f3(te["BalancedAcc"]), f3(te["MacroF1"]), f3(te["QWK"]), f3(te["AUC_OvR"])])
+    e = cnn["ensemble"]
+    rows.append(r"\midrule")
+    rows.append(["Soft vote, top 3", "--", "--", f3(e["val_f1"])] + [f3(e["test"][k]) for k in TEST_KEYS])
+    tabular("mate_cnn", "@{}lccc@{\\hspace{6pt}}ccccc@{}",
+            [r" & & & Val & \multicolumn{5}{c}{Test, " + MAC["mateTest"] + r" photographs}\\", r"\cmidrule(l){5-9}",
+             r"Model & Par.\,(M) & Ep. & mF1 & Acc. & Bal. & mF1 & QWK & AUC\\"], rows)
+
+
+def tab_mate_fm():
+    fm = MATE["foundation"]
+    rows = [r"\multicolumn{11}{@{}l}{\emph{Stage-2 probes, 10 epochs, seed 42 (one change each vs the first row)}}\\"]
+    for r in fm["runs"]:
+        if r["tag"] == "final_base_s42":
+            rows.append(r"\midrule")
+            rows.append(r"\multicolumn{11}{@{}l}{\emph{Full-length runs, 30 epochs max}}\\")
+        te = r["test"]
+        rows.append([esc(r["tag"].replace("_", " ")), esc(r["change"]), f"{r['trainable_M']:.2f}", str(r["img"]),
+                     str(r["epochs_run"]), f3(r["val"]["MacroF1"]), f3(te["Accuracy"]), f3(te["BalancedAcc"]),
+                     f3(te["MacroF1"]), f3(te["QWK"]), f3(te["AUC_OvR"])])
+    rows.append(r"\midrule")
+    for key, label, change in (("seeds", "3 seeds averaged", "chosen config, seeds 42, 1, 2"),
+                               ("with_cnn", "3 seeds + 4 CNNs", "plus EffNet-B2, ResNet50, DenseNet121, ResNeSt-50d")):
+        e = fm["ensembles"][key]
+        rows.append([label, change, "--", "--", "--", f3(e["val_f1"])] + [f3(e["test"][k]) for k in TEST_KEYS])
+    tabular("mate_fm", "@{}l>{\\raggedright\\arraybackslash}p{3.3cm}ccc@{\\hspace{5pt}}c@{\\hspace{6pt}}ccccc@{}",
+            [r" & & Trainable & & & Val & \multicolumn{5}{c}{Test, " + MAC["mateTest"] + r" photographs}\\",
+             r"\cmidrule(l){7-11}",
+             r"Run & Change & (M) & px & Epochs & mF1 & Acc. & Bal.\,acc. & mF1 & QWK & AUC\\"], rows)
+
+
+def tab_mate_stage():
+    ml, cnn, fm = MATE["ml"], MATE["cnn"], MATE["foundation"]
+    cb = max(cnn["models"], key=lambda m: m["test"]["Accuracy"])
+    blocks = [("rop\\_ml test, " + MAC["mateMLTest"] + " photographs", [(ml["best"], ml["best_report"])]),
+              ("rop\\_cnn and rop\\_foundation test, " + MAC["mateTest"] + " photographs",
+               [(cb["name"], cb["report"]), ("CNN vote, top 3", cnn["ensemble"]["report"]),
+                ("RETFound LoRA, 3 seeds", fm["ensembles"]["seeds"]["report"]),
+                ("3 seeds + 4 CNNs", fm["ensembles"]["with_cnn"]["report"])])]
+    rows = []
+    for i, (title, items) in enumerate(blocks):
+        sup = items[0][1]
+        rows.append(r"\multicolumn{5}{@{}l}{\emph{" + title + "; n: " +
+                    ", ".join(f"{MCLN[c].replace('Stage ', 'S')} {n0(sup[c]['support'])}" for c in MCL) + r"}}\\")
+        for name, rep in items:
+            rows.append([esc(name)] + [f"{f3(rep[c]['recall'])} / {f3(rep[c]['precision'])}" for c in MCL])
+        if i == 0:
+            rows.append(r"\midrule")
+    tabular("mate_stage", "@{}lcccc@{}", ["Model & " + " & ".join(MCLN[c] for c in MCL) + r"\\"], rows)
+
+
+def tab_best():
+    """One row per generation: its best model under its own protocol, and why it is or is not comparable."""
+    # v1 (June): the ROP test block of the unified evaluation
+    v1 = text(SRC_FILES["v1"]).split("===== ROP TEST RESULTS =====")[1].split("=====")[0]
+    v1acc = float(re.search(r"Accuracy: ([\d.]+)%", v1).group(1)) / 100
+    v1f1 = float(re.search(r"^\s*ROP Detected\s+[\d.]+\s+[\d.]+\s+([\d.]+)", v1, re.M).group(1))
+    rm = jload(SRC_FILES["resnet_metrics"])["test"]
+    q = {(r["dataset"], r["arm"], r["seed"], r["unit"]): r for r in csv_rows(SRC_FILES["v2_qwk"])}
+    v2cv = float(q[("cv_pooled_oof", "structured", SEEDS[0], "image")]["qwk_6class"])
+    v2eye = float(q[("multiview_locked", "structured", SEEDS[0], "eye")]["qwk_5class_drop"])
+    m = MAC
+    no_mate = (r"No: photo-level split (" + m["mateLeakTest"] + r" of test photos share an infant with training); "
+               r"trained on " + m["mateDevTrain"] + " dev-half and " + m["mateLockedTrain"] + " locked-half photos; four classes")
+    rows = [
+        ["v1, Jun 2026", "EfficientNet-B3, one model for ROP and DR", "ROP yes/no; image-level split; photo",
+         f"test acc.\\ {f3(v1acc)}, ROP F1 {f3(v1f1)}", "No: image-level split; other task (Table~\\ref{tab:v1})"],
+        ["Jun 2026 sweep", "ResNet50", "ROP yes/no; Ostrava; photo",
+         f"test AUC {f3(rm['auc'])}, QWK$_2$ {f3(rm['qwk'])}", "No: device shortcut, AUC " + m["shortcutAUC"] + " from image size alone (Table~\\ref{tab:sweep})"],
+        ["v2, Aug 2026", "EfficientNetV2-S, structured head", "6 classes; patient-grouped 5-fold CV; photo / eye",
+         f"CV QWK$_6$ {f3(v2cv)}; locked eye QWK5$_d$ {f3(v2eye)} (seed {SEEDS[0]})",
+         "No: own QWK definitions and checkpoint rule; re-scored as arm C (Table~\\ref{tab:v2})"],
+        ["v3/v4, Oct 2026", r"\textbf{B: DINOv2 ViT-S/14, 5-fold ensemble (selected)}", "6 classes; protocol v2; photo / eye",
+         "CV QWK5 " + m["BcvQ"] + " " + m["BcvQci"] + "; unseen-hospital eye QWK5 " + m["BdevQ"] + " " + m["BdevQci"],
+         "Reference (Table~\\ref{tab:headline}); the served model"],
+        ["Teammate, Nov 2026", "rop\\_ml: " + m["mateMLBest"] + " on " + m["mateMLFeat"] + " hand-made features",
+         "4 classes; photo-level 80/20; photo", "test acc.\\ " + m["mateMLAcc"] + ", QWK " + m["mateMLQ"], no_mate + " (Table~\\ref{tab:mateml})"],
+        ["", "rop\\_cnn: " + m["mateCNNBest"], "4 classes; photo-level 80/10/10; photo",
+         "test acc.\\ " + m["mateCNNAcc"] + ", QWK " + m["mateCNNQ"], "As above (Table~\\ref{tab:matecnn})"],
+        ["", "rop\\_foundation: RETFound-DINOv2 ViT-L/14 + LoRA, 3 seeds averaged", "4 classes; photo-level 80/10/10; photo",
+         "test acc.\\ " + m["mateEnsAcc"] + ", QWK " + m["mateEnsQ"], "As above (Table~\\ref{tab:matefm})"],
+        ["", r"\textbf{Best of the packages: 3 seeds + 4 CNNs averaged}", "4 classes; photo-level 80/10/10; photo",
+         "test acc.\\ " + m["mateBestAcc"] + " " + m["mateBestAccci"] + ", QWK " + m["mateBestQ"] + ", AUC " + m["mateBestAUC"],
+         "As above; selected on validation, " + MAC["mateVal"] + " photos (Table~\\ref{tab:matefm})"],
+    ]
+    tabular("best", "@{}>{\\raggedright\\arraybackslash}p{1.55cm}>{\\raggedright\\arraybackslash}p{4.1cm}"
+                    ">{\\raggedright\\arraybackslash}p{3.0cm}>{\\raggedright\\arraybackslash}p{3.55cm}>{\\raggedright\\arraybackslash}p{4.9cm}@{}",
+            [r"Generation & Best model & Task; split; unit & Headline, own protocol & Comparable with B?\\"], rows)
 
 
 def write_numbers():
@@ -942,11 +1195,13 @@ def main():
     ap.add_argument("--docx", action="store_true")
     args = ap.parse_args()
     numbers()
+    mate_numbers()
     for f in (fig_selection, fig_dev, fig_contrasts, fig_stage_recall, fig_confusion, fig_roc_pr, fig_training,
-              fig_loso, fig_reliability):
+              fig_loso, fig_reliability, fig_teammate):
         f()
     for t in (tab_headline, tab_stage, tab_folds, tab_loso, tab_contrasts, tab_operating, tab_recipe, tab_secondary,
-              tab_v1, tab_sweep, tab_v2, tab_backbones, tab_sampler, tab_screener, tab_pool, tab_loso_folds, tab_repro):
+              tab_v1, tab_sweep, tab_v2, tab_backbones, tab_sampler, tab_screener, tab_pool, tab_loso_folds,
+              tab_mate_data, tab_mate_ml, tab_mate_cnn, tab_mate_fm, tab_mate_stage, tab_best, tab_repro):
         t()
     write_numbers()
     if args.docx:

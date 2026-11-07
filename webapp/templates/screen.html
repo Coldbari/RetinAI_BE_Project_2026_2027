@@ -1,23 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Screen{% endblock %}
+{% block title %}ROP screening{% endblock %}
 {% block content %}
-<div class="screen-stage">
-  <header class="screen-hero reveal" style="--d:0s">
-    <span class="eyebrow">AI ROP SCREENING</span>
-    <h1>Screen a neonatal fundus image</h1>
-    <p>One photograph of a preterm infant's retina, screened for
-       <b>Retinopathy of Prematurity</b> — with a Grad-CAM heatmap, a downloadable report,
-       and a 6-class ICROP staging research preview.</p>
-    <div class="chips">
-      <span class="chip-dot rop">ROP screening</span>
-      <span class="chip-dot rop">ICROP staging · research preview</span>
-    </div>
+<div class="page">
+  <header class="top">
+    <h1>RetinAI · ROP screening</h1>
+    <p>Upload a preterm infant's retinal photograph. The served model gives the screening
+       verdict and the ICROP stage; a second model's stage is shown beside it for comparison.</p>
   </header>
 
-  <section class="panel screen-card reveal" style="--d:.12s">
+  <section class="panel">
     <h2><span class="step-num">1</span> Patient context <span class="req">required</span></h2>
     <p class="ctx-why">Each model is only valid for the population it was trained on. This
-       choice decides which models run — it is not a filter on the results.</p>
+       choice decides which models run.</p>
     <div id="ctxgroup" class="ctx-group"></div>
 
     <h2><span class="step-num">2</span> Patient details <span class="opt">optional</span></h2>
@@ -28,39 +22,37 @@
       <select id="gender"><option value="">Gender</option><option>F</option><option>M</option><option>Other</option></select>
     </div>
 
-    <h2><span class="step-num">3</span> Fundus image</h2>
+    <h2><span class="step-num">3</span> One photograph</h2>
     <div id="drop" class="drop">
       <input id="file" type="file" accept="image/*" hidden>
       <div id="dropmsg">
-        <span class="big">↓</span>
-        <p><b>Drag &amp; drop</b> a fundus photo<br>or <button id="browse" type="button">browse files</button></p>
-        <span class="hint">JPG / PNG · a clear, centred retinal image works best</span>
+        <p><b>Drag &amp; drop</b> a fundus photo or <button id="browse" type="button">browse files</button></p>
+        <span class="hint">JPG / PNG · use a photo neither model has seen</span>
       </div>
       <img id="preview" hidden>
     </div>
-    <button id="analyze" class="btn-pop" disabled><span>Analyze image</span></button>
+    <button id="analyze" class="primary" disabled>Analyze photo</button>
 
     <h2><span class="step-num">+</span> Whole eye <span class="opt">all photographs of one eye</span></h2>
     <p class="ctx-why">Upload every photograph of ONE eye (1&ndash;16) and get ONE answer: the
-       eye is staged by its most severe view. The acquisition view is not detected, so make
-       sure the temporal periphery was photographed. Uses the patient context chosen above.</p>
-    <div class="ctx-group">
+       eye is staged by its most severe view. Uses the patient context chosen above.</p>
+    <div class="ctx-group inline">
       <label class="ctx-opt"><input type="radio" name="laterality" value="OD"><span class="ctx-label">OD (right)</span></label>
       <label class="ctx-opt"><input type="radio" name="laterality" value="OS"><span class="ctx-label">OS (left)</span></label>
     </div>
     <input id="eyefiles" type="file" accept="image/*" multiple>
-    <button id="analyze-eye" class="btn-pop" disabled><span>Analyse this eye</span></button>
+    <button id="analyze-eye" class="primary" disabled>Analyse this eye</button>
+    <p id="status" class="status" hidden></p>
   </section>
 
-  <section class="panel results-panel reveal" id="results" hidden>
+  <section class="panel" id="results" hidden>
     <h2><span class="step-num">4</span> Results</h2>
     <p id="qualitybanner" class="quality-banner" hidden></p>
+    <p id="seenbanner" class="quality-banner warn-soft" hidden></p>
     <p id="ctxbanner" class="ctx-banner" hidden></p>
     <div id="eyecard" hidden></div>
     <div id="eyephotos" hidden></div>
     <div class="result-layout">
-      <div id="cards"></div>
-      <div id="stagingcard" hidden></div>
       <div id="viz" hidden>
         <div class="tabs" id="viztabs"></div>
         <img id="origimg" class="viz-img">
@@ -69,26 +61,63 @@
         <div class="legendbar"><span>low</span><i></i><span>high influence</span></div>
         <div id="camevidence" class="cam-evidence" hidden></div>
       </div>
+      <div class="result-right">
+        <div id="cards"></div>
+        <div id="stagingcard" hidden></div>
+        <div id="comparisoncard" hidden></div>
+      </div>
     </div>
     <div class="actions">
-      <button id="download" class="primary">⬇ Download PDF report</button>
+      <button id="download" class="primary">Download PDF report</button>
       <button id="again" class="ghost">Analyze another</button>
     </div>
   </section>
-</div>
 
-<!-- full-screen black loading page shown while /predict runs (min 5s) -->
-<div id="loader-overlay" role="status" aria-label="Loading">
-  <div class="ktl">
-    <div class="ktl-inner">
-      <!-- the dot orbits around the word; the ı stretches and the L bounces -->
-      <span class="ktl-dot" aria-hidden="true"></span>
-      <p class="ktl-word" aria-hidden="true">
-        <span class="ktl-l">L</span><span>o</span><span>a</span><span>d</span><span class="ktl-i">ı</span><span>n</span><span>g</span>
-      </p>
+  <section class="panel models">
+    <h2>The two models</h2>
+    <div class="model-cards">
+      <div class="model-card">
+        <h3>Served model: {{ card.name if card else 'not loaded' }}</h3>
+        {% if card %}
+        <p>{{ card.architecture }}. Preprocessing: {{ card.preprocessing }}.</p>
+        <p class="card-caveat">{{ card.caveat }}</p>
+        <p class="muted small">Decides the verdict, the stage, the Grad-CAM and the PDF.
+           Screening line {{ '%.2f'|format(card.threshold * 100) if card.threshold else '—' }}%
+           (pre-registered cross-validation operating point). {{ card.status }}</p>
+        {# A number and its calibration status render as one unit: the old dashboard flagged
+           this and the guard test_miscalibrated_model_is_flagged_on_the_dashboard keeps it. #}
+        {% if calibration %}
+        <p class="muted small">Confidence:
+          {% if calibration.status == 'measured-miscalibrated' %}
+            <span class="cal bad">miscalibrated (ECE {{ '%.3f'|format(calibration.ece) }})</span>
+            — read the percentages as scores, not probabilities.
+          {% elif calibration.status == 'verified-uncalibrated' %}
+            <span class="cal warn">uncalibrated, measured (ECE {{ '%.3f'|format(calibration.ece) }})</span>
+          {% else %}
+            <span class="cal bad">calibration unverified</span>
+          {% endif %}
+        </p>
+        {% endif %}
+        {% else %}
+        <p class="muted small">Weights missing: run scripts/deploy_rop_v3_weights.py.</p>
+        {% endif %}
+      </div>
+      <div class="model-card comparison">
+        <h3>Comparison model: {{ comparison.name if comparison else 'not loaded' }}</h3>
+        {% if comparison %}
+        <p>{{ comparison.architecture }}. Preprocessing: {{ comparison.preprocessing }}. {{ comparison.credit }}.</p>
+        <p class="card-caveat">{{ comparison.caveat }}</p>
+        <p class="muted small">{{ comparison.note }} Confidence:
+          <span class="cal bad">calibration unverified</span> — its percentages are scores.</p>
+        {% else %}
+        <p class="muted small">Weights missing: run scripts/deploy_comparison_weights.py.</p>
+        {% endif %}
+      </div>
     </div>
-  </div>
-  <p class="ktl-sub">Analysing the fundus image — running the models for this patient context…</p>
+    <p class="muted small">{% if seen_guard %}Seen-photo guard on: an uploaded photo that is in
+      the project's data is flagged.{% else %}Seen-photo guard off: results/comparison/seen_photos.json
+      is absent.{% endif %}</p>
+  </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='js/main.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/main.js') }}?v=6"></script>{% endblock %}
