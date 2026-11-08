@@ -1019,14 +1019,15 @@ def fig_teammate():
         ax.text(1.005, i, p3(acc), va="center", fontsize=6.3, weight="bold" if bold else "normal")
     ax.set_yticks(range(len(ser)), [s[1] for s in ser], fontsize=6.2)
     ax.set_ylim(len(ser) - 0.4, -0.8)
-    ax.set_xlim(0.4, 1.06)
-    ax.set_xlabel("Test accuracy, four classes; 95% CI: infant-clustered bootstrap (rop_cnn, rop_foundation), Wilson (rop_ml)", fontsize=6.4)
+    ax.set_xlim(0.2, 1.06)
+    ax.set_xlabel("Test accuracy, four classes, with 95% CI", fontsize=7)
     ax.tick_params(axis="x", labelsize=7)
     ax.grid(axis="x", lw=0.4, alpha=0.5)
     ax.axvline(0.25, color=GREY, lw=0.6, ls=":")
     ax.legend(handles=[Line2D([], [], color=PKG_COL[k], marker="o", ms=4, lw=1.4,
                               label={"ml": "rop_ml (629 photos)", "cnn": "rop_cnn (315)", "fm": "rop_foundation (315)"}[k])
-                       for k in ("ml", "cnn", "fm")], fontsize=6.2, loc="lower left", frameon=False)
+                       for k in ("ml", "cnn", "fm")], fontsize=6.2, loc="upper center", bbox_to_anchor=(0.42, -0.05),
+              ncol=3, frameon=False, handlelength=1.2, columnspacing=0.9, handletextpad=0.4)
     fig.tight_layout()
     save(fig, "fig_teammate")
 

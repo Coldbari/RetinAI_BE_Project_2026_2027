@@ -132,7 +132,8 @@ def clustered_acc(probs: np.ndarray, y: np.ndarray, clusters: np.ndarray, reps: 
         idx = np.concatenate([groups[i] for i in pick])
         accs.append(correct[idx].mean())
     return {"accuracy": float(correct.mean()), "ci95_infant": [float(np.percentile(accs, 2.5)), float(np.percentile(accs, 97.5))],
-            "n_clusters": int(len(ids)), "replicates": reps, "seed": seed}
+            "n_clusters": int(len(ids)), "n_unmatched_singletons": int(sum(str(c).startswith("unmatched:") for c in ids)),
+            "replicates": reps, "seed": seed}
 
 
 def collect_ml(d: Path) -> dict:
