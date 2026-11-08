@@ -3,6 +3,7 @@
 ## Project Title
 
 **RetinAI: Retinopathy of Prematurity using Machine Learning**
+
 [*Four-class ROP staging with a LoRA-adapted retinal foundation model (RETFound-DINOv2)*]
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat&logo=python)](https://www.python.org/)
