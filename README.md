@@ -207,8 +207,6 @@ million trainable parameters per task, and results stated with their statistical
 
 ## System Architecture
 
-![System Architecture](images/system_architecture.png)
-
 > `[CONFIRM / TO DO]` Redraw `images/system_architecture.png` and `images/flowchart.png` for this
 > four-class pipeline (the old versions show the earlier multi-disease system).
 
