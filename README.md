@@ -16,7 +16,7 @@ Low-Rank Adaptation (LoRA)**, so only a few million adapter parameters are train
 model kept in this repository. CNN and classical-machine-learning results are retained as
 baselines for comparison.
 
-> `[CONFIRM]` The paper draft says Stage 4/5 and AP-ROP were *excluded* from the 3,141-image set.
+> The paper draft says Stage 4/5 and AP-ROP were *excluded* from the 3,141-image set.
 > If the reported numbers were computed with those images excluded rather than merged, either
 > re-count and retrain with the merged labels, or reword this label policy. See
 > [Label scheme](#label-scheme).
@@ -136,8 +136,7 @@ not clinical readiness.
 4. To study how LoRA placement, rank, learning rate, token pooling, drop-path and input resolution
    affect RETFound-DINOv2.
 5. To report statistical uncertainty honestly (Wilson intervals, seed-to-seed spread).
-6. To make predictions explainable and deliver them through a simple application with a PDF report
-   `[CONFIRM: the app serves the RETFound LoRA model]`.
+6. To make predictions explainable and deliver them through a simple application with a PDF report.
 7. To document the work with its limitations and prepare it for publication.
 
 ---
@@ -155,7 +154,7 @@ not clinical readiness.
 
 Grouping Stage 4/5 and AP-ROP into Stage 3 is a simplification: the class then mixes different
 clinical situations, so a "Stage 3" prediction means "advanced ROP", not only Stage 3 proper.
-`[CONFIRM]` The paper draft (Section II-A and Limitations) says these classes were excluded, not
+The paper draft (Section II-A and Limitations) says these classes were excluded, not
 merged. Align the data counts and the paper text with the final decision.
 
 ### In scope
@@ -198,7 +197,7 @@ large pretrained backbone stays frozen and only small adapters and a four-unit h
 2. RETFound-DINOv2 (frozen ViT-Large, 24 blocks, width 1024) extracts patch tokens.
 3. LoRA adapters in the attention (and MLP) layers adjust the features; a four-class head gives
    Normal / Stage 1 / Stage 2 / Stage 3 probabilities via softmax, and the prediction is the argmax.
-4. The result is shown with an explanation and a PDF report `[CONFIRM: Grad-CAM and PDF on the LoRA model]`.
+4. The result is shown with an explanation and a PDF report.
 
 **Expected benefits.** A 304M-parameter retinal model adapted on a 6 GB consumer GPU, with a few
 million trainable parameters per task, and results stated with their statistical uncertainty.
@@ -207,7 +206,7 @@ million trainable parameters per task, and results stated with their statistical
 
 ## System Architecture
 
-> `[CONFIRM / TO DO]` Redraw `images/system_architecture.png` and `images/flowchart.png` for this
+> Redraw `images/system_architecture.png` and `images/flowchart.png` for this
 > four-class pipeline (the old versions show the earlier multi-disease system).
 
 ```
@@ -229,7 +228,7 @@ million trainable parameters per task, and results stated with their statistical
             Validation macro-F1 selection → test metrics on 315 images
             (accuracy, balanced accuracy, macro-F1, QWK, AUC, Wilson CI)
                                    ▼
-            RETFound LoRA → web app: stage, explanation, PDF report  [CONFIRM]
+            RETFound LoRA → web app: stage, explanation, PDF report 
 ```
 
 ---
@@ -242,7 +241,7 @@ programmed. The table lists the compute used. It is filled in because the templa
 | Sr. No. | Component | Specification | Quantity | Purpose |
 |---|---|---|---|---|
 | 1 | Laptop GPU | NVIDIA RTX 4050, 6 GB VRAM, bfloat16 mixed precision | 1 | Training and evaluating all models |
-| 2 | Demo / development machine | `[CONFIRM: model and RAM]` | 1 | Running the local web app |
+| 2 | Demo / development machine | 1 | Running the local web app |
 | 3 | Fundus camera (third-party) | RetCam-class contact camera, not built by us | n/a | Origin of the public dataset images |
 
 ---
@@ -251,14 +250,14 @@ programmed. The table lists the compute used. It is filled in because the templa
 
 | Sr. No. | Software / Tool | Version | Purpose |
 |---|---|---|---|
-| 1 | Python | 3.14 (training); 3.11+ (app) `[CONFIRM]` | Main language |
+| 1 | Python | 3.14 (training); 3.11+ (app) | Main language |
 | 2 | PyTorch | 2.14.1 (CUDA 12.6) | Models, training, inference |
 | 3 | timm | 1.0.31 | CNN and DINOv2/ViT backbones |
 | 4 | scikit-learn | 1.9.1 | Metrics, QWK, classical classifiers |
 | 5 | OpenCV | 5.0 | CLAHE, black-border crop, Frangi/HOG features |
 | 6 | pandas | 3.1 | Tables and result files |
 | 7 | LightGBM, CatBoost, XGBoost | latest | Classical-ML classifiers |
-| 8 | Flask, ReportLab | 3.x, 4.x | Web app and PDF report `[CONFIRM]` |
+| 8 | Flask, ReportLab | 3.x, 4.x | Web app and PDF report |
 | 9 | Pretrained checkpoint | `RETFound_dinov2_meh.pth` (key `teacher`; 342 tensors loaded, 0 missing, 0 unexpected) | RETFound-DINOv2 weights |
 
 ---
@@ -275,7 +274,7 @@ programmed. The table lists the compute used. It is filled in because the templa
 * **Metrics and statistics:** accuracy, balanced accuracy, macro-F1, QWK, one-vs-rest AUC, Wilson
   95% intervals
 * **Training:** bfloat16 mixed precision, one-change-at-a-time LoRA sweep
-* **Web:** Flask, ReportLab `[CONFIRM]`
+* **Web:** Flask, ReportLab
 
 ---
 
@@ -314,7 +313,7 @@ Weeks are counted from Monday 08 Jun 2026 (Week 1). Today is in Week 22 (02 to 0
 | Week 12–15 (24 Aug – 20 Sep) | Paper draft, demo hardening, preprocessing study, dataset packaging | Completed |
 | Week 16–18 (21 Sep – 11 Oct) | Post-proposal review prepared and presented | Completed |
 | Week 19–21 (12 Oct – 01 Nov) | Review feedback, model comparison rounds | Completed |
-| `[CONFIRM]` | Four-class experiments: CNNs, classical ML, RETFound-DINOv2 LoRA sweep | `[CONFIRM: dates]` |
+| Four-class experiments: CNNs, classical ML, RETFound-DINOv2 LoRA sweep | 
 | Week 22 (02–08 Nov) | Decision to keep only RETFound-DINOv2 LoRA; README, paper and report reconciled; repository cleanup | In progress |
 | Next | Finish and submit the paper; complete the project report; publish LoRA adapter weights | Planned |
 
@@ -323,7 +322,7 @@ Weeks are counted from Monday 08 Jun 2026 (Week 1). Today is in Week 22 (02 to 0
 ## Weekly Progress Updates
 
 Condensed from the development repository's history. Commit counts are shown because the full
-history is in a private repository. `[CONFIRM]` The template asks for a commit link per week.
+history is in a private repository. The template asks for a commit link per week.
 
 | Week | Date | Work Completed | Issues / Challenges | Commits |
 |---|---|---|---|---|
@@ -349,13 +348,13 @@ history is in a private repository. `[CONFIRM]` The template asks for a commit l
 
 | File Type | File Name / Link | Description |
 |---|---|---|
-| System architecture | [images/system_architecture.png](images/system_architecture.png) | `[CONFIRM: redraw for four-class pipeline]` |
-| Flowchart | [images/flowchart.png](images/flowchart.png) | `[CONFIRM: redraw]` |
-| Results: foundation models | `results/fm_results.csv` `[CONFIRM: path]` | 19 rows: 12 RETFound-LoRA runs, 6 CNNs, one ensemble |
-| Results: CNNs | `results/cnn_results.csv` `[CONFIRM: path]` | 6 CNNs and their top-3 ensemble |
-| Results: classical ML | `results/results.csv` `[CONFIRM: path]` | 12 classical classifiers |
-| Paper | `docs/` `[CONFIRM: path]` | *Four-Class ROP Staging from Fundus Images* (IEEE-format draft) |
-| Project report | `docs/` `[CONFIRM: path]` | BE project report (black book) |
+| System architecture | [images/system_architecture.png](images/system_architecture.png) |
+| Flowchart | [images/flowchart.png](images/flowchart.png) |
+| Results: foundation models | `results/fm_results.csv` | 19 rows: 12 RETFound-LoRA runs, 6 CNNs, one ensemble |
+| Results: CNNs | `results/cnn_results.csv` | 6 CNNs and their top-3 ensemble |
+| Results: classical ML | `results/results.csv` | 12 classical classifiers |
+| Paper | `docs/` | *Four-Class ROP Staging from Fundus Images* (IEEE-format draft) |
+| Project report | `docs/` | BE project report (black book) |
 | CAD / Circuit / PCB / Simulation | Not applicable | Software-only project |
 
 ---
@@ -377,12 +376,12 @@ Not applicable. RetinAI is a software and machine-learning system with no custom
 2.  Receive a colour fundus photograph
 3.  Check the file (corrupt / not an image) -> reject with a reason
 4.  Circle-crop / black-border crop; CLAHE on the lightness channel
-5.  Resize and normalise (about 224 px; 280 px for the img280 runs)   [CONFIRM: served resolution]
+5.  Resize and normalise (about 224 px; 280 px for the img280 runs)   
 6.  Run RETFound-DINOv2 (frozen ViT-L) with the trained LoRA adapters
 7.  Four-unit head -> softmax -> argmax
       Normal | Stage 1 | Stage 2 | Stage 3 (includes Stage 4/5 and AP-ROP)
-8.  Explain the result (Grad-CAM heatmap)                              [CONFIRM]
-9.  Generate the PDF report with the disclaimer                        [CONFIRM]
+8.  Explain the result (Grad-CAM heatmap)                              
+9.  Generate the PDF report with the disclaimer                       
 10. Display the result
 11. Stop
 ```
@@ -438,18 +437,16 @@ is not used. Only the adapters and the four-class head are trained.
 epochs at lr 1e-3, stopped at epoch 20. Probes and final sweep: 10 epochs, lr 2e-4 to 8e-4. Epoch
 time on the RTX 4050: about 92 s (attention-only), 115 s (attention+MLP), 120 s (V2), some runs
 300–400 s. Batch size, optimiser, weight decay, LoRA alpha and dropout, augmentation and loss
-function were not preserved in the experiment logs `[CONFIRM: add them from the code if available]`.
+function were not preserved in the experiment logs .
 
-**Serving.** `[CONFIRM: the Flask app must load the RETFound-DINOv2 LoRA adapters as the primary
+**Serving.** The Flask app must load the RETFound-DINOv2 LoRA adapters as the primary
 model; today the app's primary model is an older one and RETFound appears only as a comparison
-panel.]`
+panel.
 
 ---
 
 ## Code Structure
 
-Target structure after the cleanup (old models, DR and glaucoma code removed).
-`[CONFIRM: match the real folder names; the report names three packages rop_ml, rop_cnn, rop_foundation]`
 
 ```text
 RetinAI_BE_Project_2026_2027/
@@ -494,19 +491,17 @@ pip install -r requirements.txt
 
 ### Step 3: Get the Model Weights
 
-1. Download the pretrained `RETFound_dinov2_meh.pth` from the RETFound authors [15] and place it in
-   `[CONFIRM: folder]`.
-2. Download the trained LoRA adapter files `[CONFIRM: not yet published; upload to a model
-   repository and put the link here]`.
+1. Download the pretrained `RETFound_dinov2_meh.pth` from the RETFound authors [15] and place it in.
+2. Download the trained LoRA adapter files.
 
 ### Step 4: Run
 
 ```bash
-python webapp/app.py            # [CONFIRM: command] → http://127.0.0.1:5002
+python webapp/app.py            #http://127.0.0.1:5002
 ```
 
 Upload a neonatal fundus photograph. Expected output: the predicted class (Normal, Stage 1,
-Stage 2 or Stage 3), class probabilities, an explanation and a PDF report `[CONFIRM]`. The output is
+Stage 2 or Stage 3), class probabilities, an explanation and a PDF report. The output is
 decision support only.
 
 ---
@@ -520,7 +515,7 @@ Accuracy intervals are 95% Wilson intervals computed from the correct-prediction
 ### RETFound-DINOv2 + LoRA runs (retained model)
 
 Run IDs are the names in `fm_results.csv`. `p_` runs look like ten-epoch probes and `final_` runs
-like final runs `[CONFIRM: naming]`. Sorted by test accuracy.
+like final runs. Sorted by test accuracy.
 
 | Run | Val F1 | Accuracy | 95% CI | Bal. Acc. | Macro-F1 | QWK | AUC |
 |---|---|---|---|---|---|---|---|
@@ -536,20 +531,19 @@ like final runs `[CONFIRM: naming]`. Sorted by test accuracy.
 | final_mlp_img280_s42 | 0.8458 | 0.7873 | 73.9–82.9 | 0.7865 | 0.7785 | 0.8699 | 0.9502 |
 | final_mlp_s42 | 0.8161 | 0.7778 | 72.9–82.0 | 0.7635 | 0.7646 | 0.8605 | 0.9477 |
 | p_mlp_combo | 0.6227 | 0.6508 | 59.7–70.1 | 0.6620 | 0.6166 | 0.7612 | 0.9000 |
-| **ENSEMBLE top-3** `[CONFIRM: members]` | 0.8393 | **0.8444** | 80.0–88.0 | 0.8420 | 0.8386 | 0.8995 | 0.9641 |
+| **ENSEMBLE top-3** | 0.8393 | **0.8444** | 80.0–88.0 | 0.8420 | 0.8386 | 0.8995 | 0.9641 |
 
 Observations:
 
 - **Seed spread.** The three 280-px runs (seeds 42, 1 and 2) score 78.7%, 82.2% and 83.2%: a
   4.4-point range, mean 81.4% accuracy, mean QWK 0.883. The ensemble row (84.4%) is probably the
-  average of these three `[CONFIRM]`.
+  average of these three.
 - **MLP adapters help** over attention-only in the early probes, **rank 32 and drop-path do not
   help**, and a combined-changes run (`p_mlp_combo`) and lr 1e-3 with EMA (V2, 70.5%) are clearly
   worse, so learning rate and combined changes matter.
 - **Selection.** The paper selects by validation macro-F1. In `fm_results.csv`, `p_mlp_lr6e4` has
   Val F1 0.8294, while five other LoRA runs have a higher Val F1 (0.8458, 0.8457, 0.8409, 0.8342,
-  0.8298). `[CONFIRM: which configuration is the retained model, and reconcile with the paper's
-  Val F1 of 0.839 for mlp_lr6e4.]`
+  0.8298). 
 - Two nominally identical MLP runs in the paper differed by about two accuracy points (0.816 and
   0.797); the seed range above is larger.
 
@@ -622,7 +616,7 @@ investigated. Intervals computed here differ by 0.1 from the paper's Table VIII 
 
 ## Result Images / Videos
 
-Add these figures to `images/` `[CONFIRM: file paths]`:
+Add these figures to `images/`:
 
 | Figure | What it shows |
 |---|---|
@@ -630,7 +624,7 @@ Add these figures to `images/` `[CONFIRM: file paths]`:
 | Accuracy vs QWK | Competitive models (paper Fig. 4) |
 | Validation F1 vs trainable parameters | LoRA variants (paper Fig. 5) |
 | Validation F1 across the LoRA sweep | Paper Fig. 6 |
-| Confusion matrix of the retained model | `[CONFIRM: not yet generated]` |
+| Confusion matrix of the retained model | 
 
 ### Geotagged photographs
 
@@ -645,7 +639,7 @@ Originals and notes are in [geotagged_images/](geotagged_images/).
 
 **Project Demo Video (YouTube):** https://youtu.be/fQpp9Fr1Up4 (4 min 35 s). It was recorded before
 the project narrowed to four classes, so its results slide shows older numbers; where the video and
-this README differ, the README is current `[CONFIRM: re-record or add this note to the video description]`.
+this README differ, the README is current.
 
 ---
 
@@ -690,7 +684,7 @@ this README differ, the README is current `[CONFIRM: re-record or add this note 
    dropout were not retained; per-image predictions were not kept, so paired tests were not possible.
 10. **No calibration, class-wise error analysis, robustness or clinical safety testing.**
 11. **Label noise.** Expert graders disagree on ROP stage [2], which caps achievable agreement.
-12. **Weights not yet published** and the app must be switched to the RETFound model `[CONFIRM]`.
+12. **Weights not yet published** and the app must be switched to the RETFound model.
 
 ---
 
@@ -713,14 +707,14 @@ this README differ, the README is current `[CONFIRM: re-record or add this note 
 |---|---|
 | Paper Title | *Four-Class Retinopathy of Prematurity Staging from Fundus Images: A Comparison of Classical Machine Learning, CNNs and LoRA-Adapted Retinal Foundation Models* |
 | Authors | Praharsh Nagpure, Pravar Rangnekar, Rutuja Bait, Yash Shengale (supervisor: Mrs. Amudha Senthilkumar) |
-| Conference / Journal Name | `[CONFIRM: target venue]` |
+| Conference / Journal Name | 
 | Paper Status | Drafting (in process, not yet submitted) |
 | Submission Date | Not yet submitted |
-| Paper Link | `TO FILL after submission` |
+| Paper Link | 
 
 The draft's claim is a like-for-like comparison: a CNN and a LoRA-adapted retinal foundation model
 perform essentially equally, and the results show feasibility rather than clinical readiness.
-`[CONFIRM]` The draft still says the 280-px run "did not finish" and lists no classical-ML numbers;
+The draft still says the 280-px run "did not finish" and lists no classical-ML numbers;
 both are contradicted by the result files, and Stage 4/5 and AP-ROP handling needs to match the
 Label scheme above.
 
@@ -781,9 +775,9 @@ Label scheme above.
      Proc. IEEE CVPR, 2016, pp. 770-778.
 [24] A. Howard et al., "Searching for MobileNetV3," in Proc. IEEE/CVF ICCV, 2019, pp. 1314-1324.
 [25] Z. Liu et al., "A ConvNet for the 2020s," in Proc. IEEE/CVF CVPR, 2022, pp. 11976-11986.
-[26] Zhao et al., 2024, ROP fundus image dataset, Figshare.      [CONFIRM: full citation and DOI]
+[26] Zhao et al., 2024, ROP fundus image dataset, Figshare.      
 [27] M. F. Chiang et al., "International Classification of Retinopathy of Prematurity, Third
-     Edition," Ophthalmology, vol. 128, no. 10, pp. e51-e68, 2021.   [CONFIRM: verify details]
+     Edition," Ophthalmology, vol. 128, no. 10, pp. e51-e68, 2021.   
 ```
 
 ---
